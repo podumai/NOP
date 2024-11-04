@@ -15,19 +15,25 @@
 #include <ostream>
 #include "types.hpp"
 
+/*inline constexpr npl::size_t calculate_capacity(npl::size_t num_bits)
+{
+  return (num_bits >> 3) + (num_bits & 7);
+}*/
+
 namespace npl
 {
 
   namespace bit
   {
 
-    template <npl::size_t num_bits>
+    template <size_t num_bits>
     class bitset
     {
     public:
       using bin_string = std::string;
       using bit_state = bool;
       using pointer = u8*;
+      using const_pointer = const u8*;
       using size_type = size_t;
       using byte = u8;
 
@@ -70,9 +76,9 @@ namespace npl
           proxy_iterator& operator=(bit_state value)
           {
             if (value)
-              m_byte[m_bit >> 3] |= static_cast<size_type>(BMASK::BIT) >> (m_bit & 0b00000111);
+              m_byte[byte_division(m_bit)] |= static_cast<size_type>(BMASK::BIT) >> byte_module(m_bit);
             else
-              m_byte[m_bit >> 3] &= ~(static_cast<size_type>(BMASK::BIT) >> (m_bit & 0b00000111));
+              m_byte[byte_division(m_bit)] &= ~(static_cast<size_type>(BMASK::BIT) >> byte_module(m_bit));
 
             return *this;
           }
@@ -173,7 +179,8 @@ namespace npl
       {
         (void)std::memcpy(m_storage,
                           &value,
-                          calculate_capacity(num_bits) % (sizeof(size_type) + 1));
+                          calculate_capacity(num_bits) >= sizeof(size_type) ?
+                          sizeof(size_type) : calculate_capacity(num_bits));
       }
 
       constexpr bitset(const bitset& other) noexcept
@@ -195,12 +202,17 @@ namespace npl
 
       [[nodiscard]] iterator begin() noexcept
       {
-        return iterator(m_storage, 0);
+        return iterator(m_storage, ZERO_VALUE);
       }
 
       [[nodiscard]] iterator end() noexcept
       {
         return iterator(m_storage, num_bits);
+      }
+
+      [[nodiscard]] constexpr const_pointer data() const noexcept
+      {
+        return m_storage;
       }
 
       [[nodiscard]] constexpr size_type size() const noexcept
@@ -333,7 +345,7 @@ namespace npl
         return *this;
       }
 
-      bin_string to_string() const
+      [[nodiscard]] bin_string to_string() const
       {
         bin_string storage_representation;
 
@@ -482,14 +494,19 @@ namespace npl
         return *this;
       }
 
-      [[nodiscard]] bool operator==(const bitset& other)
+      template<size_t other_bits>
+      [[nodiscard]] bool operator==(const bitset<other_bits>& other) const noexcept
       {
-        return std::memcmp(m_storage,
-                           other.m_storage,
-                           calculate_capacity(num_bits)) == 0;
+        if (num_bits != other_bits)
+          return false;
+        else
+          return std::memcmp(m_storage,
+                             other.data(),
+                             calculate_capacity(num_bits)) == ZERO_VALUE;
       }
 
-      [[nodiscard]] bool operator!=(const bitset& other)
+      template<size_t other_bits>
+      [[nodiscard]] bool operator!=(const bitset<other_bits>& other) const noexcept
       {
         return !(*this == other);
       }
@@ -558,5 +575,6 @@ std::ostream& operator<<(std::ostream& out, const npl::bit::bitset<num_bits>& bi
 #undef BIT_SET
 #undef BIT_UNSET
 #undef calculate_capacity
+#undef ZERO_VALUE
 
 #endif

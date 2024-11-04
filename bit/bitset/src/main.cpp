@@ -3,9 +3,9 @@
 
 npl::i32 main()
 {
-  npl::bit::bitset<16> test (0xff);
+  npl::bit::bitset<16> test(0xff);
   
-  for (auto iterator : test)
+  for (auto& iterator : test)
     std::cout << iterator;
   std::cout << '\n';
   
