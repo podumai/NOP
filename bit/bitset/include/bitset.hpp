@@ -15,11 +15,6 @@
 #include <ostream>
 #include "types.hpp"
 
-/*inline constexpr npl::size_t calculate_capacity(npl::size_t num_bits)
-{
-  return (num_bits >> 3) + (num_bits & 7);
-}*/
-
 namespace npl
 {
 
