@@ -321,7 +321,7 @@ namespace npl
         if (value != ZERO_VALUE)
           (void)std::memcpy(m_storage,
                             &value,
-                            m_bytes % (sizeof(size_type) + 1));
+                            m_bytes >= sizeof(size_type) ? sizeof(size_type) : m_bytes);
       }
 
       bvector(const bvector& other)

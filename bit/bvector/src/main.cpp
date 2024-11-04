@@ -446,6 +446,70 @@ TEST_F(BVECTOR_TEST_FIXTURE, COPY_RHS_TEST)
   ASSERT_EQ("0111111111111111", empty_bvector.to_string());
 }
 
+TEST_F(BVECTOR_TEST_FIXTURE, ADVANCED_LHS_RHS_TEST)
+{
+  for (npl::size_t i{}; i != 16; ++i)
+  {
+    filled_bvector >>= 1;
+    ASSERT_EQ(false, filled_bvector[i]);
+  }
+
+  filled_bvector.set();
+
+  for (npl::size_t i{}; i != 16; ++i)
+  {
+    filled_bvector <<= 1;
+    ASSERT_EQ(false, filled_bvector[15 - i]);
+  }
+
+  filled_bvector.set();
+  filled_bvector >>= 8;
+
+  ASSERT_EQ("0000000011111111", filled_bvector.to_string());
+
+  filled_bvector >>= 3;
+
+  ASSERT_EQ("0000000000011111", filled_bvector.to_string());
+
+  filled_bvector >>= 5;
+
+  ASSERT_EQ(true, filled_bvector.none());
+
+  filled_bvector.set();
+  filled_bvector <<= 8;
+
+  ASSERT_EQ("1111111100000000", filled_bvector.to_string());
+
+  filled_bvector <<= 3;
+
+  ASSERT_EQ("1111100000000000", filled_bvector.to_string());
+
+  filled_bvector <<= 5;
+
+  ASSERT_EQ(true, filled_bvector.none());
+}
+
+TEST_F(BVECTOR_TEST_FIXTURE, ITERATOR_TEST)
+{
+  for (auto& iter : filled_bvector)
+  {
+    ASSERT_EQ(true, iter);
+    iter = false;
+    ASSERT_EQ(false, iter);
+  }
+
+  for (const auto& iter : filled_bvector)
+    ASSERT_EQ(false, iter);
+
+  for ([[maybe_unused]] auto& iter : empty_bvector)
+    ASSERT_EQ(false, true)
+    << "Error in for range loop traversing empty object";
+  
+  for ([[maybe_unused]] const auto& iter : empty_bvector)
+    ASSERT_EQ(false, true)
+    << "Error in for range loop (const) traversing empty object";
+}
+
 TEST(BVECTOR_TEST_ADVANCED, STRESS_TEST)
 {
   npl::bit::bvector test_bvector;
