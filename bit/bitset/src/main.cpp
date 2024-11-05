@@ -3,11 +3,14 @@
 
 npl::i32 main()
 {
-  npl::bit::bitset<16> test(0xff);
+  npl::bit::bitset<8> test(0xff);
   
-  for (auto& iterator : test)
-    std::cout << iterator;
-  std::cout << '\n';
-  
+  for (npl::size_t i{}; i != test.size(); ++i)
+  {
+    std::cout << test[i] << ' ';
+    test[i] = false;
+    std::cout << test[i] << '\n';
+  }
+
   return 0;
 }

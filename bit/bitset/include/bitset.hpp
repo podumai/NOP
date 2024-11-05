@@ -42,6 +42,7 @@ namespace npl
     private:
       class iterator
       {
+        friend bitset;
       public:
         using reference = u8&;
         using iterator_category = std::forward_iterator_tag;
@@ -53,15 +54,16 @@ namespace npl
           pointer m_byte;
           size_type m_bit;
 
+        public:
           proxy_iterator(pointer ptr, size_type bit_pos)
             : m_byte(ptr)
             , m_bit(bit_pos)
           {}
 
-          proxy_iterator(const proxy_iterator& other)
+          /*proxy_iterator(const proxy_iterator& other)
             : m_byte(other.m_byte)
             , m_bit(other.m_bit)
-          {}
+          {}*/
 
           proxy_iterator(proxy_iterator&& other)
             : m_byte(other.m_byte)
@@ -268,6 +270,11 @@ namespace npl
             return false;
 
         return true;
+      }
+
+      [[nodiscard]] constexpr iterator::proxy_iterator operator[](size_type index) noexcept
+      {
+        return typename iterator::proxy_iterator(m_storage, index);
       }
 
       [[nodiscard]] constexpr bit_state operator[](size_type index) const noexcept
