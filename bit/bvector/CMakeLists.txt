@@ -1,7 +1,8 @@
 cmake_minimum_required(VERSION 3.5)
 project(BVECTOR VERSION 1.5 LANGUAGES CXX)
-include_directories("include/")
-include_directories("~/NPL/bit/")
+
+include_directories(./include/)
+include_directories(~/NPL/bit/)
 
 find_package(GTest REQUIRED)
 

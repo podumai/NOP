@@ -7,6 +7,7 @@
 #include <stdexcept>
 #include "bvector_extensions.hpp"
 #include "types.hpp"
+#include <bits/stdc++.h>
 
 namespace npl
 {
@@ -49,6 +50,7 @@ namespace npl
     private:
       class iterator
       {
+        friend bvector;
       public:
         using value_type = bool;
         using reference = u8&;
@@ -655,6 +657,11 @@ namespace npl
       }
 
       // Element access
+      [[nodiscard]] iterator::proxy_iterator operator[](size_type index) noexcept
+      {
+        return typename iterator::proxy_iterator(m_storage, index);
+      }
+
       [[nodiscard]] bit_state operator[](size_type index) const noexcept
       {
         return m_storage[byte_division(index)] & BMASK::BIT >> byte_module(index);
@@ -781,8 +788,8 @@ namespace npl
         {
           if (m_storage == EMPTY_STORAGE)
             throw std::out_of_range("bvector:operator(~) -> invalid storage pointer (nullptr)");
-          bvector<allocator_type> tmp_obj(*this);
 
+          bvector<allocator_type> tmp_obj(*this);
           pointer end{tmp_obj.m_storage + tmp_obj.m_bytes};
 
           for (pointer begin{tmp_obj.m_storage}; begin != end; ++begin)
@@ -790,7 +797,7 @@ namespace npl
 
           return tmp_obj;
         }
-        catch (std::bad_alloc &error)
+        catch (const std::bad_alloc& error)
         {
           throw;
         }
