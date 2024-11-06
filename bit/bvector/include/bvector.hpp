@@ -7,9 +7,8 @@
 #include <stdexcept>
 #include "bvector_extensions.hpp"
 #include "types.hpp"
-#include <bits/stdc++.h>
 
-namespace npl
+namespace nop
 {
 
   namespace bit
@@ -137,41 +136,9 @@ namespace npl
           return tmp;
         }
 
-        iterator(const iterator& other) noexcept
-          : m_iter(other.m_iter.m_byte, other.m_iter.m_bit)
-        {}
-
-        iterator(iterator&& other) noexcept
-          : m_iter(other.m_iter.m_byte, other.m_iter.m_bit)
-        {
-          other.m_iter.m_byte = EMPTY_STORAGE;
-          other.m_iter.m_bit = ZERO_VALUE;
-        }
-
         [[nodiscard]] proxy_iterator& operator*() noexcept
         {
           return m_iter;
-        }
-
-        iterator& operator=(const iterator& other)
-        {
-          if (this != &other)
-          {
-            m_iter.m_byte = other.m_iter.m_byte;
-            m_iter.m_bit = other.m_iter.m_bit;
-          }
-
-          return *this;
-        }
-
-        iterator& operator=(iterator&& other)
-        {
-          m_iter.m_byte = other.m_iter.m_byte;
-          m_iter.m_bit = other.m_iter.m_bit;
-          other.m_iter.m_byte = EMPTY_STORAGE;
-          other.m_iter.m_bit = ZERO_VALUE;
-
-          return *this;
         }
 
         [[nodiscard]] bool operator==(const iterator& other) const noexcept
@@ -212,11 +179,6 @@ namespace npl
         const_iterator(pointer ptr, size_type bit_pos)
           : m_byte(ptr)
           , m_bit(bit_pos)
-        {}
-
-        const_iterator(const const_iterator& other) noexcept
-          : m_byte(other.m_byte)
-          , m_bit(other.m_bit)
         {}
 
         const_iterator& operator++() noexcept
@@ -343,18 +305,19 @@ namespace npl
         other.m_bits = other.m_bytes = ZERO_VALUE;
       }
 
-      ~bvector()
+      constexpr ~bvector()
       {
-        xmalloc.deallocate(m_storage, m_bytes);
+        if (m_storage != EMPTY_STORAGE)
+          xmalloc.deallocate(m_storage, m_bytes);
       }
 
       // Capacity
-      [[nodiscard]] size_type size() const noexcept
+      [[nodiscard]] constexpr size_type size() const noexcept
       {
         return m_bits;
       }
 
-      [[nodiscard]] size_type capacity() const noexcept
+      [[nodiscard]] constexpr size_type capacity() const noexcept
       {
         return m_bytes;
       }
@@ -364,7 +327,7 @@ namespace npl
         return bvector_limits::MAX_SIZE;
       }
 
-      [[nodiscard]] pointer data() const noexcept
+      [[nodiscard]] constexpr pointer data() const noexcept
       {
         return m_storage;
       }
@@ -374,7 +337,7 @@ namespace npl
         return xmalloc;
       }
 
-      [[nodiscard]] size_type count() const noexcept
+      [[nodiscard]] constexpr size_type count() const noexcept
       {
         if (m_storage == EMPTY_STORAGE)
           return ZERO_VALUE;
@@ -426,12 +389,12 @@ namespace npl
         }
       }
 
-      [[nodiscard]] storage_state any() const noexcept
+      [[nodiscard]] constexpr storage_state any() const noexcept
       {
         if (m_storage == EMPTY_STORAGE || m_bits == ZERO_VALUE)
           return !NONE_SET;
 
-        pointer end{m_storage + calculate_capacity(m_bits) - 1};
+        const pointer end{m_storage + calculate_capacity(m_bits) - 1};
 
         for (pointer begin{m_storage}; begin != end; ++begin)
           if (*begin)
@@ -446,7 +409,7 @@ namespace npl
         return !NONE_SET;
       }
 
-      [[nodiscard]] storage_state none() const noexcept
+      [[nodiscard]] constexpr storage_state none() const noexcept
       {
         if (m_storage == EMPTY_STORAGE || m_bits == ZERO_VALUE)
           return NONE_SET;
@@ -466,7 +429,7 @@ namespace npl
         return NONE_SET;
       }
 
-      [[nodiscard]] storage_state empty() const noexcept
+      [[nodiscard]] constexpr storage_state empty() const noexcept
       {
         return m_bits == ZERO_VALUE;
       }
@@ -896,9 +859,9 @@ namespace npl
 #undef NONE_SET
 #undef __EXCEPTION_HANDLER
 
-template<class allocator_type = std::allocator<npl::u8>>
-[[nodiscard]] bool operator==(const npl::bit::bvector<allocator_type>& lhs,
-                              const npl::bit::bvector<allocator_type>& rhs)
+template<class allocator_type = std::allocator<nop::u8>>
+[[nodiscard]] bool operator==(const nop::bit::bvector<allocator_type>& lhs,
+                              const nop::bit::bvector<allocator_type>& rhs)
 {
   if (lhs.size() != rhs.size())
     return false;
@@ -908,20 +871,20 @@ template<class allocator_type = std::allocator<npl::u8>>
                        lhs.capacity()) == 0;
 }
 
-template<class allocator_type = std::allocator<npl::u8>>
-[[nodiscard]] bool operator!=(const npl::bit::bvector<allocator_type>& lhs,
-                              const npl::bit::bvector<allocator_type>& rhs)
+template<class allocator_type = std::allocator<nop::u8>>
+[[nodiscard]] bool operator!=(const nop::bit::bvector<allocator_type>& lhs,
+                              const nop::bit::bvector<allocator_type>& rhs)
 {
   return !(lhs == rhs);
 }
 
-template<class allocator_type = std::allocator<npl::u8>>
-[[nodiscard]] npl::bit::bvector<allocator_type> operator&(const npl::bit::bvector<allocator_type>& lhs,
-                                                          const npl::bit::bvector<allocator_type>& rhs)
+template<class allocator_type = std::allocator<nop::u8>>
+[[nodiscard]] nop::bit::bvector<allocator_type> operator&(const nop::bit::bvector<allocator_type>& lhs,
+                                                          const nop::bit::bvector<allocator_type>& rhs)
 {
   try
   {
-    npl::bit::bvector<allocator_type> tmp_bvector(lhs);
+    nop::bit::bvector<allocator_type> tmp_bvector(lhs);
     return tmp_bvector &= rhs;
   }
   catch (const std::exception& error)
@@ -930,13 +893,13 @@ template<class allocator_type = std::allocator<npl::u8>>
   }
 }
 
-template<class allocator_type = std::allocator<npl::u8>>
-[[nodiscard]] npl::bit::bvector<allocator_type> operator|(const npl::bit::bvector<allocator_type>& lhs,
-                                                          const npl::bit::bvector<allocator_type>& rhs)
+template<class allocator_type = std::allocator<nop::u8>>
+[[nodiscard]] nop::bit::bvector<allocator_type> operator|(const nop::bit::bvector<allocator_type>& lhs,
+                                                          const nop::bit::bvector<allocator_type>& rhs)
 {
   try
   {
-    npl::bit::bvector<allocator_type> tmp_bvector(lhs);
+    nop::bit::bvector<allocator_type> tmp_bvector(lhs);
     return tmp_bvector |= rhs;
   }
   catch (const std::exception& error)
@@ -945,13 +908,13 @@ template<class allocator_type = std::allocator<npl::u8>>
   }
 }
 
-template<class allocator_type = std::allocator<npl::u8>>
-[[nodiscard]] npl::bit::bvector<allocator_type> operator^(const npl::bit::bvector<allocator_type>& lhs,
-                                                          const npl::bit::bvector<allocator_type>& rhs)
+template<class allocator_type = std::allocator<nop::u8>>
+[[nodiscard]] nop::bit::bvector<allocator_type> operator^(const nop::bit::bvector<allocator_type>& lhs,
+                                                          const nop::bit::bvector<allocator_type>& rhs)
 {
   try
   {
-    npl::bit::bvector<allocator_type> tmp_bvector(lhs);
+    nop::bit::bvector<allocator_type> tmp_bvector(lhs);
     return tmp_bvector ^= rhs;
   }
   catch (const std::exception& error)
@@ -960,13 +923,13 @@ template<class allocator_type = std::allocator<npl::u8>>
   }
 }
 
-template<class allocator_type = std::allocator<npl::u8>>
-[[nodiscard]] npl::bit::bvector<allocator_type> operator<<(const npl::bit::bvector<allocator_type>& bvector_obj,
-                                                           const npl::size_t bit_offset)
+template<class allocator_type = std::allocator<nop::u8>>
+[[nodiscard]] nop::bit::bvector<allocator_type> operator<<(const nop::bit::bvector<allocator_type>& bvector_obj,
+                                                           const nop::size_t bit_offset)
 {
   try
   {
-    npl::bit::bvector<allocator_type> tmp_bvector(bvector_obj);
+    nop::bit::bvector<allocator_type> tmp_bvector(bvector_obj);
     return tmp_bvector <<= bit_offset;
   }
   catch (const std::exception& error)
@@ -975,13 +938,13 @@ template<class allocator_type = std::allocator<npl::u8>>
   }
 }
 
-template<class allocator_type = std::allocator<npl::u8>>
-[[nodiscard]] npl::bit::bvector<allocator_type> operator>>(const npl::bit::bvector<allocator_type>& bvector_obj,
-                                                           const npl::size_t bit_offset)
+template<class allocator_type = std::allocator<nop::u8>>
+[[nodiscard]] nop::bit::bvector<allocator_type> operator>>(const nop::bit::bvector<allocator_type>& bvector_obj,
+                                                           const nop::size_t bit_offset)
 {
   try
   {
-    npl::bit::bvector<allocator_type> tmp_bvector(bvector_obj);
+    nop::bit::bvector<allocator_type> tmp_bvector(bvector_obj);
     return tmp_bvector >>= bit_offset;
   }
   catch(const std::exception& error)
@@ -994,9 +957,9 @@ namespace std
 {
 
   template<class allocator_type>
-  struct formatter<npl::bit::bvector<allocator_type>> : formatter<string>
+  struct formatter<nop::bit::bvector<allocator_type>> : formatter<string>
   {
-    auto format(const npl::bit::bvector<allocator_type> bvector_obj, format_context& ctx) const
+    auto format(const nop::bit::bvector<allocator_type> bvector_obj, format_context& ctx) const
     {
       return formatter<string>::format(bvector_obj.to_string(), ctx);
     }

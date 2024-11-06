@@ -4,8 +4,8 @@
 class BVECTOR_TEST_FIXTURE : public ::testing::Test
 {
 protected:
-  npl::bit::bvector<std::allocator<npl::u8>> empty_bvector;
-  npl::bit::bvector<std::allocator<npl::u8>> filled_bvector{16, 0xffff};
+  nop::bit::bvector<std::allocator<nop::u8>> empty_bvector;
+  nop::bit::bvector<std::allocator<nop::u8>> filled_bvector{16, 0xffff};
 };
 
 TEST_F(BVECTOR_TEST_FIXTURE, CONSTRUCTOR_TEST)
@@ -26,7 +26,7 @@ TEST_F(BVECTOR_TEST_FIXTURE, CONSTRUCTOR_TEST)
 
 TEST_F(BVECTOR_TEST_FIXTURE, COPY_CONSTRUCTOR_TEST)
 {
-  npl::bit::bvector test_bvector(filled_bvector);
+  nop::bit::bvector test_bvector(filled_bvector);
 
   EXPECT_EQ(test_bvector.size(), filled_bvector.size());
   EXPECT_EQ(test_bvector.capacity(), filled_bvector.capacity());
@@ -35,7 +35,7 @@ TEST_F(BVECTOR_TEST_FIXTURE, COPY_CONSTRUCTOR_TEST)
 
 TEST_F(BVECTOR_TEST_FIXTURE, MOVE_CONSTRUCTOR_TEST)
 {
-  npl::bit::bvector test_bvector(std::move(filled_bvector));
+  nop::bit::bvector test_bvector(std::move(filled_bvector));
 
   EXPECT_EQ(16, test_bvector.size());
   EXPECT_EQ(2, test_bvector.capacity());
@@ -70,7 +70,7 @@ TEST_F(BVECTOR_TEST_FIXTURE, DATA_METHOD_TEST)
 
 TEST_F(BVECTOR_TEST_FIXTURE, MAX_SIZE_METHOD_TEST)
 {
-  EXPECT_EQ(npl::bit::bvector_limits::MAX_SIZE, empty_bvector.max_size());
+  EXPECT_EQ(nop::bit::bvector_limits::MAX_SIZE, empty_bvector.max_size());
 }
 
 TEST_F(BVECTOR_TEST_FIXTURE, COUNT_METHOD_TEST)
@@ -82,7 +82,7 @@ TEST_F(BVECTOR_TEST_FIXTURE, COUNT_METHOD_TEST)
 
 TEST_F(BVECTOR_TEST_FIXTURE, RESERVE_METHOD)
 {
-  EXPECT_THROW(empty_bvector.reserve(npl::bit::bvector_limits::MAX_SIZE),
+  EXPECT_THROW(empty_bvector.reserve(nop::bit::bvector_limits::MAX_SIZE),
                std::length_error);
   empty_bvector.reserve(10);
 
@@ -177,7 +177,7 @@ TEST_F(BVECTOR_TEST_FIXTURE, RESIZE_METHOD)
 
 TEST_F(BVECTOR_TEST_FIXTURE, PUSH_BACK_METHOD)
 {
-  for (npl::size_t i{}; i != 10; ++i)
+  for (nop::size_t i{}; i != 10; ++i)
   {
     empty_bvector.push_back(true);
     filled_bvector.push_back(true);
@@ -192,7 +192,7 @@ TEST_F(BVECTOR_TEST_FIXTURE, POP_BACK_METHOD)
   EXPECT_THROW((void)empty_bvector.pop_back(),
                 std::out_of_range);
 
-  for (npl::size_t i {}; i != 16; ++i)
+  for (nop::size_t i {}; i != 16; ++i)
     ASSERT_EQ(true, filled_bvector.pop_back());
 }
 
@@ -201,7 +201,7 @@ TEST_F(BVECTOR_TEST_FIXTURE, SET_INDEX_METHOD)
   EXPECT_THROW(empty_bvector.set(10),
                std::out_of_range);
   
-  for (npl::size_t i{}; i != 4; ++i)
+  for (nop::size_t i{}; i != 4; ++i)
     filled_bvector.set(i, false);
   
   EXPECT_EQ("0000111111111111", filled_bvector.to_string());
@@ -212,7 +212,7 @@ TEST_F(BVECTOR_TEST_FIXTURE, SET_METHOD)
   EXPECT_THROW(empty_bvector.set(),
                std::out_of_range);
 
-  npl::bit::bvector test_bvector(16);
+  nop::bit::bvector test_bvector(16);
   test_bvector.set();
 
   EXPECT_EQ(false, test_bvector.none())
@@ -224,7 +224,7 @@ TEST_F(BVECTOR_TEST_FIXTURE, RESET_INDEX_METHOD)
   EXPECT_THROW(empty_bvector.reset(10),
                std::out_of_range);
 
-  for (npl::size_t i{}; i != 4; ++i)
+  for (nop::size_t i{}; i != 4; ++i)
     filled_bvector.reset(i);
   
   EXPECT_EQ("0000111111111111", filled_bvector.to_string());
@@ -246,7 +246,7 @@ TEST_F(BVECTOR_TEST_FIXTURE, FLIP_INDEX_METHOD)
   EXPECT_THROW(empty_bvector.flip(10),
                std::out_of_range);
 
-  for (npl::size_t i{}; i != 4; ++i)
+  for (nop::size_t i{}; i != 4; ++i)
     filled_bvector.flip(i);
   
   EXPECT_EQ("0000111111111111", filled_bvector.to_string());
@@ -276,7 +276,7 @@ TEST_F(BVECTOR_TEST_FIXTURE, SWAP_METHOD)
 
 TEST_F(BVECTOR_TEST_FIXTURE, SUBSCRIPT_OPERATOR_TEST)
 {
-  for (npl::size_t i{}; i != 10; ++i)
+  for (nop::size_t i{}; i != 10; ++i)
   {
     ASSERT_EQ(true, filled_bvector[i]);
     filled_bvector[i] = false;
@@ -500,7 +500,7 @@ TEST_F(BVECTOR_TEST_FIXTURE, COPY_RHS_TEST)
 
 TEST_F(BVECTOR_TEST_FIXTURE, ADVANCED_LHS_RHS_TEST)
 {
-  for (npl::size_t i{}; i != 16; ++i)
+  for (nop::size_t i{}; i != 16; ++i)
   {
     filled_bvector >>= 1;
     ASSERT_EQ(false, filled_bvector[i]);
@@ -508,7 +508,7 @@ TEST_F(BVECTOR_TEST_FIXTURE, ADVANCED_LHS_RHS_TEST)
 
   filled_bvector.set();
 
-  for (npl::size_t i{}; i != 16; ++i)
+  for (nop::size_t i{}; i != 16; ++i)
   {
     filled_bvector <<= 1;
     ASSERT_EQ(false, filled_bvector[15 - i]);
@@ -564,23 +564,23 @@ TEST_F(BVECTOR_TEST_FIXTURE, ITERATOR_TEST)
 
 TEST(BVECTOR_TEST_ADVANCED, STRESS_TEST)
 {
-  npl::bit::bvector test_bvector;
+  nop::bit::bvector test_bvector;
 
-  constexpr npl::size_t SIZE{npl::bit::bvector_limits::MAX_SIZE >> 2};
+  constexpr nop::size_t SIZE{nop::bit::bvector_limits::MAX_SIZE >> 2};
 
-  for (npl::size_t i{}; i != SIZE; ++i)
+  for (nop::size_t i{}; i != SIZE; ++i)
     test_bvector.push_back(true);
   
   ASSERT_EQ(SIZE, test_bvector.count());
 
-  for (npl::size_t i{}; i != SIZE; ++i)
+  for (nop::size_t i{}; i != SIZE; ++i)
     (void)test_bvector.pop_back();
   
   ASSERT_EQ(true, test_bvector.none());
 
   test_bvector.shrink_to_fit();
 
-  constexpr npl::size_t MID_SIZE{SIZE >> 1};
+  constexpr nop::size_t MID_SIZE{SIZE >> 1};
 
   test_bvector.resize(SIZE, true);
 
@@ -595,7 +595,7 @@ TEST(BVECTOR_TEST_ADVANCED, STRESS_TEST)
   test_bvector.clear();
 }
 
-npl::i32 main(npl::i32 argc, char** argv)
+nop::i32 main(nop::i32 argc, char** argv)
 {
   testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();

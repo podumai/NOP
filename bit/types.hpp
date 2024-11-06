@@ -1,7 +1,7 @@
 #ifndef __NPL_LIB_TYPES_H__
 #define __NPL_LIB_TYPES_H__ 1
 
-namespace npl
+namespace nop
 {
 
   using i8 = signed char;
@@ -25,7 +25,10 @@ namespace npl
 
   using f32 = float;
   using f64 = double;
+
+#if __WORDSIZE == 64
   using f128 = long double;
+#endif
 
 }
 
