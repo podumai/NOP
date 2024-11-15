@@ -1,5 +1,5 @@
-#ifndef __BITS_BITSET__
-#define __BITS_BITSET__ 1
+#ifndef __NOP_LIB_BITS_BITSET_H__
+#define __NOP_LIB_BITS_BITSET_H__ 1
 
 #define calculate_capacity(bits) (((bits) >> 3) + ((bits) & 0b00000111 ? 1 : 0))
 #define byte_division(bits) ((bits) >> 3)
@@ -15,7 +15,7 @@
 #include <ostream>
 #include "types.hpp"
 
-namespace npl
+namespace nop
 {
 
   namespace bit
@@ -60,16 +60,6 @@ namespace npl
             , m_bit(bit_pos)
           {}
 
-          /*proxy_iterator(const proxy_iterator& other)
-            : m_byte(other.m_byte)
-            , m_bit(other.m_bit)
-          {}*/
-
-          proxy_iterator(proxy_iterator&& other)
-            : m_byte(other.m_byte)
-            , m_bit(other.m_bit)
-          {}
-
           proxy_iterator& operator=(bit_state value)
           {
             if (value)
@@ -111,14 +101,6 @@ namespace npl
       public:
         iterator(pointer ptr, size_type bit_pos)
           : m_bit_iterator(ptr, bit_pos)
-        {}
-
-        iterator(const iterator& other)
-          : m_bit_iterator(other.m_bit_iterator)
-        {}
-
-        iterator(iterator&& other)
-          : m_bit_iterator(std::move(other.m_bit_iterator))
         {}
 
         proxy_iterator& operator*() noexcept
@@ -178,13 +160,6 @@ namespace npl
                           &value,
                           calculate_capacity(num_bits) >= sizeof(size_type) ?
                           sizeof(size_type) : calculate_capacity(num_bits));
-      }
-
-      constexpr bitset(const bitset& other) noexcept
-      {
-        (void)std::memcpy(m_storage,
-                          other.m_storage,
-                          calculate_capacity(num_bits));
       }
 
       constexpr bitset(bitset&& other) noexcept
@@ -496,7 +471,7 @@ namespace npl
         return *this;
       }
 
-      template<size_t other_bits>
+      template <size_t other_bits>
       [[nodiscard]] bool operator==(const bitset<other_bits>& other) const noexcept
       {
         if (num_bits != other_bits)
@@ -507,7 +482,7 @@ namespace npl
                              calculate_capacity(num_bits)) == ZERO_VALUE;
       }
 
-      template<size_t other_bits>
+      template <size_t other_bits>
       [[nodiscard]] bool operator!=(const bitset<other_bits>& other) const noexcept
       {
         return !(*this == other);
@@ -519,57 +494,57 @@ namespace npl
 
 }
 
-template<npl::size_t lhs_bits, npl::size_t rhs_bits>
-[[nodiscard]] npl::bit::bitset<lhs_bits> operator&(const npl::bit::bitset<lhs_bits>& lhs,
-                                                   const npl::bit::bitset<rhs_bits>& rhs)
+template <nop::size_t lhs_bits, nop::size_t rhs_bits>
+[[nodiscard]] nop::bit::bitset<lhs_bits> operator&(const nop::bit::bitset<lhs_bits>& lhs,
+                                                   const nop::bit::bitset<rhs_bits>& rhs)
 {
   if (lhs_bits != rhs_bits)
     throw std::invalid_argument("bitwise operator(&) -> invalid bitset sizes");
 
-  npl::bit::bitset<lhs_bits> tmp_bitset(lhs);
+  nop::bit::bitset<lhs_bits> tmp_bitset(lhs);
   return tmp_bitset &= rhs;
 }
 
-template<npl::size_t lhs_bits, npl::size_t rhs_bits>
-[[nodiscard]] npl::bit::bitset<lhs_bits> operator|(const npl::bit::bitset<lhs_bits>& lhs,
-                                                   const npl::bit::bitset<rhs_bits>& rhs)
+template <nop::size_t lhs_bits, nop::size_t rhs_bits>
+[[nodiscard]] nop::bit::bitset<lhs_bits> operator|(const nop::bit::bitset<lhs_bits>& lhs,
+                                                   const nop::bit::bitset<rhs_bits>& rhs)
 {
   if (lhs_bits != rhs_bits)
     throw std::invalid_argument("bitwise operator(|) -> invalid bitset sizes");
 
-  npl::bit::bitset<lhs_bits> tmp_bitset(lhs);
+  nop::bit::bitset<lhs_bits> tmp_bitset(lhs);
   return tmp_bitset |= rhs;
 }
 
-template<npl::size_t lhs_bits, npl::size_t rhs_bits>
-[[nodiscard]] npl::bit::bitset<lhs_bits> operator^(const npl::bit::bitset<lhs_bits>& lhs,
-                                                   const npl::bit::bitset<rhs_bits>& rhs)
+template <nop::size_t lhs_bits, nop::size_t rhs_bits>
+[[nodiscard]] nop::bit::bitset<lhs_bits> operator^(const nop::bit::bitset<lhs_bits>& lhs,
+                                                   const nop::bit::bitset<rhs_bits>& rhs)
 {
   if (lhs_bits != rhs_bits)
    throw std::invalid_argument("bitwise operator(^) -> invalid bitset sizes");
 
-  npl::bit::bitset<lhs_bits> tmp_bitset(lhs);
+  nop::bit::bitset<lhs_bits> tmp_bitset(lhs);
   return tmp_bitset ^= rhs;
 }
 
-template<npl::size_t num_bits>
-[[nodiscard]] npl::bit::bitset<num_bits> operator>>(const npl::bit::bitset<num_bits>& bitset_obj,
-                                                    const npl::size_t bit_offset)
+template <nop::size_t num_bits>
+[[nodiscard]] nop::bit::bitset<num_bits> operator>>(const nop::bit::bitset<num_bits>& bitset_obj,
+                                                    const nop::size_t bit_offset)
 {
-  npl::bit::bitset<num_bits> tmp_bitset(bitset_obj);
+  nop::bit::bitset<num_bits> tmp_bitset(bitset_obj);
   return tmp_bitset >>= bit_offset;
 }
 
-template<npl::size_t num_bits>
-[[nodiscard]] npl::bit::bitset<num_bits> operator<<(const npl::bit::bitset<num_bits>& bitset_obj,
-                                                    const npl::size_t bit_offset)
+template <nop::size_t num_bits>
+[[nodiscard]] nop::bit::bitset<num_bits> operator<<(const nop::bit::bitset<num_bits>& bitset_obj,
+                                                    const nop::size_t bit_offset)
 {
-  npl::bit::bitset<num_bits> tmp_bitset(bitset_obj);
+  nop::bit::bitset<num_bits> tmp_bitset(bitset_obj);
   return tmp_bitset <<= bit_offset;
 }
 
-template<npl::size_t num_bits>
-std::ostream& operator<<(std::ostream& out, const npl::bit::bitset<num_bits>& bitset_obj)
+template <nop::size_t num_bits>
+std::ostream& operator<<(std::ostream& out, const nop::bit::bitset<num_bits>& bitset_obj)
 {
   return out << bitset_obj.to_string();
 }

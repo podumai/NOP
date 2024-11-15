@@ -1,5 +1,5 @@
-#ifndef __NPL_LIB_BITS_BVECTOR_H__
-#define __NPL_LIB_BITS_BVECTOR_H__ 1
+#ifndef __NOP_LIB_BITS_BVECTOR_H__
+#define __NOP_LIB_BITS_BVECTOR_H__ 1
 
 #include <string>
 #include <cstring>
@@ -283,9 +283,9 @@ namespace nop
         std::memset(m_storage, BMASK::RESET, m_bytes);
 
         if (value != ZERO_VALUE)
-          (void)std::memcpy(m_storage,
-                            &value,
-                            m_bytes >= sizeof(size_type) ? sizeof(size_type) : m_bytes);
+          std::memcpy(m_storage,
+                      &value,
+                      m_bytes >= sizeof(size_type) ? sizeof(size_type) : m_bytes);
       }
 
       bvector(const bvector& other)
@@ -293,7 +293,7 @@ namespace nop
         , m_bytes(other.m_bytes)
       {
         __EXCEPTION_HANDLER(m_storage = xmalloc.allocate(m_bytes))
-        (void)std::memcpy(m_storage, other.m_storage, m_bytes);
+        std::memcpy(m_storage, other.m_storage, m_bytes);
       }
 
       bvector(bvector&& other) noexcept
@@ -310,8 +310,7 @@ namespace nop
         if (m_storage != EMPTY_STORAGE)
           xmalloc.deallocate(m_storage, m_bytes);
       }
-
-      // Capacity
+      
       [[nodiscard]] constexpr size_type size() const noexcept
       {
         return m_bits;
@@ -327,11 +326,11 @@ namespace nop
         return bvector_limits::MAX_SIZE;
       }
 
-      [[nodiscard]] constexpr pointer data() const noexcept
+      [[nodiscard]] constexpr pointer data() noexcept
       {
         return m_storage;
       }
-
+      
       [[nodiscard]] constexpr allocator_type get_allocator() const noexcept
       {
         return xmalloc;
@@ -381,7 +380,7 @@ namespace nop
         {
           pointer tmp_ptr;
           __EXCEPTION_HANDLER(tmp_ptr = xmalloc.allocate(current_bytes))
-          (void)std::memcpy(tmp_ptr, m_storage, current_bytes);
+          std::memcpy(tmp_ptr, m_storage, current_bytes);
           xmalloc.deallocate(m_storage, m_bytes);
 
           m_storage = tmp_ptr;
@@ -459,18 +458,18 @@ namespace nop
 
         if (m_storage != EMPTY_STORAGE)
         {
-          (void)std::memcpy(tmp_ptr,
-                            m_storage,
-                            m_bytes > new_size ? new_size : m_bytes);
+          std::memcpy(tmp_ptr,
+                      m_storage,
+                      m_bytes > new_size ? new_size : m_bytes);
           xmalloc.deallocate(m_storage, m_bytes);
         }
 
         m_storage = tmp_ptr;
 
         if (m_bytes < new_size)
-          (void)std::memset(m_storage + m_bytes,
-                            value == BIT_SET ? BMASK::SET : BMASK::RESET,
-                            new_size - m_bytes);
+          std::memset(m_storage + m_bytes,
+                      value == BIT_SET ? BMASK::SET : BMASK::RESET,
+                      new_size - m_bytes);
 
         m_bits = bits_number;
         m_bytes = new_size;
@@ -491,7 +490,7 @@ namespace nop
 
         if (m_storage != EMPTY_STORAGE)
         {
-          (void)std::memcpy(tmp_ptr, m_storage, m_bytes);
+          std::memcpy(tmp_ptr, m_storage, m_bytes);
           xmalloc.deallocate(m_storage, m_bytes);
         }
 
@@ -561,9 +560,9 @@ namespace nop
         if (m_bits == ZERO_VALUE)
           throw std::out_of_range("bvector:set() -> invalid number of bits");
 
-        (void)std::memset(m_storage,
-                          BMASK::SET,
-                          calculate_capacity(m_bits));
+        std::memset(m_storage,
+                    BMASK::SET,
+                    calculate_capacity(m_bits));
         return *this;
       }
 
@@ -581,9 +580,9 @@ namespace nop
         if (m_bits == ZERO_VALUE)
           throw std::out_of_range("bvector:reset() -> invalid number of bits");
 
-        (void)std::memset(m_storage,
-                          BMASK::RESET,
-                          calculate_capacity(m_bits));
+        std::memset(m_storage,
+                    BMASK::RESET,
+                    calculate_capacity(m_bits));
         return *this;
       }
 
@@ -665,9 +664,9 @@ namespace nop
             __EXCEPTION_HANDLER(m_storage = xmalloc.allocate(other.m_bytes))
           }
 
-          (void)std::memcpy(m_storage,
-                            other.m_storage,
-                            other.m_bytes);
+          std::memcpy(m_storage,
+                      other.m_storage,
+                      other.m_bytes);
           m_bits = other.m_bits;
           m_bytes = other.m_bytes;
         }
@@ -771,9 +770,9 @@ namespace nop
         if (m_storage == EMPTY_STORAGE)
           throw std::out_of_range("bvector:operator(>>=) -> invalid storage pointer (nullptr)");
         else if (bit_offset >= m_bits)
-          (void)std::memset(m_storage,
-                            BMASK::RESET,
-                            calculate_capacity(m_bits));
+          std::memset(m_storage,
+                      BMASK::RESET,
+                      calculate_capacity(m_bits));
         else if (bit_offset != ZERO_VALUE)
         {
           size_type total_shifts{bit_offset - 1};
@@ -787,9 +786,9 @@ namespace nop
             set_bit(bit, byte);
           }
 
-          (void)std::memset(m_storage,
-                            BMASK::RESET,
-                            byte_division(bit_offset));
+          std::memset(m_storage,
+                      BMASK::RESET,
+                      byte_division(bit_offset));
 
           for (size_type bit{bit_offset - byte_module(bit_offset)}; bit != bit_offset; ++bit)
             set_bit(bit, BIT_UNSET);
@@ -803,9 +802,9 @@ namespace nop
         if (m_storage == EMPTY_STORAGE)
           throw std::out_of_range("bvector:operator(<<=) -> invalid storage pointer (nullptr)");
         else if (bit_offset >= m_bits)
-          (void)std::memset(m_storage,
-                            BMASK::RESET,
-                            calculate_capacity(m_bits));
+          std::memset(m_storage,
+                      BMASK::RESET,
+                      calculate_capacity(m_bits));
         else if (bit_offset != ZERO_VALUE)
         {
           size_type total_shifts{m_bits - bit_offset};
@@ -819,9 +818,9 @@ namespace nop
           }
 
           size_type byte_shift{byte_division(bit_offset)};
-          (void)std::memset(m_storage + (calculate_capacity(m_bits) - byte_shift),
-                            BMASK::RESET,
-                            byte_shift);
+          std::memset(m_storage + (calculate_capacity(m_bits) - byte_shift),
+                      BMASK::RESET,
+                      byte_shift);
           
           size_type bit_shift{m_bits - (byte_shift << 3)};
           for (size_type bit{m_bits - bit_offset}; bit != bit_shift; ++bit)
