@@ -31,13 +31,11 @@ namespace nop
   {
     static T* Create() noexcept
     {
-      std::cout << "StoragePolicySingle is running...\n";
       return nullptr;
     }
 
     static void Delete(T* pointer) noexcept
     {
-      std::cout << "StoragePolicySingle is out of date\n";
       if (pointer != nullptr)
         delete pointer;
     }
@@ -50,17 +48,14 @@ namespace nop
   {
     static T* Create(nop::size_t size = 0)
     {
-      std::cout << "StoragePolicyMultiple is running...\n";
-
-      if (size == 0)
-        return nullptr;
-      else
+      if (size > 0)
         return new T[size];
+      else
+        return nullptr;
     }
 
     static void Delete(T* pointer) noexcept
     {
-      std::cout << "StoragePolicyMultiple is out of date...\n";
       if (pointer != nullptr)
         delete[] pointer;
     }
