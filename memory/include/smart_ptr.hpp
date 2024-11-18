@@ -113,8 +113,7 @@ namespace nop
 
     void reset(pointer ptr = nullptr) noexcept
     {
-      if (m_pointer != nullptr)
-        Storage<T>::Delete(m_pointer);
+      Storage<T>::Delete(m_pointer);
       m_pointer = ptr;
     }
 
@@ -174,12 +173,31 @@ namespace nop
       return m_pointer != nullptr;
     }
 
-    template<typename U = bool>
-    [[nodiscard]] std::enable_if_t<Conversion::BOOL == true, U> operator!() const noexcept
+    [[nodiscard]] bool operator!() const noexcept
     {
       return !m_pointer;
     }
+
+    [[nodiscard]] inline friend bool operator==(const smart_ptr& s_ptr, pointer r_ptr)
+    {
+      return s_ptr.m_pointer == r_ptr;
+    }
     
+    [[nodiscard]] inline friend bool operator==(const_pointer r_ptr, const smart_ptr& s_ptr)
+    {
+      return r_ptr == s_ptr.m_pointer;
+    }
+
+    [[nodiscard]] inline friend bool operator!=(const smart_ptr& s_ptr, pointer r_ptr)
+    {
+      return s_ptr.m_pointer != r_ptr;
+    }
+
+    [[nodiscard]] inline friend bool operator!=(pointer r_ptr, const smart_ptr& s_ptr)
+    {
+      return r_ptr != s_ptr.m_pointer;
+    }
+
   };
 
 }
