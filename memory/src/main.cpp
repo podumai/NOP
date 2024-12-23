@@ -3,7 +3,9 @@
 
 nop::i32 main()
 {
-  auto ptr{nop::make_sptr<nop::i32>(120)};
-  std::cout << *ptr << '\n';
+  auto ptr{nop::makeSmartPtr<nop::i32>(52)};
+
+  std::cout << *ptr << std::endl;
+
   return 0;
 }
