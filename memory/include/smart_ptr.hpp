@@ -1,14 +1,14 @@
-#ifndef __NOP_SMART_PTR__
-#define __NOP_SMART_PTR__ 1
+#ifndef __NOP_SMART_PTR_HPP__
+#define __NOP_SMART_PTR_HPP__ 1
 
-#include <ostream>
 #include <type_traits>
+#include <stdexcept>
 #include "types.hpp"
 
 namespace nop
 {
 
-  struct allow_conversion
+  struct AllowConversion
   {
     enum
     {
@@ -17,7 +17,7 @@ namespace nop
     };
   };
 
-  struct disallow_conversion
+  struct DisallowConversion
   {
     enum
     {
@@ -27,7 +27,7 @@ namespace nop
   };
 
   template <typename T>
-  struct single_storage 
+  struct SingleStorage 
   {
     static void Delete(T* pointer) noexcept
     {
@@ -39,7 +39,7 @@ namespace nop
   };
 
   template<typename T>
-  struct multiple_storage
+  struct MultipleStorage
   {
     static void Delete(T* pointer) noexcept
     {
@@ -54,15 +54,15 @@ namespace nop
            typename T,
 // TODO: Implement new class-strategies -> Ownership
 // {template<typename> class Ownership = unique_ownership}
-           class Conversion = allow_conversion,
+           class Conversion = AllowConversion,
 // TODO: Implement new class-strategies -> Safety
 // {template<typename> class Safety = no_check}
-           template<typename> class Storage = single_storage
+           template<typename> class Storage = SingleStorage
           >
-  class smart_ptr
+  class SmartPtr
   {
   public:
-    using size_type = nop::size_t;
+    using size_type = size_t;
     using value_type = T;
     using pointer = T*;
     using const_pointer = const T*;
@@ -73,21 +73,21 @@ namespace nop
     pointer m_pointer;
 
   public:
-    smart_ptr()
+    SmartPtr()
       : m_pointer{nullptr}
     {}
 
-    explicit smart_ptr(pointer ptr)
+    explicit SmartPtr(pointer ptr)
       : m_pointer{ptr}
     {}
 
-    smart_ptr(const smart_ptr&) = delete;
+    SmartPtr(const SmartPtr&) = delete;
 
-    smart_ptr(smart_ptr&& other)
+    SmartPtr(SmartPtr&& other)
       : m_pointer{other.release()}
     {}
 
-    ~smart_ptr()
+    ~SmartPtr()
     {
       Storage<T>::Delete(m_pointer);
     }
@@ -149,9 +149,9 @@ namespace nop
       return m_pointer[index];
     }
 
-    smart_ptr& operator=(const smart_ptr&) = delete;
+    SmartPtr& operator=(const SmartPtr&) = delete;
 
-    smart_ptr& operator=(smart_ptr&& other)
+    SmartPtr& operator=(SmartPtr&& other)
     {
       Storage<T>::Delete(m_pointer);
       m_pointer = other.release();
@@ -178,37 +178,37 @@ namespace nop
     }
 
     template<typename U>
-    [[nodiscard]] bool operator==(const smart_ptr<U>& s_ptr) const noexcept
+    [[nodiscard]] bool operator==(const SmartPtr<U>& s_ptr) const noexcept
     {
       return static_cast<const void*>(m_pointer) == static_cast<const void*>(s_ptr.get());
     }
 
     template<typename U>
-    [[nodiscard]] inline friend bool operator==(const smart_ptr& s_ptr, const U* r_ptr)
+    [[nodiscard]] inline friend bool operator==(const SmartPtr& s_ptr, const U* r_ptr)
     {
       return static_cast<const void*>(s_ptr.m_pointer) == static_cast<const void*>(r_ptr);
     }
 
     template<typename U>
-    [[nodiscard]] inline friend bool operator==(const U* r_ptr, const smart_ptr& s_ptr)
+    [[nodiscard]] inline friend bool operator==(const U* r_ptr, const SmartPtr& s_ptr)
     {
       return static_cast<const void*>(r_ptr) == static_cast<const void*>(s_ptr.m_pointer);
     }
 
     template<typename U>
-    [[nodiscard]] bool operator!=(const smart_ptr<U>& s_ptr) const noexcept
+    [[nodiscard]] bool operator!=(const SmartPtr<U>& s_ptr) const noexcept
     {
       return static_cast<const void*>(m_pointer) != static_cast<const void*>(s_ptr.get());
     }
 
     template<typename U>
-    [[nodiscard]] inline friend bool operator!=(const smart_ptr& s_ptr, const U* r_ptr) noexcept
+    [[nodiscard]] inline friend bool operator!=(const SmartPtr& s_ptr, const U* r_ptr) noexcept
     {
       return static_cast<const void*>(s_ptr.m_pointer) != static_cast<const void*>(r_ptr);
     }
 
     template<typename U>
-    [[nodiscard]] inline friend bool operator!=(const U* r_ptr, const smart_ptr& s_ptr) noexcept
+    [[nodiscard]] inline friend bool operator!=(const U* r_ptr, const SmartPtr& s_ptr) noexcept
     {
       return static_cast<const void*>(r_ptr) != static_cast<const void*>(s_ptr.m_pointer);
     }
@@ -217,13 +217,13 @@ namespace nop
 
   template<
            typename T,
-           class Conversion = allow_conversion,
-           template<typename> class Storage = single_storage,
+           class Conversion = AllowConversion,
+           template<typename> class Storage = SingleStorage,
            typename... Args
           >
-  [[nodiscard]] smart_ptr<T, Conversion, Storage> make_sptr(Args&&... args)
+  [[nodiscard]] SmartPtr<T, Conversion, Storage> makeSmartPtr(Args&&... args)
   {
-    smart_ptr<T, Conversion, Storage> ptr{new T(std::forward<Args>(args)...)};
+    SmartPtr<T, Conversion, Storage> ptr{new T(std::forward<Args>(args)...)};
     return ptr;
   }
 
