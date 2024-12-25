@@ -1,6 +1,6 @@
 #include "exception.hpp"
 
-namespace csv /* Begin namespace sndproc */
+namespace csv /* Begin namespace csv */
 {
 
   namespace err /* Begin namespace err */
@@ -138,4 +138,4 @@ namespace csv /* Begin namespace sndproc */
 
   } /* End namespace err */
 
-} /* End namespace sndproc */
+} /* End namespace csv */
