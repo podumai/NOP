@@ -1,338 +1,291 @@
-#ifndef __CSV_PARSER_HPP__   /* Begin parser header file */
-#define __CSV_PARSER_HPP__ 1
+#ifndef __NOP_CSV_PARSER_HPP__   /* Begin parser header file */
+#define __NOP_CSV_PARSER_HPP__ 1
 
 #include <iostream>
 #include <tuple>
 #include <sstream>
 #include <fstream>
-#include <cstdlib>
-#include <format>
-#include <locale>
 #include <memory>
 #include <type_traits>
 #include <boost/type_index.hpp>
-#include "parser.hpp"
 #include "exception.hpp"
 
-/*template<typename Ch, typename Tr, class Tuple, size_t... I>
-void print_tuple(std::basic_ostream<Ch, Tr>& out, const Tuple& t, std::index_sequence<I...>) noexcept
-{
-  ((out << '<' << std::get<I>(t) << '>'), ...);
-}
-
-template<typename Ch, typename Tr, typename... Types>
-decltype(auto) operator<<(std::basic_ostream<Ch, Tr>& out, const std::tuple<Types...>& t) noexcept
-{
-  print_tuple(out, t, std::index_sequence_for<Types...>());
-  return out;
-}*/
-
-namespace csv /* Begin namespace csv */
+namespace nop /* Begin namespace nop */
 {
 
-  template<size_t curr, size_t t_size, typename Ch, typename Tr, typename... Types>
-  void print_tuple(std::basic_ostream<Ch, Tr>& out, const std::tuple<Types...>& t) noexcept
+  namespace csv /* Begin namespace csv */
   {
-    if constexpr (curr < t_size)
+
+    template<size_t curr, size_t t_size, typename Ch, typename Tr, typename... Types>
+    void print_tuple(std::basic_ostream<Ch, Tr>& out, const std::tuple<Types...>& t) noexcept
     {
-      out << '<' << std::get<curr>(t) << '>';
-      print_tuple<curr + 1, t_size, Ch, Tr,Types...>(out, t);
+      if constexpr (curr < t_size)
+      {
+        out << '<' << std::get<curr>(t) << '>';
+        print_tuple<curr + 1, t_size, Ch, Tr,Types...>(out, t);
+      }
     }
-  }
 
-} /* End namespace csv */
+  } /* End namespace csv */
+
+} /* End namespace nop */
 
 template<typename Ch, typename Tr, typename... Types>
 decltype(auto) operator<<(std::basic_ostream<Ch, Tr>& out, const std::tuple<Types...>& t) noexcept
 {
-  csv::print_tuple<0 , sizeof... (Types), Ch, Tr, Types...>(out, t);
+  nop::csv::print_tuple<0 , sizeof... (Types), Ch, Tr, Types...>(out, t);
   return out;
 }
 
-namespace csv /* Begin namespace csv */
+namespace nop /* Begin namespace nop */
 {
 
-
-  template<typename... Types>
-  class parser
+  namespace csv /* Begin namespace csv */
   {
-  public:
-    struct configuration
+
+    struct DefaultCfg
     {
-      char del_column;
-      char del_row;
-      char escape_sym;
-
-      configuration()
-        : del_column{','}
-        , del_row{'\n'}
-        , escape_sym{'\"'}
-      {}
-
-      configuration(char d_c, char d_r, char s_sym)
-        : del_column{d_c}
-        , del_row{d_r}
-        , escape_sym{s_sym}
-      {}
-
-      configuration(const configuration&) = default;
-      configuration(configuration&&) = default;
-      ~configuration() = default;
-
-      configuration& operator=(const configuration&) = default;
-      configuration& operator=(configuration&&) = default;
+    public:
+      enum Symbol : char
+      {
+        Column = ',',
+        Row = '\n',
+        Escape = '\"'
+      };
     };
 
-  private:
-    class control_block
+    template<class Cfg, typename... Types>
+    class Parser
     {
     private:
-      std::ifstream* input;
-      size_t m_row;
-      size_t m_column;
-      std::unique_ptr<std::tuple<Types...>> m_storage;
+      class ControlBlock
+      {
+      private:
+        std::ifstream* input;
+        size_t m_row;
+        size_t m_column;
+        std::unique_ptr<std::tuple<Types...>> m_storage;
+
+      public:
+        ControlBlock(std::ifstream* in, size_t skip_lines)
+          : input{in}
+          , m_row{skip_lines}
+          , m_column{1}
+          , m_storage{std::make_unique<std::tuple<Types...>>(std::tuple<Types...>{})}
+        {}
+
+        ControlBlock(const ControlBlock&) = delete;
+        ControlBlock(ControlBlock&&) = delete;
+        ~ControlBlock() = default;
+
+        void incColumn() noexcept
+        {
+          ++m_column;
+        }
+
+        void updatePosition() noexcept
+        {
+          ++m_row;
+          m_column = 1;
+        }
+
+        [[nodiscard]] std::ifstream* getStream() noexcept
+        {
+          return input;
+        }
+
+        void freeStream() noexcept
+        {
+          input = nullptr;
+        }
+
+        [[nodiscard]] size_t getRow() const noexcept
+        {
+          return m_row;
+        }
+
+        [[nodiscard]] size_t getColumn() const noexcept
+        {
+          return m_column;
+        }
+
+        [[nodiscard]] std::tuple<Types...>& getStorage() noexcept
+        {
+          return *m_storage;
+        }
+
+        ControlBlock& operator=(const ControlBlock&) = delete;
+        ControlBlock& operator=(ControlBlock&&) = delete;
+      };
 
     public:
-      control_block(std::ifstream* in, size_t skip_lines)
-        : input{in}
-        , m_row{skip_lines}
-        , m_column{1}
-        , m_storage{std::make_unique<std::tuple<Types...>>(std::tuple<Types...>{})}
-      {}
-
-      control_block(const control_block&) = delete;
-      control_block(control_block&&) = delete;
-      ~control_block() = default;
-
-      void inc_column() noexcept
+      class Iterator
       {
-        ++m_column;
-      }
+      private:
+        std::unique_ptr<std::stringstream> buffer;
+        std::shared_ptr<ControlBlock> m_block;
 
-      void update_position() noexcept
-      {
-        ++m_row;
-        m_column = 1;
-      }
-
-      [[nodiscard]] std::ifstream* get_stream() noexcept
-      {
-        return input;
-      }
-
-      void free_stream() noexcept
-      {
-        input = nullptr;
-      }
-
-      [[nodiscard]] size_t get_row() const noexcept
-      {
-        return m_row;
-      }
-
-      [[nodiscard]] size_t get_column() const noexcept
-      {
-        return m_column;
-      }
-
-      [[nodiscard]] std::tuple<Types...>& get_storage() noexcept
-      {
-        return *m_storage;
-      }
-
-      control_block& operator=(const control_block&) = delete;
-      control_block& operator=(control_block&&) = delete;
-    };
-
-  public:
-    class iterator
-    {
-    private:
-      configuration m_cfg;
-      std::unique_ptr<std::stringstream> buffer;
-      std::shared_ptr<control_block> m_block;
-
-    private:
-      template<size_t current, size_t total_size>
-      void parse()
-      {
-        if constexpr (current < total_size)
+      private:
+        template<size_t current, size_t totalSize>
+        void parse()
         {
-          size_t start_column{m_block->get_column()};
-          buffer->str("");
-          buffer->clear();
-
-          while (m_block->get_stream()->eof() == false)
+          if constexpr (current < totalSize)
           {
-            char symbol{static_cast<char>(m_block->get_stream()->get())};
+            size_t startColumn{m_block->getColumn()};
+            buffer->str("");
+            buffer->clear();
 
-            if (symbol == m_cfg.del_row || symbol == m_cfg.del_column)
+            while (m_block->getStream()->eof() == false)
             {
-              if (buffer->rdbuf()->in_avail() == 0 ||
-                 (current + 1 < total_size && symbol == m_cfg.del_row))
-              {
-                std::string error_message{
-                std::format(
-                "\033[1;35m[ERROR]\033[0m Invalid column size.\n"
-                "\033[1;35m[MESSAGE]\033[0m Parse error position : <Row:{};Column:{}-{}>",
-                m_block->get_row(), start_column, m_block->get_column())};
+              char symbol{static_cast<char>(m_block->getStream()->get())};
 
-                throw csv::err::format_error{error_message};
+              if (symbol == Cfg::Symbol::Column || symbol == Cfg::Symbol::Row)
+              {
+                if (buffer->rdbuf()->in_avail() == 0 ||
+                  (current + 1 < totalSize && symbol == Cfg::Symbol::Row))
+                  throw ::csv::err::format_error{std::format(
+                         "\033[1;35m[ERROR]\033[0m Invalid column size.\n"
+                         "\033[1;35m[MESSAGE]\033[0m Parse error position : <Row:{};Column:{}-{}>",
+                         m_block->getRow(), startColumn, m_block->getColumn())};
+                else
+                  break;
+              }
+              else if (symbol == Cfg::Symbol::Escape)
+              {
+                std::string tmpBuffer;
+                std::getline(*(m_block->getStream()), tmpBuffer, static_cast<char>(Cfg::Symbol::Escape));
+                buffer->write(tmpBuffer.c_str(), tmpBuffer.length());
+                m_block->getStream()->unget();
+                symbol = m_block->getStream()->get();
+
+                if (symbol != Cfg::Symbol::Escape)
+                  throw ::csv::err::format_error{std::format(
+                        "\033[1;35m[ERROR]\033[0m Unpaired escape character.\n"
+                        "\033[1;35m[MESSAGE]\033[0m The escape string should be : {}str{}\n"
+                        "\033[1;35m[MESSAGE]\033[0m Parse error position : <Row:{};Column:{}-{}>"
+                        , static_cast<char>(Cfg::Symbol::Escape)
+                        , static_cast<char>(Cfg::Symbol::Escape)
+                        , m_block->getRow()
+                        , startColumn
+                        , m_block->getColumn())};
               }
               else
-                break;
-            }
-            else if (symbol == m_cfg.escape_sym)
-            {
-              std::string tmp_buffer;
-              std::getline(*(m_block->get_stream()), tmp_buffer, m_cfg.escape_sym);
-              buffer->write(tmp_buffer.c_str(), tmp_buffer.length());
-              m_block->get_stream()->unget();
-              symbol = m_block->get_stream()->get();
-
-              if (symbol != m_cfg.escape_sym)
               {
-                std::string error_message{
-                std::format(
-                "\033[1;35m[ERROR]\033[0m Unpaired escape character.\n"
-                "\033[1;35m[MESSAGE]\033[0m The escape string should be : {}str{}\n"
-                "\033[1;35m[MESSAGE]\033[0m Parse error position : <Row:{};Column:{}-{}>",
-                m_cfg.escape_sym, m_cfg.escape_sym, m_block->get_row(), start_column, m_block->get_column())};
-
-                throw csv::err::format_error{error_message};
+                buffer->put(symbol);
+                m_block->incColumn();
               }
             }
+
+            m_block->incColumn();
+
+            if constexpr (std::is_same_v<std::remove_reference_t<decltype(std::get<current>(m_block->getStorage()))>, std::string> == true)
+              std::getline(*buffer, std::get<current>(m_block->getStorage()));
             else
-            {
-              buffer->put(symbol);
-              m_block->inc_column();
-            }
+              (*buffer) >> std::get<current>(m_block->getStorage());
+
+            if (m_block->getStream()->eof() == false && buffer->fail() == true)
+              throw ::csv::err::format_error{std::format(
+                    "\033[1;35m[ERROR]\033[0m Invalid data type.\n"
+                    "\033[1;35m[MESSAGE]\033[0m The expected type was : {}\n"
+                    "\033[1;35m[MESSAGE]\033[0m Parse error position : <Row:{};Column:{}-{}>"
+                    , boost::typeindex::type_id<decltype(std::get<current>(m_block->getStorage()))>().pretty_name()
+                    , m_block->getRow()
+                    , startColumn
+                    , m_block->getColumn())};
+
+            parse<current + 1, totalSize>();
           }
-
-          m_block->inc_column();
-
-          if constexpr (std::is_same_v<std::remove_reference_t<decltype(std::get<current>(m_block->get_storage()))>, std::string> == true)
-            std::getline(*buffer, std::get<current>(m_block->get_storage()));
-          else
-            (*buffer) >> std::get<current>(m_block->get_storage());
-
-          if (m_block->get_stream()->eof() == false && buffer->fail() == true)
-          {
-            std::string error_message{
-            std::format(
-            "\033[1;35m[ERROR]\033[0m Invalid data type.\n"
-            "\033[1;35m[MESSAGE]\033[0m The expected type was : {}\n"
-            "\033[1;35m[MESSAGE]\033[0m Parse error position : <Row:{};Column:{}-{}>",
-            boost::typeindex::type_id<decltype(std::get<current>(m_block->get_storage()))>().pretty_name(),
-            m_block->get_row(), start_column, m_block->get_column())};
-
-            throw csv::err::format_error{error_message};
-          }
-
-          parse<current + 1, total_size>();
         }
-      }
+
+      public:
+        Iterator(std::shared_ptr<ControlBlock>& mainBlock)
+          : buffer{std::make_unique<std::stringstream>(std::stringstream())}
+          , m_block{mainBlock}
+        {
+          parse<0, sizeof... (Types)>();
+          m_block->updatePosition();
+        }
+
+        Iterator(std::shared_ptr<ControlBlock>& mainBlock, [[maybe_unused]] void* ptr)
+          : m_block{mainBlock}
+        {}
+
+        Iterator(const Iterator&) = delete;
+        Iterator(Iterator&& other) = delete;
+
+        ~Iterator() = default;
+
+        [[nodiscard]] std::tuple<Types...>& operator*() noexcept
+        {
+          return m_block->getStorage();
+        }
+
+        Iterator& operator++()
+        {
+          if (m_block->getStream()->eof() == false)
+          {
+            parse<0, sizeof...(Types)>();
+            m_block->updatePosition();
+          }
+
+          return *this;
+        }
+
+        Iterator& operator=(const Iterator&) = delete;
+        Iterator& operator=(Iterator&& other) = delete;
+
+        [[nodiscard]] bool operator==(const Iterator& other) const noexcept
+        {
+          return (m_block->getStream() == other.m_block->getStream())
+                  && (m_block->getStream()->eof() == true);
+        }
+
+        [[nodiscard]] bool operator!=(const Iterator& other) const noexcept
+        {
+          return !(*this == other);
+        }
+      };
+
+    private:
+      std::shared_ptr<ControlBlock> mainBlock;
 
     public:
-      iterator(std::shared_ptr<control_block>& main_block, configuration new_cfg = {',', '\n', '\"'})
-        : m_cfg{new_cfg}
-        , buffer{std::make_unique<std::stringstream>(std::stringstream())}
-        , m_block{main_block}
+      Parser(std::ifstream& in, size_t skip_lines)
+        : mainBlock{std::make_shared<ControlBlock>(&in, skip_lines)}
       {
-        parse<0, sizeof... (Types)>();
-        m_block->update_position();
+        if (in.is_open() == false)
+          throw ::csv::err::invalid_argument{"\033[1;35m[ERROR]\033[0m Invalid file stream.\n"
+                                             "\033[1;35m[MESSAGE]\033[0m Cannot parse the file."};
+
+        while (skip_lines > 0 && mainBlock->getStream()->eof() == false)
+          if (mainBlock->getStream()->get() == Cfg::Symbol::Row)
+            --skip_lines;
       }
 
-      iterator(std::shared_ptr<control_block>& main_block, [[maybe_unused]] void* ptr)
-        : m_block{main_block}
-      {}
+      Parser(const Parser&) = delete;
+      Parser(Parser&&) = delete;
 
-      iterator(const iterator&) = delete;
-      iterator(iterator&& other) = delete;
-
-      ~iterator() = default;
-
-      [[nodiscard]] std::tuple<Types...>& operator*() noexcept
+      ~Parser()
       {
-        return m_block->get_storage();
+        mainBlock->freeStream();
       }
 
-      iterator& operator++()
+      [[nodiscard]] Iterator begin()
       {
-        if (m_block->get_stream()->eof() == false)
-        {
-          parse<0, sizeof...(Types)>();
-          m_block->update_position();
-        }
-
-        return *this;
+        return Iterator(mainBlock);
       }
 
-      iterator& operator=(const iterator&) = delete;
-      iterator& operator=(iterator&& other) = delete;
-
-      [[nodiscard]] bool operator==(const iterator& other) const noexcept
+      [[nodiscard]] Iterator end()
       {
-        return (m_block->get_stream() == other.m_block->get_stream())
-                && (m_block->get_stream()->eof() == true);
+        return Iterator(mainBlock, nullptr);
       }
 
-      [[nodiscard]] bool operator!=(const iterator& other) const noexcept
-      {
-        return !(*this == other);
-      }
+      Parser& operator=(const Parser&) = delete;
+      Parser& operator=(Parser&&) = delete;
     };
 
-  private:
-    configuration m_cfg;
-    std::shared_ptr<control_block> main_block;
+  } /* End namespace csv */
 
-  private:
-    void skip(size_t skip_lines) noexcept
-    {
-      while (skip_lines > 0 && main_block->get_stream()->eof() == false)
-        if (main_block->get_stream()->get() == m_cfg.del_row)
-          --skip_lines;
-    }
-
-  public:
-    parser(std::ifstream& in, size_t skip_lines, configuration new_cfg = {',', '\n', '\"'})
-      : m_cfg{new_cfg}
-      , main_block{std::make_shared<control_block>(&in, skip_lines)}
-    {
-      if (in.is_open() == false)
-      {
-        std::string error_message{"\033[1;35m[ERROR]\033[0m Invalid file stream.\n"
-                                  "\033[1;35m[MESSAGE]\033[0m Cannot parse the file."};
-
-        throw err::invalid_argument{error_message};
-      }
-
-      skip(skip_lines);
-    }
-
-    parser(const parser&) = delete;
-    parser(parser&&) = delete;
-
-    ~parser()
-    {
-      main_block->free_stream();
-    }
-
-    [[nodiscard]] iterator begin()
-    {
-      return iterator(main_block, m_cfg);
-    }
-
-    [[nodiscard]] iterator end()
-    {
-      return iterator(main_block, nullptr);
-    }
-
-    parser& operator=(const parser&) = delete;
-    parser& operator=(parser&&) = delete;
-  };
-
-} /* End namespace csv */
+} /* End namespace nop */
 
 #endif /* End parser header file */

@@ -8,7 +8,7 @@ namespace csv /* Begin namespace csv */
   namespace cmd /* Begin namespace cmd */
   {
 
-    data_handler::data_handler(int32_t argc, char* argv[])
+    DataHandler::DataHandler(int32_t argc, char* argv[])
     {
       if (2 <= argc && argc <= 3)
       {
@@ -52,12 +52,12 @@ ERROR:
       }
     }
 
-    const char* data_handler::get_file_name() const noexcept
+    const char* DataHandler::getFileName() const noexcept
     {
       return m_data.first.data();
     }
 
-    size_t data_handler::get_skip_lines() const noexcept
+    size_t DataHandler::getSkipLines() const noexcept
     {
       return m_data.second;
     }

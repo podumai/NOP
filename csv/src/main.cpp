@@ -8,9 +8,9 @@ int32_t main(int32_t argc, char* argv[])
 
   try
   {
-    csv::cmd::data_handler input_data{argc, argv};
-    std::ifstream in{input_data.get_file_name()};
-    csv::parser<int32_t, std::string> prs{in, input_data.get_skip_lines()};
+    csv::cmd::DataHandler inputData{argc, argv};
+    std::ifstream in{inputData.getFileName()};
+    nop::csv::Parser<nop::csv::DefaultCfg, int32_t, std::string> prs{in, inputData.getSkipLines()};
 
     for (auto&& i : prs)
       std::cout << i << '\n';

@@ -5,7 +5,7 @@
 TEST(TEST_PARSER, VALID_FILE1)
 {
   std::ifstream in{"csv/test1.csv"};
-  csv::parser<int32_t, std::string> prs{in, 1};
+  nop::csv::Parser<nop::csv::DefaultCfg, int32_t, std::string> prs{in, 1};
   std::vector<std::tuple<int32_t, std::string>> vals{{120, "another1"},
                                                      {52, "another2"}};
   size_t counter{};
@@ -19,7 +19,7 @@ TEST(TEST_PARSER, VALID_FILE1)
 TEST(TEST_PARSER, VALID_FILE2)
 {
   std::ifstream in{"csv/test2.csv"};
-  csv::parser<std::string, int32_t, std::string> prs{in, 1};
+  nop::csv::Parser<nop::csv::DefaultCfg, std::string, int32_t, std::string> prs{in, 1};
   std::vector<std::tuple<std::string, int32_t, std::string>> vals{
                                      {"another1", 120, "another1"},
                                      {"another2", 52, "another2"},
@@ -35,7 +35,19 @@ TEST(TEST_PARSER, VALID_FILE2)
 TEST(TEST_PARSER, CONFIGURATION)
 {
   std::ifstream in{"csv/test8.csv"};
-  csv::parser<int32_t, std::string> prs{in, 1, {'.','*','$'}};
+
+  struct MyCfg
+  {
+  public:
+    enum Symbol : char
+    {
+      Column = '.',
+      Row = '*',
+      Escape = '$'
+    };
+  };
+
+  nop::csv::Parser<MyCfg, int32_t, std::string> prs{in, 1};
   std::vector<std::tuple<int32_t, std::string>> vals{{120, "another1 120 another2"},
                                                      {52, "another2"}};
   size_t counter{};
@@ -51,7 +63,7 @@ TEST(TEST_PARSER, EMPTY_FILE)
   std::ifstream in{"csv/test3.csv"};
   try
   {
-    csv::parser<int32_t, std::string> prs{in, 0};
+    nop::csv::Parser<nop::csv::DefaultCfg, int32_t, std::string> prs{in, 0};
     std::tuple<int32_t, std::string> t;
     EXPECT_EQ(t, *(prs.begin()));
   }
@@ -64,7 +76,7 @@ TEST(TEST_PARSER, EMPTY_FILE)
 TEST(TEST_PARSER, SKIP_LINES1)
 {
   std::ifstream in{"csv/test1.csv"};
-  csv::parser<int32_t, std::string> prs{in, 10};
+  nop::csv::Parser<nop::csv::DefaultCfg, int32_t, std::string> prs{in, 10};
   std::tuple<int32_t, std::string> t;
   EXPECT_EQ(t, *(prs.begin()));
 }
@@ -72,7 +84,7 @@ TEST(TEST_PARSER, SKIP_LINES1)
 TEST(TEST_PARSER, SKIP_LINES2)
 {
   std::ifstream in{"csv/test5.csv"};
-  csv::parser<std::string, int32_t, std::string> prs{in, 144};
+  nop::csv::Parser<nop::csv::DefaultCfg, std::string, int32_t, std::string> prs{in, 144};
   auto t{std::make_tuple<std::string, int32_t, std::string>("ifndef", 1, "0.69444%")};
   EXPECT_EQ(t, *(prs.begin()));
 }
@@ -82,7 +94,7 @@ TEST(TEST_PARSER, INVALID_FILE)
   std::ifstream in{"csv/test4.csv"};
   try
   {
-    csv::parser<int32_t, std::string> prs{in, 1};
+    nop::csv::Parser<nop::csv::DefaultCfg, int32_t, std::string> prs{in, 1};
   }
   catch (const csv::err::invalid_argument& error)
   {
@@ -99,7 +111,7 @@ TEST(TEST_PARSER, INVALID_FILE_FORMAT1)
   std::ifstream in{"csv/test1.csv"};
   try
   {
-    csv::parser<std::string, int32_t, std::string> prs{in, 1};
+    nop::csv::Parser<nop::csv::DefaultCfg, std::string, int32_t, std::string> prs{in, 1};
   }
   catch (const csv::err::format_error& error)
   {
@@ -114,7 +126,7 @@ TEST(TEST_PARSER, INVALID_FILE_FORMAT1)
 TEST(TEST_PARSER, INVALID_FILE_FORMAT2)
 {
   std::ifstream in{"csv/test6.csv"};
-  csv::parser<int32_t, std::string> prs{in, 1};
+  nop::csv::Parser<nop::csv::DefaultCfg, int32_t, std::string> prs{in, 1};
   EXPECT_THROW(
       {
         auto&& e{prs.end()};
@@ -127,7 +139,7 @@ TEST(TEST_PARSER, INVALID_FILE_FORMAT2)
 TEST(TEST_PARSER, INVALID_FILE_FORMAT3)
 {
   std::ifstream in{"csv/test7.csv"};
-  csv::parser<int32_t, std::string> prs{in, 1};
+  nop::csv::Parser<nop::csv::DefaultCfg, int32_t, std::string> prs{in, 1};
   EXPECT_THROW(
       {
         auto&& e{prs.end()};
