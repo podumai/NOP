@@ -1,5 +1,3 @@
-#define __INVALID_FILE__ (7UL)
-
 #include <iostream>
 #include "parser.hpp"
 #include "command.hpp"
