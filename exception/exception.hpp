@@ -2,7 +2,7 @@
 #define __NOP_EXCEPTION_HPP__ 1
 
 #include <string>
-#incldue "types.hpp"
+#include "types.hpp"
 
 namespace nop /* Begin namespace nop */
 {
