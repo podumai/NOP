@@ -16,13 +16,24 @@ namespace nop /* Begin namespace nop */
   namespace csv /* Begin namespace csv */
   {
 
-    template<size_t curr, size_t t_size, typename Ch, typename Tr, typename... Types>
+    /**
+     * @brief Helper function to print tulpe elements
+     *
+     * @tparam current The actual index
+     * @tparam tupleSize The tuple size
+     * @tparam Ch Char type for output stream
+     * @tparam Tr Char traits for output stream
+     * @tparam Types... Variadic number of types
+     *
+     * @return None
+     */
+    template<size_t current, size_t tupleSize, typename Ch, typename Tr, typename... Types>
     void print_tuple(std::basic_ostream<Ch, Tr>& out, const std::tuple<Types...>& t) noexcept
     {
-      if constexpr (curr < t_size)
+      if constexpr (current < tupleSize)
       {
-        out << '<' << std::get<curr>(t) << '>';
-        print_tuple<curr + 1, t_size, Ch, Tr,Types...>(out, t);
+        out << '<' << std::get<current>(t) << '>';
+        print_tuple<current + 1, tupleSize, Ch, Tr, Types...>(out, t);
       }
     }
 
@@ -30,10 +41,22 @@ namespace nop /* Begin namespace nop */
 
 } /* End namespace nop */
 
+/**
+ * @brief Operator overload for tuple printing
+ *
+ * @tparam Ch Char type for output stream
+ * @tparam Tr Char traits for output stream
+ * @tparam Types... Variadic number of types
+ *
+ * @param [in] out Output stream
+ * @param [in] t The tuple class
+ *
+ * @return Output stream reference type
+ */
 template<typename Ch, typename Tr, typename... Types>
 decltype(auto) operator<<(std::basic_ostream<Ch, Tr>& out, const std::tuple<Types...>& t) noexcept
 {
-  nop::csv::print_tuple<0 , sizeof... (Types), Ch, Tr, Types...>(out, t);
+  nop::csv::print_tuple<0 , sizeof...(Types), Ch, Tr, Types...>(out, t);
   return out;
 }
 
@@ -54,6 +77,14 @@ namespace nop /* Begin namespace nop */
       };
     };
 
+    /**
+     * @brief Parser class for parsing csv files
+     *
+     * @class Parser
+     *
+     * @tparam Cfg Configuration class that consists of char enum providing symbols
+     * @tparam Types... Variadic number of types
+     */
     template<class Cfg, typename... Types>
     class Parser
     {
@@ -64,14 +95,14 @@ namespace nop /* Begin namespace nop */
         std::ifstream* input;
         size_t m_row;
         size_t m_column;
-        std::unique_ptr<std::tuple<Types...>> m_storage;
+        std::tuple<Types...> m_storage;
 
       public:
-        ControlBlock(std::ifstream* in, size_t skip_lines)
+        ControlBlock(std::ifstream* in, size_t skipLines)
           : input{in}
-          , m_row{skip_lines}
+          , m_row{skipLines}
           , m_column{1}
-          , m_storage{std::make_unique<std::tuple<Types...>>(std::tuple<Types...>{})}
+          , m_storage{}
         {}
 
         ControlBlock(const ControlBlock&) = delete;
@@ -111,7 +142,7 @@ namespace nop /* Begin namespace nop */
 
         [[nodiscard]] std::tuple<Types...>& getStorage() noexcept
         {
-          return *m_storage;
+          return m_storage;
         }
 
         ControlBlock& operator=(const ControlBlock&) = delete;
@@ -119,6 +150,11 @@ namespace nop /* Begin namespace nop */
       };
 
     public:
+      /**
+       * @brief Input iterator class for parsing and traversing file
+       *
+       * @class Iterator
+       */
       class Iterator
       {
       private:
@@ -143,10 +179,12 @@ namespace nop /* Begin namespace nop */
               {
                 if (buffer->rdbuf()->in_avail() == 0 ||
                   (current + 1 < totalSize && symbol == Cfg::Symbol::Row))
-                  throw ::csv::err::format_error{std::format(
-                         "\033[1;35m[ERROR]\033[0m Invalid column size.\n"
-                         "\033[1;35m[MESSAGE]\033[0m Parse error position : <Row:{};Column:{}-{}>",
-                         m_block->getRow(), startColumn, m_block->getColumn())};
+                  throw err::FormatError{std::format(
+                        "\033[1;35m[ERROR]\033[0m Invalid column size.\n"
+                        "\033[1;35m[MESSAGE]\033[0m Parse error position : <Row:{};Column:{}-{}>"
+                        , m_block->getRow()
+                        , startColumn
+                        , m_block->getColumn())};
                 else
                   break;
               }
@@ -159,7 +197,7 @@ namespace nop /* Begin namespace nop */
                 symbol = m_block->getStream()->get();
 
                 if (symbol != Cfg::Symbol::Escape)
-                  throw ::csv::err::format_error{std::format(
+                  throw err::FormatError{std::format(
                         "\033[1;35m[ERROR]\033[0m Unpaired escape character.\n"
                         "\033[1;35m[MESSAGE]\033[0m The escape string should be : {}str{}\n"
                         "\033[1;35m[MESSAGE]\033[0m Parse error position : <Row:{};Column:{}-{}>"
@@ -184,7 +222,7 @@ namespace nop /* Begin namespace nop */
               (*buffer) >> std::get<current>(m_block->getStorage());
 
             if (m_block->getStream()->eof() == false && buffer->fail() == true)
-              throw ::csv::err::format_error{std::format(
+              throw err::FormatError{std::format(
                     "\033[1;35m[ERROR]\033[0m Invalid data type.\n"
                     "\033[1;35m[MESSAGE]\033[0m The expected type was : {}\n"
                     "\033[1;35m[MESSAGE]\033[0m Parse error position : <Row:{};Column:{}-{}>"
@@ -202,7 +240,7 @@ namespace nop /* Begin namespace nop */
           : buffer{std::make_unique<std::stringstream>(std::stringstream())}
           , m_block{mainBlock}
         {
-          parse<0, sizeof... (Types)>();
+          parse<0, sizeof...(Types)>();
           m_block->updatePosition();
         }
 
@@ -250,16 +288,24 @@ namespace nop /* Begin namespace nop */
       std::shared_ptr<ControlBlock> mainBlock;
 
     public:
-      Parser(std::ifstream& in, size_t skip_lines)
-        : mainBlock{std::make_shared<ControlBlock>(&in, skip_lines)}
+      /**
+       * @brief Parser constructor recieving two parameters
+       *
+       * @param [in] in Input file stream representing file to parse
+       * @param [in] skipLines The number of lines to skip
+       *
+       * @throws invalid_argument
+       */
+      Parser(std::ifstream& in, size_t skipLines)
+        : mainBlock{std::make_shared<ControlBlock>(&in, skipLines)}
       {
         if (in.is_open() == false)
-          throw ::csv::err::invalid_argument{"\033[1;35m[ERROR]\033[0m Invalid file stream.\n"
-                                             "\033[1;35m[MESSAGE]\033[0m Cannot parse the file."};
+          throw err::InvalidArgument{"\033[1;35m[ERROR]\033[0m Invalid file stream.\n"
+                                     "\033[1;35m[MESSAGE]\033[0m Cannot parse the file."};
 
-        while (skip_lines > 0 && mainBlock->getStream()->eof() == false)
+        while (skipLines > 0 && mainBlock->getStream()->eof() == false)
           if (mainBlock->getStream()->get() == Cfg::Symbol::Row)
-            --skip_lines;
+            --skipLines;
       }
 
       Parser(const Parser&) = delete;
@@ -270,11 +316,19 @@ namespace nop /* Begin namespace nop */
         mainBlock->freeStream();
       }
 
+      /**
+       * @brief Begin method for creating Input Iterator
+       *
+       * @throws format_error
+       */
       [[nodiscard]] Iterator begin()
       {
         return Iterator(mainBlock);
       }
 
+      /**
+       * @brief End method for creating Input Iterator
+       */
       [[nodiscard]] Iterator end()
       {
         return Iterator(mainBlock, nullptr);

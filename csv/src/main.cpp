@@ -15,10 +15,10 @@ int32_t main(int32_t argc, char* argv[])
     for (auto&& i : prs)
       std::cout << i << '\n';
   }
-  catch (const csv::err::base_exception& error)
+  catch (const nop::err::BaseException& error)
   {
     std::cerr << error.what() << '\n';
-    return error.err_code();
+    return error.errorCode();
   }
 
   return EXIT_SUCCESS;

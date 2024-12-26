@@ -1,4 +1,3 @@
-#include <string>
 #include "command.hpp"
 #include "exception.hpp"
 
@@ -35,7 +34,7 @@ namespace csv /* Begin namespace csv */
 ERROR:
         using namespace std::string_literals;
 
-        std::string error_message{
+        std::string errorMessage{
             "\033[1;35m[ERROR]\033[0m Invalid parameters.\n"
             "\033[1;35m[MESSAGE]\033[0m Requires <file.csv> <skip_lines> (optional)\n"
             "\033[1;35m[MESSAGE]\033[0m Recieved: "};
@@ -43,12 +42,12 @@ ERROR:
         if (argc > 1)
         {
           for (int32_t i{1}; i < argc; ++i)
-            error_message += "<"s + argv[i] + "> ";
+            errorMessage += "<"s + argv[i] + "> ";
         }
         else
-          error_message += "<None>";
+          errorMessage += "<None>";
 
-        throw csv::err::invalid_argument{error_message};
+        throw nop::err::InvalidArgument{errorMessage};
       }
     }
 

@@ -67,7 +67,7 @@ TEST(TEST_PARSER, EMPTY_FILE)
     std::tuple<int32_t, std::string> t;
     EXPECT_EQ(t, *(prs.begin()));
   }
-  catch (const csv::err::base_exception& error)
+  catch (const nop::err::BaseException& error)
   {
     FAIL();
   }
@@ -96,7 +96,7 @@ TEST(TEST_PARSER, INVALID_FILE)
   {
     nop::csv::Parser<nop::csv::DefaultCfg, int32_t, std::string> prs{in, 1};
   }
-  catch (const csv::err::invalid_argument& error)
+  catch (const nop::err::InvalidArgument& error)
   {
     SUCCEED();
   }
@@ -113,7 +113,7 @@ TEST(TEST_PARSER, INVALID_FILE_FORMAT1)
   {
     nop::csv::Parser<nop::csv::DefaultCfg, std::string, int32_t, std::string> prs{in, 1};
   }
-  catch (const csv::err::format_error& error)
+  catch (const nop::err::FormatError& error)
   {
     SUCCEED();
   }
@@ -133,7 +133,7 @@ TEST(TEST_PARSER, INVALID_FILE_FORMAT2)
         for (auto&& b{prs.begin()}; b != e; ++b)
           asm volatile ("");
       }
-      , csv::err::format_error);
+      , nop::err::FormatError);
 }
 
 TEST(TEST_PARSER, INVALID_FILE_FORMAT3)
@@ -146,7 +146,7 @@ TEST(TEST_PARSER, INVALID_FILE_FORMAT3)
         for (auto&& b{prs.begin()}; b != e; ++b)
           asm volatile ("");
       }
-      , csv::err::format_error);
+      , nop::err::FormatError);
 }
 
 int32_t main(int32_t argc, char* argv[])

@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.5)
 project(PARSER VERSION 1.0 LANGUAGES CXX)
 
 include_directories(include/)
+include_directories(~/NOP/exception/)
+
 find_package(GTest REQUIRED)
 
 add_compile_options(
@@ -24,7 +26,7 @@ if (NOT CMAKE_CXX_EXTENSIONS)
 endif ()
 
 set(parser_exe src/main.cpp)
-set(exception_exe src/exception.cpp)
+set(exception_exe ~/NOP/exception/exception.cpp)
 set(command_exe src/command.cpp)
 set(test_parser_exe src/test.cpp)
 
