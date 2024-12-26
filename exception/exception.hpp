@@ -3,7 +3,7 @@
 
 #include <string>
 
-namespace nop /* Begin namespace csv */
+namespace nop /* Begin namespace nop */
 {
 
   namespace err /* Begin namespace err */
@@ -107,6 +107,6 @@ namespace nop /* Begin namespace csv */
 
   } /*End namespace err */
 
-} /* End namespace csv */
+} /* End namespace nop */
 
 #endif /* End exception header file */
