@@ -1,6 +1,6 @@
 #include "exception.hpp"
 
-namespace nop /* Begin namespace sndproc */
+namespace nop /* Begin namespace nop */
 {
 
   namespace err /* Begin namespace err */
@@ -26,7 +26,7 @@ namespace nop /* Begin namespace sndproc */
       return m_error.c_str();
     }
 
-    int32_t LogicError::errorCode() const noexcept
+    i32 LogicError::errorCode() const noexcept
     {
       return 1;
     }
@@ -46,7 +46,7 @@ namespace nop /* Begin namespace sndproc */
       : LogicError{errorMessage}
     {}
 
-    int32_t InvalidArgument::errorCode() const noexcept
+    i32 InvalidArgument::errorCode() const noexcept
     {
       return 2;
     }
@@ -71,7 +71,7 @@ namespace nop /* Begin namespace sndproc */
       return m_error.c_str();
     }
 
-    int32_t RuntimeError::errorCode() const noexcept
+    i32 RuntimeError::errorCode() const noexcept
     {
       return 3;
     }
@@ -91,7 +91,7 @@ namespace nop /* Begin namespace sndproc */
       : RuntimeError{errorMessage}
     {}
 
-    int32_t SystemError::errorCode() const noexcept
+    i32 SystemError::errorCode() const noexcept
     {
       return 4;
     }
@@ -111,11 +111,11 @@ namespace nop /* Begin namespace sndproc */
       : LogicError{errorMessage}
     {}
 
-    int32_t FormatError::errorCode() const noexcept
+    i32 FormatError::errorCode() const noexcept
     {
       return 6;
     }
 
   } /* End namespace err */
 
-} /* End namespace sndproc */
+} /* End namespace nop */

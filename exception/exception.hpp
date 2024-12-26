@@ -2,6 +2,7 @@
 #define __NOP_EXCEPTION_HPP__ 1
 
 #include <string>
+#incldue "types.hpp"
 
 namespace nop /* Begin namespace nop */
 {
@@ -13,7 +14,7 @@ namespace nop /* Begin namespace nop */
     {
     public:
       virtual const char* what() const noexcept = 0;
-      virtual int32_t errorCode() const noexcept = 0;
+      virtual i32 errorCode() const noexcept = 0;
       virtual ~BaseException() = default;
     };
 
@@ -31,7 +32,7 @@ namespace nop /* Begin namespace nop */
       ~LogicError() = default;
 
       [[nodiscard]] const char* what() const noexcept override;
-      [[nodiscard]] int32_t errorCode() const noexcept override;
+      [[nodiscard]] i32 errorCode() const noexcept override;
 
       LogicError& operator=(const LogicError&) = default;
       LogicError& operator=(LogicError&&) = default;
@@ -47,7 +48,7 @@ namespace nop /* Begin namespace nop */
       InvalidArgument(InvalidArgument&&) = default;
       ~InvalidArgument() = default;
 
-      [[nodiscard]] int32_t errorCode() const noexcept override;
+      [[nodiscard]] i32 errorCode() const noexcept override;
 
       InvalidArgument& operator=(const InvalidArgument&) = default;
       InvalidArgument& operator=(InvalidArgument&&) = default;
@@ -67,7 +68,7 @@ namespace nop /* Begin namespace nop */
       ~RuntimeError() = default;
 
       [[nodiscard]] const char* what() const noexcept override;
-      [[nodiscard]] int32_t errorCode() const noexcept override;
+      [[nodiscard]] i32 errorCode() const noexcept override;
 
       RuntimeError& operator=(const RuntimeError&) = default;
       RuntimeError& operator=(RuntimeError&&) = default;
@@ -83,7 +84,7 @@ namespace nop /* Begin namespace nop */
       SystemError(SystemError&&) = default;
       ~SystemError() = default;
 
-      [[nodiscard]] int32_t errorCode() const noexcept override;
+      [[nodiscard]] i32 errorCode() const noexcept override;
 
       SystemError& operator=(const SystemError&) = default;
       SystemError& operator=(SystemError&&) = default;
@@ -99,7 +100,7 @@ namespace nop /* Begin namespace nop */
       FormatError(FormatError&&) = default;
       ~FormatError() = default;
 
-      [[nodiscard]] int32_t errorCode() const noexcept override;
+      [[nodiscard]] i32 errorCode() const noexcept override;
 
       FormatError& operator=(const FormatError&) = default;
       FormatError& operator=(FormatError&&) = default;
