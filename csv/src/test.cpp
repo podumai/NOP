@@ -4,7 +4,7 @@
 
 TEST(TEST_PARSER, VALID_FILE1)
 {
-  std::ifstream in{"csv/test1.csv"};
+  std::ifstream in{"csv_tests/test1.csv"};
   nop::csv::Parser<nop::csv::DefaultCfg, int32_t, std::string> prs{in, 1};
   std::vector<std::tuple<int32_t, std::string>> vals{{120, "another1"},
                                                      {52, "another2"}};
@@ -18,7 +18,7 @@ TEST(TEST_PARSER, VALID_FILE1)
 
 TEST(TEST_PARSER, VALID_FILE2)
 {
-  std::ifstream in{"csv/test2.csv"};
+  std::ifstream in{"csv_tests/test2.csv"};
   nop::csv::Parser<nop::csv::DefaultCfg, std::string, int32_t, std::string> prs{in, 1};
   std::vector<std::tuple<std::string, int32_t, std::string>> vals{
                                      {"another1", 120, "another1"},
@@ -34,7 +34,7 @@ TEST(TEST_PARSER, VALID_FILE2)
 
 TEST(TEST_PARSER, CONFIGURATION)
 {
-  std::ifstream in{"csv/test8.csv"};
+  std::ifstream in{"csv_tests/test8.csv"};
 
   struct MyCfg
   {
@@ -60,7 +60,7 @@ TEST(TEST_PARSER, CONFIGURATION)
 
 TEST(TEST_PARSER, EMPTY_FILE)
 {
-  std::ifstream in{"csv/test3.csv"};
+  std::ifstream in{"csv_tests/test3.csv"};
   try
   {
     nop::csv::Parser<nop::csv::DefaultCfg, int32_t, std::string> prs{in, 0};
@@ -75,7 +75,7 @@ TEST(TEST_PARSER, EMPTY_FILE)
 
 TEST(TEST_PARSER, SKIP_LINES1)
 {
-  std::ifstream in{"csv/test1.csv"};
+  std::ifstream in{"csv_tests/test1.csv"};
   nop::csv::Parser<nop::csv::DefaultCfg, int32_t, std::string> prs{in, 10};
   std::tuple<int32_t, std::string> t;
   EXPECT_EQ(t, *(prs.begin()));
@@ -83,7 +83,7 @@ TEST(TEST_PARSER, SKIP_LINES1)
 
 TEST(TEST_PARSER, SKIP_LINES2)
 {
-  std::ifstream in{"csv/test5.csv"};
+  std::ifstream in{"csv_tests/test5.csv"};
   nop::csv::Parser<nop::csv::DefaultCfg, std::string, int32_t, std::string> prs{in, 144};
   auto t{std::make_tuple<std::string, int32_t, std::string>("ifndef", 1, "0.69444%")};
   EXPECT_EQ(t, *(prs.begin()));
@@ -91,7 +91,7 @@ TEST(TEST_PARSER, SKIP_LINES2)
 
 TEST(TEST_PARSER, INVALID_FILE)
 {
-  std::ifstream in{"csv/test4.csv"};
+  std::ifstream in{"csv_tests/test4.csv"};
   try
   {
     nop::csv::Parser<nop::csv::DefaultCfg, int32_t, std::string> prs{in, 1};
@@ -108,7 +108,7 @@ TEST(TEST_PARSER, INVALID_FILE)
 
 TEST(TEST_PARSER, INVALID_FILE_FORMAT1)
 {
-  std::ifstream in{"csv/test1.csv"};
+  std::ifstream in{"csv_tests/test1.csv"};
   try
   {
     nop::csv::Parser<nop::csv::DefaultCfg, std::string, int32_t, std::string> prs{in, 1};
@@ -125,7 +125,7 @@ TEST(TEST_PARSER, INVALID_FILE_FORMAT1)
 
 TEST(TEST_PARSER, INVALID_FILE_FORMAT2)
 {
-  std::ifstream in{"csv/test6.csv"};
+  std::ifstream in{"csv_tests/test6.csv"};
   nop::csv::Parser<nop::csv::DefaultCfg, int32_t, std::string> prs{in, 1};
   EXPECT_THROW(
       {
@@ -138,7 +138,7 @@ TEST(TEST_PARSER, INVALID_FILE_FORMAT2)
 
 TEST(TEST_PARSER, INVALID_FILE_FORMAT3)
 {
-  std::ifstream in{"csv/test7.csv"};
+  std::ifstream in{"csv_tests/test7.csv"};
   nop::csv::Parser<nop::csv::DefaultCfg, int32_t, std::string> prs{in, 1};
   EXPECT_THROW(
       {
