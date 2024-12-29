@@ -22,8 +22,8 @@ namespace csv /* Begin namespace csv */
       DataHandler(DataHandler&&) = default;
       ~DataHandler() = default;
 
-      size_t getSkipLines() const noexcept;
-      const char* getFileName() const noexcept;
+      [[nodiscard]] size_t getSkipLines() const noexcept;
+      [[nodiscard]] const char* getFileName() const noexcept;
 
       DataHandler& operator=(const DataHandler&) = default;
       DataHandler& operator=(DataHandler&&) = default;

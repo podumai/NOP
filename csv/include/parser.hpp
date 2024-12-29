@@ -1,13 +1,14 @@
-#ifndef __NOP_CSV_PARSER_HPP__   /* Begin parser header file */
-#define __NOP_CSV_PARSER_HPP__ 1
+#ifndef NOP_CSV_PARSER_HPP   /* Begin parser header file */
+#define NOP_CSV_PARSER_HPP 1
 
-#include <iostream>
+#include <ostream>
 #include <tuple>
 #include <sstream>
 #include <fstream>
 #include <memory>
 #include <type_traits>
 #include <boost/type_index.hpp>
+#include <fmt/format.h>
 #include "exception.hpp"
 
 namespace nop /* Begin namespace nop */
@@ -19,22 +20,17 @@ namespace nop /* Begin namespace nop */
     /**
      * @brief Helper function to print tulpe elements
      *
-     * @tparam current The actual index
-     * @tparam tupleSize The tuple size
      * @tparam Ch Char type for output stream
      * @tparam Tr Char traits for output stream
-     * @tparam Types... Variadic number of types
+     * @tparam Tuple The tuple type
+     * @tparam Indices... Sequence of indices
      *
      * @return None
      */
-    template<size_t current, size_t tupleSize, typename Ch, typename Tr, typename... Types>
-    void print_tuple(std::basic_ostream<Ch, Tr>& out, const std::tuple<Types...>& t) noexcept
+    template<typename Ch, typename Tr, class Tuple, size_t... Indices>
+    void printTuple(std::basic_ostream<Ch, Tr>& out, const Tuple& t, std::index_sequence<Indices...>) noexcept
     {
-      if constexpr (current < tupleSize)
-      {
-        out << '<' << std::get<current>(t) << '>';
-        print_tuple<current + 1, tupleSize, Ch, Tr, Types...>(out, t);
-      }
+      ((out << '<' << std::get<Indices>(t) << '>'),...);
     }
 
   } /* End namespace csv */
@@ -56,7 +52,7 @@ namespace nop /* Begin namespace nop */
 template<typename Ch, typename Tr, typename... Types>
 decltype(auto) operator<<(std::basic_ostream<Ch, Tr>& out, const std::tuple<Types...>& t) noexcept
 {
-  nop::csv::print_tuple<0 , sizeof...(Types), Ch, Tr, Types...>(out, t);
+  nop::csv::printTuple(out, t, std::index_sequence_for<Types...>{});
   return out;
 }
 
@@ -179,7 +175,7 @@ namespace nop /* Begin namespace nop */
               {
                 if (buffer->rdbuf()->in_avail() == 0 ||
                   (current + 1 < totalSize && symbol == Cfg::Symbol::Row))
-                  throw err::FormatError{std::format(
+                  throw err::FormatError{fmt::format(
                         "\033[1;35m[ERROR]\033[0m Invalid column size.\n"
                         "\033[1;35m[MESSAGE]\033[0m Parse error position : <Row:{};Column:{}-{}>"
                         , m_block->getRow()
@@ -191,18 +187,18 @@ namespace nop /* Begin namespace nop */
               else if (symbol == Cfg::Symbol::Escape)
               {
                 std::string tmpBuffer;
-                std::getline(*(m_block->getStream()), tmpBuffer, static_cast<char>(Cfg::Symbol::Escape));
+                std::getline(*(m_block->getStream()), tmpBuffer, std::to_underlying(Cfg::Symbol::Escape));
                 buffer->write(tmpBuffer.c_str(), tmpBuffer.length());
                 m_block->getStream()->unget();
                 symbol = m_block->getStream()->get();
 
                 if (symbol != Cfg::Symbol::Escape)
-                  throw err::FormatError{std::format(
+                  throw err::FormatError{fmt::format(
                         "\033[1;35m[ERROR]\033[0m Unpaired escape character.\n"
                         "\033[1;35m[MESSAGE]\033[0m The escape string should be : {}str{}\n"
                         "\033[1;35m[MESSAGE]\033[0m Parse error position : <Row:{};Column:{}-{}>"
-                        , static_cast<char>(Cfg::Symbol::Escape)
-                        , static_cast<char>(Cfg::Symbol::Escape)
+                        , std::to_underlying(Cfg::Symbol::Escape)
+                        , std::to_underlying(Cfg::Symbol::Escape)
                         , m_block->getRow()
                         , startColumn
                         , m_block->getColumn())};
@@ -222,7 +218,7 @@ namespace nop /* Begin namespace nop */
               (*buffer) >> std::get<current>(m_block->getStorage());
 
             if (m_block->getStream()->eof() == false && buffer->fail() == true)
-              throw err::FormatError{std::format(
+              throw err::FormatError{fmt::format(
                     "\033[1;35m[ERROR]\033[0m Invalid data type.\n"
                     "\033[1;35m[MESSAGE]\033[0m The expected type was : {}\n"
                     "\033[1;35m[MESSAGE]\033[0m Parse error position : <Row:{};Column:{}-{}>"
@@ -323,7 +319,7 @@ namespace nop /* Begin namespace nop */
        */
       [[nodiscard]] Iterator begin()
       {
-        return Iterator(mainBlock);
+        return Iterator{mainBlock};
       }
 
       /**
@@ -331,7 +327,7 @@ namespace nop /* Begin namespace nop */
        */
       [[nodiscard]] Iterator end()
       {
-        return Iterator(mainBlock, nullptr);
+        return Iterator{mainBlock, nullptr};
       }
 
       Parser& operator=(const Parser&) = delete;
