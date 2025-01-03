@@ -97,8 +97,7 @@ namespace nop /* Begin namespace nop */
         ControlBlock(std::ifstream* in, size_t skipLines)
           : input{in}
           , m_row{skipLines}
-          , m_column{1}
-          , m_storage{}
+          , m_column{1UL}
         {}
 
         ControlBlock(const ControlBlock&) = delete;
@@ -113,17 +112,12 @@ namespace nop /* Begin namespace nop */
         void updatePosition() noexcept
         {
           ++m_row;
-          m_column = 1;
+          m_column = 1UL;
         }
 
         [[nodiscard]] std::ifstream* getStream() noexcept
         {
           return input;
-        }
-
-        void freeStream() noexcept
-        {
-          input = nullptr;
         }
 
         [[nodiscard]] size_t getRow() const noexcept
@@ -154,7 +148,7 @@ namespace nop /* Begin namespace nop */
       class Iterator
       {
       private:
-        std::unique_ptr<std::stringstream> buffer;
+        std::unique_ptr<std::stringstream> m_buffer;
         std::shared_ptr<ControlBlock> m_block;
 
       private:
@@ -164,8 +158,8 @@ namespace nop /* Begin namespace nop */
           if constexpr (current < totalSize)
           {
             size_t startColumn{m_block->getColumn()};
-            buffer->str("");
-            buffer->clear();
+            m_buffer->str("");
+            m_buffer->clear();
 
             while (m_block->getStream()->eof() == false)
             {
@@ -173,8 +167,8 @@ namespace nop /* Begin namespace nop */
 
               if (symbol == Cfg::Symbol::Column || symbol == Cfg::Symbol::Row)
               {
-                if (buffer->rdbuf()->in_avail() == 0 ||
-                  (current + 1 < totalSize && symbol == Cfg::Symbol::Row))
+                if (m_buffer->rdbuf()->in_avail() == 0UL ||
+                  (current + 1UL < totalSize && symbol == Cfg::Symbol::Row))
                   throw err::FormatError{fmt::format(
                         "\033[1;35m[ERROR]\033[0m Invalid column size.\n"
                         "\033[1;35m[MESSAGE]\033[0m Parse error position : <Row:{};Column:{}-{}>"
@@ -188,7 +182,7 @@ namespace nop /* Begin namespace nop */
               {
                 std::string tmpBuffer;
                 std::getline(*(m_block->getStream()), tmpBuffer, std::to_underlying(Cfg::Symbol::Escape));
-                buffer->write(tmpBuffer.c_str(), tmpBuffer.length());
+                m_buffer->write(tmpBuffer.c_str(), tmpBuffer.length());
                 m_block->getStream()->unget();
                 symbol = m_block->getStream()->get();
 
@@ -205,7 +199,7 @@ namespace nop /* Begin namespace nop */
               }
               else
               {
-                buffer->put(symbol);
+                m_buffer->put(symbol);
                 m_block->incColumn();
               }
             }
@@ -213,11 +207,11 @@ namespace nop /* Begin namespace nop */
             m_block->incColumn();
 
             if constexpr (std::is_same_v<std::remove_reference_t<decltype(std::get<current>(m_block->getStorage()))>, std::string> == true)
-              std::getline(*buffer, std::get<current>(m_block->getStorage()));
+              std::getline(*m_buffer, std::get<current>(m_block->getStorage()));
             else
-              (*buffer) >> std::get<current>(m_block->getStorage());
+              (*m_buffer) >> std::get<current>(m_block->getStorage());
 
-            if (m_block->getStream()->eof() == false && buffer->fail() == true)
+            if (m_block->getStream()->eof() == false && m_buffer->fail() == true)
               throw err::FormatError{fmt::format(
                     "\033[1;35m[ERROR]\033[0m Invalid data type.\n"
                     "\033[1;35m[MESSAGE]\033[0m The expected type was : {}\n"
@@ -227,16 +221,16 @@ namespace nop /* Begin namespace nop */
                     , startColumn
                     , m_block->getColumn())};
 
-            parse<current + 1, totalSize>();
+            parse<current + 1UL, totalSize>();
           }
         }
 
       public:
         Iterator(std::shared_ptr<ControlBlock>& mainBlock)
-          : buffer{std::make_unique<std::stringstream>(std::stringstream())}
+          : m_buffer{std::make_unique<std::stringstream>(std::stringstream())}
           , m_block{mainBlock}
         {
-          parse<0, sizeof...(Types)>();
+          parse<0UL, sizeof...(Types)>();
           m_block->updatePosition();
         }
 
@@ -258,7 +252,7 @@ namespace nop /* Begin namespace nop */
         {
           if (m_block->getStream()->eof() == false)
           {
-            parse<0, sizeof...(Types)>();
+            parse<0UL, sizeof...(Types)>();
             m_block->updatePosition();
           }
 
@@ -299,7 +293,7 @@ namespace nop /* Begin namespace nop */
           throw err::InvalidArgument{"\033[1;35m[ERROR]\033[0m Invalid file stream.\n"
                                      "\033[1;35m[MESSAGE]\033[0m Cannot parse the file."};
 
-        while (skipLines > 0 && mainBlock->getStream()->eof() == false)
+        while (skipLines > 0UL && mainBlock->getStream()->eof() == false)
           if (mainBlock->getStream()->get() == Cfg::Symbol::Row)
             --skipLines;
       }
@@ -307,10 +301,7 @@ namespace nop /* Begin namespace nop */
       Parser(const Parser&) = delete;
       Parser(Parser&&) = delete;
 
-      ~Parser()
-      {
-        mainBlock->freeStream();
-      }
+      ~Parser() = default;
 
       /**
        * @brief Begin method for creating Input Iterator
