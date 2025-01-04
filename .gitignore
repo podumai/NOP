@@ -10,9 +10,7 @@ compile_commands.json
 CTestTestfile.cmake
 _deps
 CMakeUserPresets.json
+CMakePresets.json
 
 data_structures/
-exception/
 lin_alg/
-memory/
-types/
