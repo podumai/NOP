@@ -2,7 +2,8 @@ cmake_minimum_required(VERSION 3.5)
 project(BVECTOR VERSION 1.6 LANGUAGES CXX)
 
 include_directories(include/)
-include_directories(~/NOP/bit/)
+include_directories(../exception/)
+include_directories(../bit/)
 
 find_package(GTest CONFIG REQUIRED)
 
@@ -30,6 +31,7 @@ if (NOT CMAKE_CXX_EXTENSIONS)
 endif ()
 
 add_executable(TEST src/test.cpp)
-target_link_libraries(TEST PRIVATE GTest::gtest_main)
+add_library(NOP_EXCEPTIONS STATIC ../exception/exception.cpp)
+target_link_libraries(TEST PRIVATE GTest::gtest_main NOP_EXCEPTIONS)
 include(GoogleTest)
 gtest_discover_tests(TEST)

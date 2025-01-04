@@ -27,6 +27,7 @@ namespace nop /* Begin namespace nop */
       LogicError();
       LogicError(const char*);
       LogicError(const std::string&);
+      LogicError(std::string&&) noexcept;
       LogicError(const LogicError&) = default;
       LogicError(LogicError&&) = default;
       ~LogicError() = default;
@@ -44,6 +45,7 @@ namespace nop /* Begin namespace nop */
       InvalidArgument();
       InvalidArgument(const char*);
       InvalidArgument(const std::string&);
+      InvalidArgument(std::string&&) noexcept;
       InvalidArgument(const InvalidArgument&) = default;
       InvalidArgument(InvalidArgument&&) = default;
       ~InvalidArgument() = default;
@@ -63,6 +65,7 @@ namespace nop /* Begin namespace nop */
       RuntimeError();
       RuntimeError(const char*);
       RuntimeError(const std::string&);
+      RuntimeError(std::string&&) noexcept;
       RuntimeError(const RuntimeError&) = default;
       RuntimeError(RuntimeError&&) = default;
       ~RuntimeError() = default;
@@ -80,6 +83,7 @@ namespace nop /* Begin namespace nop */
       SystemError();
       SystemError(const char*);
       SystemError(const std::string&);
+      SystemError(std::string&&) noexcept;
       SystemError(const SystemError&) = default;
       SystemError(SystemError&&) = default;
       ~SystemError() = default;
@@ -90,12 +94,30 @@ namespace nop /* Begin namespace nop */
       SystemError& operator=(SystemError&&) = default;
     };
 
+    class BadAlloc : public RuntimeError
+    {
+    public:
+      BadAlloc();
+      BadAlloc(const char*);
+      BadAlloc(const std::string&);
+      BadAlloc(std::string&&) noexcept;
+      BadAlloc(const BadAlloc&) = default;
+      BadAlloc(BadAlloc&&) = default;
+      ~BadAlloc() = default;
+
+      [[nodiscard]] i32 errorCode() const noexcept override;
+
+      BadAlloc& operator=(const BadAlloc&) = default;
+      BadAlloc& operator=(BadAlloc&&) = default;
+    };
+
     class FormatError : public LogicError
     {
     public:
       FormatError();
       FormatError(const char*);
       FormatError(const std::string&);
+      FormatError(std::string&&) noexcept;
       FormatError(const FormatError&) = default;
       FormatError(FormatError&&) = default;
       ~FormatError() = default;
@@ -104,6 +126,40 @@ namespace nop /* Begin namespace nop */
 
       FormatError& operator=(const FormatError&) = default;
       FormatError& operator=(FormatError&&) = default;
+    };
+
+    class OutOfRange : public LogicError
+    {
+    public:
+      OutOfRange();
+      OutOfRange(const char*);
+      OutOfRange(const std::string&);
+      OutOfRange(std::string&&) noexcept;
+      OutOfRange(const OutOfRange&) = default;
+      OutOfRange(OutOfRange&&) = default;
+      ~OutOfRange() = default;
+
+      [[nodiscard]] i32 errorCode() const noexcept override;
+      
+      OutOfRange& operator=(const OutOfRange&) = default;
+      OutOfRange& operator=(OutOfRange&&) = default;
+    };
+
+    class LengthError : public LogicError
+    {
+    public:
+      LengthError();
+      LengthError(const char*);
+      LengthError(const std::string&);
+      LengthError(std::string&&) noexcept;
+      LengthError(const LengthError&) = default;
+      LengthError(LengthError&&) = default;
+      ~LengthError() = default;
+
+      [[nodiscard]] i32 errorCode() const noexcept override;
+      
+      LengthError& operator=(const LengthError&) = default;
+      LengthError& operator=(LengthError&&) = default;
     };
 
   } /*End namespace err */

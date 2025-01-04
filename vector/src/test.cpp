@@ -83,7 +83,7 @@ TEST_F(VECTOR_TEST_FIXTURE, COUNT_METHOD_TEST)
 TEST_F(VECTOR_TEST_FIXTURE, RESERVE_METHOD)
 {
   EXPECT_THROW(emptyVector.reserve(nop::vectorLimits::MAX_SIZE),
-               std::length_error);
+               nop::err::LengthError);
   emptyVector.reserve(10UL);
 
   EXPECT_EQ(0UL, emptyVector.size());
@@ -189,7 +189,7 @@ TEST_F(VECTOR_TEST_FIXTURE, pushBack_METHOD)
 
 TEST_F(VECTOR_TEST_FIXTURE, popBack_METHOD)
 {
-  EXPECT_THROW(emptyVector.popBack(), std::out_of_range);
+  EXPECT_THROW(emptyVector.popBack(), nop::err::OutOfRange);
 
   for (nop::size_t i {}; i != 16UL; ++i)
   {
@@ -200,7 +200,7 @@ TEST_F(VECTOR_TEST_FIXTURE, popBack_METHOD)
 
 TEST_F(VECTOR_TEST_FIXTURE, SET_INDEX_METHOD)
 {
-  EXPECT_THROW(emptyVector.set(10UL), std::out_of_range);
+  EXPECT_THROW(emptyVector.set(10UL), nop::err::OutOfRange);
   
   for (nop::size_t i{}; i != 4UL; ++i)
   {
@@ -212,7 +212,7 @@ TEST_F(VECTOR_TEST_FIXTURE, SET_INDEX_METHOD)
 
 TEST_F(VECTOR_TEST_FIXTURE, SET_METHOD)
 {
-  EXPECT_THROW(emptyVector.set(), std::out_of_range);
+  EXPECT_THROW(emptyVector.set(), nop::err::OutOfRange);
 
   nop::Vector<bool> testVector{16UL};
   testVector.set();
@@ -223,7 +223,7 @@ TEST_F(VECTOR_TEST_FIXTURE, SET_METHOD)
 
 TEST_F(VECTOR_TEST_FIXTURE, RESET_INDEX_METHOD)
 {
-  EXPECT_THROW(emptyVector.reset(10UL), std::out_of_range);
+  EXPECT_THROW(emptyVector.reset(10UL), nop::err::OutOfRange);
 
   for (nop::size_t i{}; i != 4UL; ++i)
   {
@@ -235,7 +235,7 @@ TEST_F(VECTOR_TEST_FIXTURE, RESET_INDEX_METHOD)
 
 TEST_F(VECTOR_TEST_FIXTURE, RESET_METHOD)
 {
-  EXPECT_THROW(emptyVector.reset(), std::out_of_range);
+  EXPECT_THROW(emptyVector.reset(), nop::err::OutOfRange);
 
   filledVector.reset();
 
@@ -245,7 +245,7 @@ TEST_F(VECTOR_TEST_FIXTURE, RESET_METHOD)
 
 TEST_F(VECTOR_TEST_FIXTURE, FLIP_INDEX_METHOD)
 {
-  EXPECT_THROW(emptyVector.flip(10UL), std::out_of_range);
+  EXPECT_THROW(emptyVector.flip(10UL), nop::err::OutOfRange);
 
   for (nop::size_t i{}; i != 4UL; ++i)
   {
@@ -257,7 +257,7 @@ TEST_F(VECTOR_TEST_FIXTURE, FLIP_INDEX_METHOD)
 
 TEST_F(VECTOR_TEST_FIXTURE, FLIP_METHOD)
 {
-  EXPECT_THROW(emptyVector.flip(), std::out_of_range);
+  EXPECT_THROW(emptyVector.flip(), nop::err::OutOfRange);
 
   filledVector.flip();
 
@@ -290,8 +290,8 @@ TEST_F(VECTOR_TEST_FIXTURE, SUBSCRIPT_OPERATOR_TEST)
 
 TEST_F(VECTOR_TEST_FIXTURE, AT_METHOD)
 {
-  EXPECT_THROW((void)emptyVector.at(10UL), std::out_of_range);
-  EXPECT_THROW((void)filledVector.at(20UL), std::out_of_range);
+  EXPECT_THROW((void)emptyVector.at(10UL), nop::err::OutOfRange);
+  EXPECT_THROW((void)filledVector.at(20UL), nop::err::OutOfRange);
 
   EXPECT_EQ(true, filledVector.at(0UL));
   filledVector.reset(0UL);
@@ -300,7 +300,7 @@ TEST_F(VECTOR_TEST_FIXTURE, AT_METHOD)
 
 TEST_F(VECTOR_TEST_FIXTURE, FRONT_METHOD)
 {
-  EXPECT_THROW((void)emptyVector.front(), std::out_of_range);
+  EXPECT_THROW((void)emptyVector.front(), nop::err::OutOfRange);
 
   EXPECT_EQ(true, filledVector.front());
   filledVector.reset(0UL);
@@ -309,7 +309,7 @@ TEST_F(VECTOR_TEST_FIXTURE, FRONT_METHOD)
 
 TEST_F(VECTOR_TEST_FIXTURE, BACK_METHOD)
 {
-  EXPECT_THROW((void)emptyVector.back(), std::out_of_range);
+  EXPECT_THROW((void)emptyVector.back(), nop::err::OutOfRange);
 
   EXPECT_EQ(true, filledVector.back());
   filledVector.reset(15UL);
@@ -340,7 +340,7 @@ TEST_F(VECTOR_TEST_FIXTURE, MOVE_ASSIGNMENT_OPERATOR)
 
 TEST_F(VECTOR_TEST_FIXTURE, BITWISE_AND_ASSIGNMENT_OPERATOR_TEST)
 {
-  EXPECT_THROW(emptyVector &= filledVector, std::invalid_argument);
+  EXPECT_THROW(emptyVector &= filledVector, nop::err::InvalidArgument);
 
   emptyVector.resize(16UL, true);
   filledVector &= emptyVector;
@@ -359,7 +359,7 @@ TEST_F(VECTOR_TEST_FIXTURE, BITWISE_AND_ASSIGNMENT_OPERATOR_TEST)
 
 TEST_F(VECTOR_TEST_FIXTURE, BITWISE_OR_ASSIGNMENT_OPERATOR_TEST)
 {
-  EXPECT_THROW(emptyVector |= filledVector, std::invalid_argument);
+  EXPECT_THROW(emptyVector |= filledVector, nop::err::InvalidArgument);
 
   emptyVector.resize(16UL, true);
   filledVector |= emptyVector;
@@ -378,7 +378,7 @@ TEST_F(VECTOR_TEST_FIXTURE, BITWISE_OR_ASSIGNMENT_OPERATOR_TEST)
 
 TEST_F(VECTOR_TEST_FIXTURE, BITWISE_XOR_ASSIGNMENT_OPERATOR_TEST)
 {
-  EXPECT_THROW(emptyVector ^= filledVector, std::invalid_argument);
+  EXPECT_THROW(emptyVector ^= filledVector, nop::err::InvalidArgument);
 
   emptyVector.resize(16UL, true);
   filledVector ^= emptyVector;
@@ -396,7 +396,7 @@ TEST_F(VECTOR_TEST_FIXTURE, BITWISE_XOR_ASSIGNMENT_OPERATOR_TEST)
 
 TEST_F(VECTOR_TEST_FIXTURE, BITWISE_INVERSE_OPERATOR_TEST)
 {
-  EXPECT_THROW((void)~emptyVector, std::out_of_range);
+  EXPECT_THROW((void)~emptyVector, nop::err::OutOfRange);
 
   emptyVector = ~filledVector;
 
@@ -413,8 +413,7 @@ TEST_F(VECTOR_TEST_FIXTURE, toString_METHOD_TEST)
 
 TEST_F(VECTOR_TEST_FIXTURE, LHS_ASSIGNMENT_TEST)
 {
-  EXPECT_THROW(emptyVector >>= 10UL,
-               std::out_of_range);
+  EXPECT_THROW(emptyVector >>= 10UL, nop::err::OutOfRange);
 
   filledVector >>= 0UL;
 
@@ -443,7 +442,7 @@ TEST_F(VECTOR_TEST_FIXTURE, LHS_ASSIGNMENT_TEST)
 
 TEST_F(VECTOR_TEST_FIXTURE, RHS_ASSIGNMENT_TEST)
 {
-  EXPECT_THROW(emptyVector <<= 10UL, std::out_of_range);
+  EXPECT_THROW(emptyVector <<= 10UL, nop::err::OutOfRange);
 
   filledVector <<= 0UL;
 

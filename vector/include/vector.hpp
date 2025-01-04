@@ -3,8 +3,8 @@
 
 #include <string>
 #include <cstring>
-#include <stdexcept>
 #include "vector_extensions.hpp"
+#include "exception.hpp"
 #include "types.hpp"
 
 namespace nop
@@ -291,7 +291,7 @@ namespace nop
     {
       if (m_bits > vectorLimits::MAX_SIZE)
       {
-        throw std::length_error{"Vector:Vector(sizeType, sizeType) -> invalid number of bits"};
+        throw err::LengthError{"Vector:Vector(sizeType, sizeType) -> invalid number of bits"};
       }
       else if (bitsNumber == ZERO_VALUE)
       {
@@ -299,7 +299,19 @@ namespace nop
         return;
       }
 
+#ifdef __ALLOCATOR_BASE_EXCEPTION__
+      try
+      {
+        m_storage = xmalloc.allocate(m_bytes);
+      }
+      catch (const __ALLOCATOR_BASE_EXCEPTION__& error)
+      {
+        throw err::BadAlloc{"Vector:Vector(sizeType, sizeType) -> Cannot allocate memory"};
+      }
+#else
       m_storage = xmalloc.allocate(m_bytes);
+#endif
+
       std::memset(m_storage, BMASK::RESET, m_bytes);
 
       if (value != ZERO_VALUE)
@@ -314,7 +326,19 @@ namespace nop
       : m_bits{other.m_bits}
       , m_bytes{other.m_bytes}
     {
+#ifdef __ALLOCATOR_BASE_EXCEPTION__
+      try
+      {
+        m_storage = xmalloc.allocate(m_bytes);
+      }
+      catch (const __ALLOCATOR_BASE_EXCEPTION__& error)
+      {
+        throw err::BadAlloc{"Vector:Vector(const Vector&) -> Cannot allocate memory"};
+      }
+#else
       m_storage = xmalloc.allocate(m_bytes);
+#endif
+
       std::memcpy(m_storage, other.m_storage, m_bytes);
     }
 
@@ -408,7 +432,21 @@ namespace nop
 
       if (currentBytes < m_bytes)
       {
-        pointer tempPtr{static_cast<pointer>(xmalloc.allocate(currentBytes))};
+        pointer tempPtr;
+
+#ifdef __ALLOCATOR_BASE_EXCEPTION__
+        try
+        {
+          tempPtr = static_cast<pointer>(xmalloc.allocate(currentBytes));
+        }
+        catch (const __ALLOCATOR_BASE_EXCEPTION__& error)
+        {
+          throw err::BadAlloc{"Vector:shrinkToFit() -> Cannot allocate memory"};
+        }
+#else
+        tempPtr = static_cast<pointer>(xmalloc.allocate(currentBytes));
+#endif
+
         std::memcpy(tempPtr, m_storage, currentBytes);
         xmalloc.deallocate(m_storage, m_bytes);
         m_storage = tempPtr;
@@ -505,7 +543,20 @@ namespace nop
       }
 
       const sizeType newSize{calculateCapacity(bitsNumber)};
-      pointer tempPtr{static_cast<pointer>(xmalloc.allocate(newSize))};
+      pointer tempPtr;
+
+#ifdef __ALLOCATOR_BASE_EXCEPTION__
+      try
+      {
+        tempPtr = static_cast<pointer>(xmalloc.allocate(newSize));
+      }
+      catch (const __ALLOCATOR_BASE_EXCEPTION__& error)
+      {
+        throw err::BadAlloc{"Vector:resize(sizeType, bitState) -> Cannot allocate memory"};
+      }
+#else
+      tempPtr = static_cast<pointer>(xmalloc.allocate(newSize));
+#endif
 
       if (m_storage != EMPTY_STORAGE)
       {
@@ -534,14 +585,27 @@ namespace nop
 
       if (newSize > vectorLimits::MAX_CAPACITY)
       {
-        throw std::length_error{"Vector:reserve() -> invalid number of bytes"};
+        throw err::LengthError{"Vector:reserve() -> invalid number of bytes"};
       }
       else if (bytesNumber == ZERO_VALUE || m_bytes == vectorLimits::MAX_CAPACITY)
       {
         return;
       }
 
-      pointer tempPtr{static_cast<pointer>(xmalloc.allocate(newSize))};
+      pointer tempPtr;
+
+#ifdef __ALLOCATOR_BASE_EXCEPTION__
+      try
+      {
+        tempPtr = static_cast<pointer>(xmalloc.allocate(newSize));
+      }
+      catch (const __ALLOCATOR_BASE_EXCEPTION__& error)
+      {
+        throw err::BadAlloc{"Vector:reserve(sizeType) -> Cannot allocate memory"};
+      }
+#else
+      tempPtr = static_cast<pointer>(xmalloc.allocate(newSize));
+#endif
 
       if (m_storage != EMPTY_STORAGE)
       {
@@ -600,7 +664,7 @@ namespace nop
     {
       if (m_bits == ZERO_VALUE)
       {
-        throw std::out_of_range{"Vector:pop_back() -> invalid number of bits"};
+        throw err::OutOfRange{"Vector:popBack() -> invalid number of bits"};
       }
       --m_bits;
     }
@@ -609,7 +673,7 @@ namespace nop
     {
       if (index >= m_bits)
       {
-        throw std::out_of_range{"Vector:set(sizeType, bitState) -> index is out of range"};
+        throw err::OutOfRange{"Vector:set(sizeType, bitState) -> index is out of range"};
       }
 
       setBit(index, value);
@@ -620,7 +684,7 @@ namespace nop
     {
       if (m_bits == ZERO_VALUE)
       {
-        throw std::out_of_range{"Vector:set() -> invalid number of bits"};
+        throw err::OutOfRange{"Vector:set() -> invalid number of bits"};
       }
 
       std::memset(m_storage, BMASK::SET, calculateCapacity(m_bits));
@@ -631,7 +695,7 @@ namespace nop
     {
       if (index >= m_bits)
       {
-        throw std::out_of_range{"Vector:reset(sizeType) -> index is out of range"};
+        throw err::OutOfRange{"Vector:reset(sizeType) -> index is out of range"};
       }
 
       m_storage[byteDivision(index)] &= ~(BMASK::BIT >> byteModule(index));
@@ -642,12 +706,10 @@ namespace nop
     {
       if (m_bits == ZERO_VALUE)
       {
-        throw std::out_of_range{"Vector:reset() -> invalid number of bits"};
+        throw err::OutOfRange{"Vector:reset() -> invalid number of bits"};
       }
 
-      std::memset(m_storage,
-                  BMASK::RESET,
-                  calculateCapacity(m_bits));
+      std::memset(m_storage, BMASK::RESET, calculateCapacity(m_bits));
       return *this;
     }
 
@@ -655,7 +717,7 @@ namespace nop
     {
       if (index >= m_bits)
       {
-        throw std::out_of_range{"Vector:flip(sizeType) -> index is out of range"};
+        throw err::OutOfRange{"Vector:flip(sizeType) -> index is out of range"};
       }
 
       m_storage[byteDivision(index)] ^= BMASK::BIT >> byteModule(index);
@@ -666,7 +728,7 @@ namespace nop
     {
       if (m_bits == ZERO_VALUE)
       {
-        throw std::out_of_range{"Vector:flip() -> invalid number of bits"};
+        throw err::OutOfRange{"Vector:flip() -> invalid number of bits"};
       }
 
       pointer end{m_storage + calculateCapacity(m_bits)};
@@ -706,7 +768,7 @@ namespace nop
     {
       if (m_bits == ZERO_VALUE)
       {
-        throw std::out_of_range{"Vector:front() -> invalid number of bits"};
+        throw err::OutOfRange{"Vector:front() -> invalid number of bits"};
       }
 
       return *m_storage & BMASK::BIT;
@@ -716,7 +778,7 @@ namespace nop
     {
       if (m_bits == ZERO_VALUE)
       {
-        throw std::out_of_range{"Vector:back() -> invalid number of bits"};
+        throw err::OutOfRange{"Vector:back() -> invalid number of bits"};
       }
 
       return m_storage[byteDivision(m_bits - 1UL)] & BMASK::BIT >> byteModule(m_bits - 1UL);
@@ -726,7 +788,7 @@ namespace nop
     {
       if (index >= m_bits || m_storage == EMPTY_STORAGE)
       {
-        throw std::out_of_range{"Vector:at(sizeType) -> index is out of range"};
+        throw err::OutOfRange{"Vector:at(sizeType) -> index is out of range"};
       }
 
       return m_storage[byteDivision(index)] & BMASK::BIT >> byteModule(index);
@@ -740,7 +802,19 @@ namespace nop
         if (m_bytes != other.m_bytes)
         {
           xmalloc.deallocate(m_storage, m_bytes);
+
+#ifdef __ALLOCATOR_BASE_EXCEPTION__
+          try
+          {
+            m_storage = xmalloc.allocate(other.m_bytes);
+          }
+          catch (const __ALLOCATOR_BASE_EXCEPTION__& error)
+          {
+            throw err::BadAlloc{"Vector:copy assignment operator -> Cannot allocate memory"};
+          }
+#else
           m_storage = xmalloc.allocate(other.m_bytes);
+#endif
         }
 
         std::memcpy(m_storage, other.m_storage, other.m_bytes);
@@ -770,7 +844,7 @@ namespace nop
     {
       if (m_bits != rhs.m_bits || m_bits == ZERO_VALUE || rhs.m_bits == ZERO_VALUE)
       {
-        throw std::invalid_argument("Vector:operator(&=) -> invalid storage size");
+        throw err::InvalidArgument{"Vector:operator(&=) -> invalid storage size"};
       }
 
       pointer beginLhs{m_storage};
@@ -791,7 +865,7 @@ namespace nop
     {
       if (m_bits != rhs.m_bits || m_bits == ZERO_VALUE || rhs.m_bits == ZERO_VALUE)
       {
-        throw std::invalid_argument{"Vector:operator(|=) -> invalid storage size"};
+        throw err::InvalidArgument{"Vector:operator(|=) -> invalid storage size"};
       }
 
       pointer beginLhs{m_storage};
@@ -812,7 +886,7 @@ namespace nop
     {
       if (m_bits != rhs.m_bits || m_bits == ZERO_VALUE || rhs.m_bits == ZERO_VALUE)
       {
-        throw std::invalid_argument{"Vector:operator(^=) -> invalid storage size"};
+        throw err::InvalidArgument{"Vector:operator(^=) -> invalid storage size"};
       }
 
       pointer beginLhs{m_storage};
@@ -833,7 +907,7 @@ namespace nop
     {
       if (m_storage == EMPTY_STORAGE)
       {
-        throw std::out_of_range{"Vector:operator(~) -> invalid storage pointer (nullptr)"};
+        throw err::OutOfRange{"Vector:operator(~) -> invalid storage pointer (nullptr)"};
       }
 
       auto tempObj{*this};
@@ -851,13 +925,11 @@ namespace nop
     {
       if (m_storage == EMPTY_STORAGE)
       {
-        throw std::out_of_range("Vector:operator(>>=) -> invalid storage pointer (nullptr)");
+        throw err::OutOfRange{"Vector:operator(>>=) -> invalid storage pointer (nullptr)"};
       }
       else if (bitOffset >= m_bits)
       {
-        std::memset(m_storage,
-                    BMASK::RESET,
-                    calculateCapacity(m_bits));
+        std::memset(m_storage, BMASK::RESET, calculateCapacity(m_bits));
       }
       else if (bitOffset != ZERO_VALUE)
       {
@@ -889,13 +961,11 @@ namespace nop
     {
       if (m_storage == EMPTY_STORAGE)
       {
-        throw std::out_of_range("Vector:operator(<<=) -> invalid storage pointer (nullptr)");
+        throw err::OutOfRange{"Vector:operator(<<=) -> invalid storage pointer (nullptr)"};
       }
       else if (bitOffset >= m_bits)
       {
-        std::memset(m_storage,
-                    BMASK::RESET,
-                    calculateCapacity(m_bits));
+        std::memset(m_storage, BMASK::RESET, calculateCapacity(m_bits));
       }
       else if (bitOffset != ZERO_VALUE)
       {
@@ -926,12 +996,22 @@ namespace nop
     [[nodiscard]] bitString toString() const
     {
       bitString storageRepresentation;
-      storageRepresentation.reserve(m_bits);
+      
+      try
+      {
+        storageRepresentation.reserve(m_bits);
+      }
+      catch (const std::exception& error)
+      {
+        throw err::BadAlloc{"Vector:toString() -> Cannot allocate memory\n"};
+      }
 
       for (sizeType currentBit{}; currentBit != m_bits; ++currentBit)
+      {
         storageRepresentation.push_back(
         static_cast<bool>(m_storage[byteDivision(currentBit)] & BMASK::BIT >>
         byteModule(currentBit)) + '0');
+      }
 
       return storageRepresentation;
     }
@@ -940,12 +1020,7 @@ namespace nop
 
 }
 
-#undef EMPTY_STORAGE
-#undef ZERO_VALUE
-#undef BIT_SET
-#undef BIT_UNSET
-#undef ANY_SET
-#undef NONE_SET
+#include "undef_vector_extensions.hpp"
 
 template<class AllocatorType = std::allocator<nop::u8>>
 [[nodiscard]] bool operator==(const nop::Vector<bool, AllocatorType>& lhs,
