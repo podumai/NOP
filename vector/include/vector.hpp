@@ -1,7 +1,6 @@
 #ifndef NOP_VECTOR_HPP
 #define NOP_VECTOR_HPP 1
 
-#include <string>
 #include <cstring>
 #include "vector_extensions.hpp"
 #include "exception.hpp"
@@ -13,7 +12,7 @@ namespace nop
   namespace vectorLimits
   {
 
-#if __WORDSIZE == 64
+#if __WORDSIZE == 64UL
     extern constexpr size_t MAX_SIZE{0x2000000000UL};
     extern constexpr size_t MAX_CAPACITY{0x400000000UL};
     extern constexpr size_t MID_CAPACITY{0x100000000UL};
@@ -62,9 +61,10 @@ namespace nop
       };
 
     private:
-      struct ProxyIterator
+      class ProxyIterator
       {
-      public:
+        friend Iterator;
+      private:
         pointer m_byte;
         sizeType m_bit;
 
@@ -1008,9 +1008,9 @@ namespace nop
 
       for (sizeType currentBit{}; currentBit != m_bits; ++currentBit)
       {
-        storageRepresentation.push_back(
-        static_cast<bool>(m_storage[byteDivision(currentBit)] & BMASK::BIT >>
-        byteModule(currentBit)) + '0');
+        storageRepresentation.push_back(((m_storage[byteDivision(currentBit)] & BMASK::BIT >> byteModule(currentBit)) > 0) + '0');
+        //static_cast<bool>(m_storage[byteDivision(currentBit)] & BMASK::BIT >>
+        //byteModule(currentBit)) + '0');
       }
 
       return storageRepresentation;
