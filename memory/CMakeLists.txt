@@ -1,7 +1,11 @@
-cmake_minimum_required(VERSION 3.5)
-project(SMART_PTR VERSION 1.0 LANGUAGES CXX)
+cmake_minimum_required(VERSION 3.15)
+project(SMART_PTR VERSION 1.1 LANGUAGES CXX)
+
 include_directories("include/")
-include_directories("~/NOP/bit/")
+include_directories("../bit/")
+include_directories("../exception/")
+
+find_package(fmt CONFIG REQUIRED)
 
 add_compile_options(
   -Werror
@@ -24,6 +28,9 @@ if (NOT CMAKE_CXX_EXTENSIONS)
   set(CMAKE_CXX_EXTENSIONS OFF)
 endif ()
 
-set(TEST_EXE src/main.cpp)
+set(MAIN_EXE src/main.cpp)
+set(EXCEPTION_EXE ../exception/exception.cpp)
 
-add_executable(TEST.OUT ${TEST_EXE})
+add_executable(MAIN ${MAIN_EXE})
+add_library(EXCEPTION_LIB STATIC ${EXCEPTION_EXE})
+target_link_libraries(MAIN PRIVATE EXCEPTION_LIB fmt::fmt)
