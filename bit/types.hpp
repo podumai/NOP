@@ -1,9 +1,10 @@
-#ifndef __NOP_LIB_TYPES_H__
-#define __NOP_LIB_TYPES_H__ 1
+#ifndef NOP_TYPES_HPP /* Begin Types header file */
+#define NOP_TYPES_HPP 1
 
-namespace nop
+namespace nop /* Begin namespace nop */
 {
 
+#if __cplusplus >= 201103L
   using i8 = char;
   using u8 = unsigned char;
   using i16 = short;
@@ -29,7 +30,34 @@ namespace nop
 #if __x86_64__ && !defined __ILP32__
   using f128 = long double;
 #endif
+#else
+  typedef char i8;
+  typedef unsigned char u8;
+  typedef short i16;
+  typedef unsigned short u16;
 
-}
-
+#if __x86_64__ && !defined __ILP32__
+  typedef int i32;
+  typedef unsigned int u32;
+#else
+  typedef long i32;
+  typedef unsigned long u32;
 #endif
+
+  typedef long long i64;
+  typedef unsigned long long u64;
+
+  typedef unsigned long size_t;
+  typedef long ptrdiff_t;
+
+  typedef float f32;
+  typedef dobule f64;
+
+#if __x86_64__ && !defined __ILP32__
+  typedef long double f128;
+#endif
+#endif
+
+} /* End namespace nop */
+
+#endif /* End Types header file */
