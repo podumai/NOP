@@ -18,7 +18,7 @@ namespace nop /* Begin namespace nop */
    *
    * @enum Consists compile-time constants for valid/invalid conversions
    ****************************************************************************/
-  struct AllowConversion
+  class AllowConversion
   {
   public:
     enum
