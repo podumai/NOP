@@ -2,12 +2,17 @@
 #include <vector>
 #include "smart_ptr.hpp"
 
+#define example(...) nop::makeSmartPtr<std::vector<nop::i32>\
+                                      , nop::AllowConversion\
+                                      , nop::NoSafety\
+                                      , nop::MultipleStorage>(__VA_ARGS__)
+
 nop::i32 main()
 {
-  auto ptr{nop::makeSmartPtr<std::vector<nop::i32>, nop::AllowConversion, nop::NoSafety, nop::MultipleStorage>(10UL, 2UL, 52)};
-
   try
   {
+    auto ptr{example(10UL, 2UL, 52)};
+
     for (nop::size_t i{}; i < 10UL; ++i)
     {
       std::cout << "Vector in Ptr[" << i << "]:\n";

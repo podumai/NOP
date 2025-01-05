@@ -76,7 +76,7 @@ namespace nop /* Begin namespace nop */
 
   public:
     template<typename... Args>
-    [[nodiscard]] static pointer Create(Args... args)
+    [[nodiscard]] static pointer Create(Args... args) noexcept(false)
     {
       return new T(std::forward<Args>(args)...);
     }
@@ -125,7 +125,7 @@ namespace nop /* Begin namespace nop */
   public:
     /* Maybe a bit expensive */
     template<typename... Args>
-    [[nodiscard]] static pointer Create(size_t initSize, Args... args)
+    [[nodiscard]] static pointer Create(size_t initSize, Args... args) noexcept(false)
     {
       pointer ptr{new T[initSize]};
       if constexpr (pointer tempPtr{ptr}; sizeof... (Args) > 0UL)
@@ -170,7 +170,7 @@ namespace nop /* Begin namespace nop */
     using pointer = T*;
 
   public:
-    static void Check(pointer ptr)
+    static void Check(pointer ptr) noexcept(false)
     {
       if (ptr == nullptr)
       {
@@ -289,13 +289,13 @@ namespace nop /* Begin namespace nop */
       Storage<T>::Delete(m_pointer);
     }
 
-    [[nodiscard]] pointer get()
+    [[nodiscard]] pointer get() noexcept(noexcept(Safety<T>::Check(nullptr)))
     {
       Safety<T>::Check(m_pointer);
       return m_pointer;
     }
 
-    [[nodiscard]] constPointer get() const
+    [[nodiscard]] constPointer get() const noexcept(noexcept(Safety<T>::Check(nullptr)))
     {
       Safety<T>::Check(m_pointer);
       return m_pointer;
@@ -314,41 +314,41 @@ namespace nop /* Begin namespace nop */
       return tmp_ptr;
     }
 
-    [[nodiscard]] reference operator*()
+    [[nodiscard]] reference operator*() noexcept(noexcept(Safety<T>::Check(nullptr)))
     {
       Safety<T>::Check(m_pointer);
       return *m_pointer;
     }
 
-    [[nodiscard]] constReference operator*() const
+    [[nodiscard]] constReference operator*() const noexcept(noexcept(Safety<T>::Check(nullptr)))
     {
       Safety<T>::Check(m_pointer);
       return *m_pointer;
     }
 
     template<typename U = T>
-    [[nodiscard]] std::enable_if_t<std::is_class_v<U> == true, T>* operator->()
+    [[nodiscard]] std::enable_if_t<std::is_class_v<U> == true, T>* operator->() noexcept(noexcept(Safety<T>::Check(nullptr)))
     {
       Safety<T>::Check(m_pointer);
       return m_pointer;
     }
 
     template<typename U = T>
-    [[nodiscard]] const std::enable_if_t<std::is_class_v<U> == true, T>* operator->() const
+    [[nodiscard]] const std::enable_if_t<std::is_class_v<U> == true, T>* operator->() const noexcept(noexcept(Safety<T>::Check(nullptr)))
     {
       Safety<T>::Check(m_pointer);
       return m_pointer;
     }
 
     template<typename U = T>
-    [[nodiscard]] std::enable_if_t<Storage<U>::RND_ACCESS == true, T>& operator[](sizeType index)
+    [[nodiscard]] std::enable_if_t<Storage<U>::RND_ACCESS == true, T>& operator[](sizeType index) noexcept(noexcept(Safety<T>::Check(nullptr)))
     {
       Safety<T>::Check(m_pointer);
       return m_pointer[index];
     }
 
     template<typename U = T>
-    [[nodiscard]] const std::enable_if_t<Storage<U>::RND_ACCESS == true, T>& operator[](sizeType index) const
+    [[nodiscard]] const std::enable_if_t<Storage<U>::RND_ACCESS == true, T>& operator[](sizeType index) const noexcept(noexcept(Safety<T>::Check(nullptr)))
     {
       Safety<T>::Check(m_pointer);
       return m_pointer[index];
@@ -385,23 +385,23 @@ namespace nop /* Begin namespace nop */
     template<typename U>
     [[nodiscard]] bool operator==(const SmartPtr<U>& s_ptr) const noexcept
     {
-      return static_cast<const void*>(m_pointer) == static_cast<const void*>(s_ptr.get());
+      return static_cast<const void*>(m_pointer) == static_cast<const void*>(s_ptr);
     }
 
     template<typename U>
-    [[nodiscard]] inline friend bool operator==(const SmartPtr& s_ptr, const U* r_ptr)
+    [[nodiscard]] inline friend bool operator==(const SmartPtr& s_ptr, const U* r_ptr) noexcept
     {
       return static_cast<const void*>(s_ptr.m_pointer) == static_cast<const void*>(r_ptr);
     }
 
     template<typename U>
-    [[nodiscard]] inline friend bool operator==(const U* r_ptr, const SmartPtr& s_ptr)
+    [[nodiscard]] inline friend bool operator==(const U* r_ptr, const SmartPtr& s_ptr) noexcept
     {
       return static_cast<const void*>(r_ptr) == static_cast<const void*>(s_ptr.m_pointer);
     }
 
     template<typename U>
-    [[nodiscard]] bool operator!=(const SmartPtr<U>& s_ptr) const noexcept
+    [[nodiscard]] bool operator!=(const SmartPtr<U>& s_ptr) const noexcept(noexcept(s_ptr.get()))
     {
       return static_cast<const void*>(m_pointer) != static_cast<const void*>(s_ptr.get());
     }
@@ -426,8 +426,7 @@ namespace nop /* Begin namespace nop */
    * @function makeSmartPtr
    * @tparam [in, out] T Is the target type
    * @tparam [in, out] Conversion -> Strategy struct/class
-   * for obtaining the conversion
-   * policy
+   * for obtaining the conversion policy
    * Default: AllowConversion
    * @see AllowConversion
    * @tparam [in, out] Safety -> Strategy struct/class
@@ -451,7 +450,8 @@ namespace nop /* Begin namespace nop */
            template<typename> class Storage = SingleStorage,
            typename... Args
           >
-  [[nodiscard]] SmartPtr<T, Conversion, Safety, Storage> makeSmartPtr(Args&&... args)
+  [[nodiscard]] SmartPtr<T, Conversion, Safety, Storage> makeSmartPtr(Args&&... args) noexcept(Storage<T>::RND_ACCESS == true &&
+                                                                                      noexcept(Storage<T>::Create(10000000000000UL)))
   {
     SmartPtr<T, Conversion, Safety, Storage> ptr{Storage<T>::Create(std::forward<Args>(args)...)};
     return ptr;
