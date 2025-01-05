@@ -10,12 +10,14 @@
 namespace nop /* Begin namespace nop */
 {
 
-  /**
+  /*************************************************************************//**
    * @brief Strategy class/struct for conversion policy
    *
    * @class AllowConversion
-   * @enum Consist valid conversions
-   */
+   * AllowConversion Applies the implicit conversions to bool, void*
+   *
+   * @enum Consists compile-time constants for valid/invalid conversions
+   ****************************************************************************/
   struct AllowConversion
   {
   public:
@@ -26,13 +28,15 @@ namespace nop /* Begin namespace nop */
     };
   };
 
-  /**
-   * @brief Strategy class/struct for conversion policy
+  /*************************************************************************//**
+   * @brief Strategy class for conversion policy
    *
    * @class DisallowConversion
-   * @enum Consist valid conversions
-   */
-  struct DisallowConversion
+   * DisallowConversion Denies the implicit conversions to bool, void*
+   *
+   * @enum Consists compile-time constants for valid/invalid conversions
+   ****************************************************************************/
+  class DisallowConversion
   {
   public:
     enum
@@ -42,14 +46,30 @@ namespace nop /* Begin namespace nop */
     };
   };
   
-  /**
-   * @brief Strategy class/struct for store policy
+  /*************************************************************************//**
+   * @brief Strategy class for store policy
    *
    * @class SingleStorage
+   * SingleStorage Create, Delete and provide compile-time constant
+   * to check the operator subscript support
+   * This support gives information that this pointer is containing the
+   * single object
+   *
+   * @tparam T -> The target type
+   *
+   * @function Create
+   * @tparam [in] Args -> The parameter pack for object constructor
+   * @throw std::bad_alloc()
+   * @return T*
+   *
+   * @function Delete
+   * @param [in] ptr -> Memory to deallocate (previously allocated via new)
+   * @return None
+   *
    * @enum Consist the information about operator subscript overloading
-   */
+   ****************************************************************************/
   template <typename T>
-  struct SingleStorage 
+  class SingleStorage 
   {
   public:
     using pointer = T*;
@@ -72,22 +92,38 @@ namespace nop /* Begin namespace nop */
     enum { RND_ACCESS = false };
   };
 
-  /**
-   * @brief Strategy class/struct for store policy
+  /*************************************************************************//**
+   * @brief Strategy class for store policy
    *
    * @class MultipleStorage
+   * MultipleStorage Create, Delete and provide compile-time constant
+   * to check the operator subscript support
+   * This support gives information that this pointer is containing the
+   * contiguios storage allocated on the heap
+   *
+   * @tparam T -> The target type
+   *
+   * @function Create
+   * @param [in] initSize -> The length of the array
+   * @tparam [in] Args -> The parameter pack containing arguments
+   * for constructor
+   * @throw std::bad_alloc()
+   * @return T*
+   *
+   * @function Delete
+   * @param [in] ptr -> Memory to deallocate (previously allocated via new[])
+   * @return None
+   *
    * @enum Consist the information about operator subscript overloading
-   */
+   ****************************************************************************/
   template<typename T>
-  struct MultipleStorage
+  class MultipleStorage
   {
   public:
     using pointer = T*;
 
   public:
-    /**
-     * Maybe a bit expensive
-     */
+    /* Maybe a bit expensive */
     template<typename... Args>
     [[nodiscard]] static pointer Create(size_t initSize, Args... args)
     {
@@ -114,8 +150,21 @@ namespace nop /* Begin namespace nop */
     enum { RND_ACCESS = true };
   };
 
+  /*************************************************************************//**
+  * @brief Template strategy class for safety policy
+  *
+  * @class ExceptionSafety
+  * ExceptionSafety checks the validness of the provided pointer
+  *
+  * @tparam T -> The target type
+  *
+  * @function Check
+  * @param [in] ptr -> Pointer that need to be checked
+  * @throw nop::err::InvalidArgument
+  * @return None
+  *****************************************************************************/
   template<typename T>
-  struct ExceptionSafety
+  class ExceptionSafety
   {
   public:
     using pointer = T*;
@@ -132,8 +181,21 @@ namespace nop /* Begin namespace nop */
     }
   };
 
+  /*************************************************************************//**
+   * @brief Template strategy class for safety policy
+   *
+   * @class AssertSafety
+   * AssertSafety uses the C assert macro to check the validness
+   * of the provided pointer
+   *
+   * @tparam T -> The target type
+   *
+   * @function Check
+   * @param [in] ptr -> Pointer that need to be checked
+   * @return None
+   ****************************************************************************/
   template<typename T>
-  struct AssertSafety
+  class AssertSafety
   {
   public:
     using pointer = T*;
@@ -145,8 +207,20 @@ namespace nop /* Begin namespace nop */
     }
   };
 
+  /*************************************************************************//**
+   * @brief Template strategy class for safety policy
+   *
+   * @class NoSafety
+   * NoSafety does not check the passed parameter and acts like stub
+   *
+   * @tparam T -> The target type
+   *
+   * @function Check
+   * @param [in] ptr -> Pointer that need to be checked
+   * @return None
+   ****************************************************************************/
   template<typename T>
-  struct NoSafety
+  class NoSafety
   {
   public:
     using pointer = T*;
@@ -156,15 +230,24 @@ namespace nop /* Begin namespace nop */
     {}
   };
 
-  /**
-   * @brief Template smart pointer maintaing it's storage depending on provided strategies
+  /************************************************************************//**
+   * @brief Template smart pointer
    *
    * @class SmartPtr
+   * SmartPtr Recieves four strategies and maintain it's storage depending
+   * on provided strategies
    *
-   * @tparam T is the object type to be stored
-   * @tparam Conversion is the strategy class for conversion policy
-   * @tparam Storage is the strategy class for storage policy
-   */
+   * @tparam T -> The target type
+   * @tparam Conversion -> Strategy struct/class for conversion policy
+   * Default: AllowConversion
+   * @see AllowConversion
+   * @tparam Safety -> Strategy struct/class for safety policy
+   * Default: NoSafety
+   * @see NoSafety
+   * @tparam Storage -> Strategy struct/class for storage policy
+   * Default: SingleStorage
+   * @see SingleStorage
+   ****************************************************************************/
   template<
            typename T,
 // TODO: Implement new class-strategies -> Ownership
@@ -337,20 +420,30 @@ namespace nop /* Begin namespace nop */
 
   };
 
-  /**
+  /************************************************************************//**
    * @brief Factory function for constructing smart ptr with perfect forwarding
    *
-   * @tparam T Is the target type
-   * @tparam Conversion struct/class strategy for obtaining the conversion policy
+   * @function makeSmartPtr
+   * @tparam [in, out] T Is the target type
+   * @tparam [in, out] Conversion -> Strategy struct/class
+   * for obtaining the conversion
+   * policy
    * Default: AllowConversion
-   * @tparam Safety struct/class strategy for obtaining the safety policy
+   * @see AllowConversion
+   * @tparam [in, out] Safety -> Strategy struct/class
+   * for obtaining the safety policy
    * Default: NoSafety
-   * @tparam Storage struct/class strategy for obtaining the storage policy
+   * @see NoSafety
+   * @tparam [in, out] Storage -> Strategy struct/class
+   * for obtaining the storage policy
    * Default: SingleStorage
-   * @tparam Args Is the parameter pack for the object constructors (perfect forward)
-   *
+   * @see SingleStorage
+   * @tparam [in] Args -> The parameter pack for the object constructors
+   * (perfect forward)
+   * @throw std::bad_alloc() if nop storage policy provided
+   * or strategy dependent
    * @result SmartPtr rvalue reference
-   */
+   ****************************************************************************/
   template<
            typename T,
            class Conversion = AllowConversion,
