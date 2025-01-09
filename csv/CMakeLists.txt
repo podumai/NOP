@@ -6,7 +6,7 @@ find_package(fmt CONFIG REQUIRED)
 
 include_directories(include/)
 include_directories(~/NOP/exception/)
-include_directories(~/NOP/bit/)
+include_directories(~/NOP/base/)
 
 enable_testing()
 
