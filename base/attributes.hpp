@@ -19,7 +19,7 @@
     #define __NOP_ATTRIBUTE_ALWAYS_INLINE__ __attribute__((always_inline))
     #define __NOP_HAS_ATTRIBUTE_ALWAYS_INLINE__ 1UL
   #else
-    #define __NOP___NOP_ATTRIBUTE_ALWAYS_INLINE__
+    #define __NOP_ATTRIBUTE_ALWAYS_INLINE__
   #endif
 
   #if __NOP_HAS_ATTRIBUTE(noinline) ||\
