@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 3.5)
-project(BVECTOR VERSION 1.6 LANGUAGES CXX)
+project(VECTOR VERSION 2.0 LANGUAGES CXX)
 
 include_directories(include/)
 include_directories(../exception/)
-include_directories(../bit/)
+include_directories(../base/)
 
 find_package(GTest CONFIG REQUIRED)
 

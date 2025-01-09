@@ -1,4 +1,5 @@
 #include <gtest/gtest.h>
+#include <memory_resource>
 #include "vector.hpp"
 
 class VECTOR_TEST_FIXTURE : public ::testing::Test
@@ -18,7 +19,7 @@ TEST_F(VECTOR_TEST_FIXTURE, CONSTRUCTOR_TEST)
   << "Empty object must be initialized with empty storage";
 
   EXPECT_EQ(16UL, filledVector.size());
-  EXPECT_EQ(2UL, filledVector.capacity());
+  EXPECT_EQ(1UL, filledVector.capacity());
   ASSERT_NE(nullptr, filledVector.data());
   EXPECT_EQ("1111111111111111", filledVector.toString())
   << "Vector was initialized with 0xffff which is 0b1111111111111111";
@@ -26,7 +27,7 @@ TEST_F(VECTOR_TEST_FIXTURE, CONSTRUCTOR_TEST)
 
 TEST_F(VECTOR_TEST_FIXTURE, COPY_CONSTRUCTOR_TEST)
 {
-  auto testVector{filledVector};
+  nop::Vector<bool> testVector{filledVector};
 
   EXPECT_EQ(testVector.size(), filledVector.size());
   EXPECT_EQ(testVector.capacity(), filledVector.capacity());
@@ -38,7 +39,7 @@ TEST_F(VECTOR_TEST_FIXTURE, MOVE_CONSTRUCTOR_TEST)
   auto testVector(std::move(filledVector));
 
   EXPECT_EQ(16UL, testVector.size());
-  EXPECT_EQ(2UL, testVector.capacity());
+  EXPECT_EQ(1UL, testVector.capacity());
   ASSERT_NE(nullptr, testVector.data());
   EXPECT_EQ("1111111111111111", testVector.toString());
 
@@ -59,7 +60,7 @@ TEST_F(VECTOR_TEST_FIXTURE, SIZE_METHOD_TEST)
 TEST_F(VECTOR_TEST_FIXTURE, CAPACITY_METHOD_TEST)
 {
   EXPECT_EQ(0UL, emptyVector.capacity());
-  EXPECT_EQ(2UL, filledVector.capacity());
+  EXPECT_EQ(1UL, filledVector.capacity());
 }
 
 TEST_F(VECTOR_TEST_FIXTURE, DATA_METHOD_TEST)
@@ -94,7 +95,7 @@ TEST_F(VECTOR_TEST_FIXTURE, RESERVE_METHOD)
   filledVector.reserve(10UL);
 
   EXPECT_EQ(16UL, filledVector.size());
-  ASSERT_EQ(12UL, filledVector.capacity())
+  ASSERT_EQ(11UL, filledVector.capacity())
   << "Invalid reservation of space which must be: previous + new <=> 2 + 10 = 12";
   ASSERT_NE(nullptr, filledVector.data());
 }
@@ -115,7 +116,7 @@ TEST_F(VECTOR_TEST_FIXTURE, SHRINK_TO_FIT_METHOD)
 
   EXPECT_EQ(16UL, filledVector.size())
   << "Shrink to fit must not modify the number of bits";
-  EXPECT_EQ(2UL, filledVector.capacity())
+  EXPECT_EQ(1UL, filledVector.capacity())
   << "If object does not contain extra space it must not change object state";
   EXPECT_NE(nullptr, filledVector.data())
   << "Nullptr must be set if object is empty but 'filledVector' is not";
@@ -162,14 +163,14 @@ TEST_F(VECTOR_TEST_FIXTURE, RESIZE_METHOD)
 
   EXPECT_EQ(10UL, emptyVector.size())
   << "Resize must modify the number of bits";
-  EXPECT_EQ(2UL, emptyVector.capacity())
+  EXPECT_EQ(1UL, emptyVector.capacity())
   << "Resize must modify the number of bytes";
   ASSERT_NE(nullptr, emptyVector.data());
   EXPECT_EQ(true, emptyVector.none())
   << "Bits must be unset due to second parameter -> false";
 
   EXPECT_EQ(20UL, filledVector.size());
-  EXPECT_EQ(3UL, filledVector.capacity());
+  EXPECT_EQ(1UL, filledVector.capacity());
   ASSERT_NE(nullptr, filledVector.data());
   EXPECT_EQ(20UL, filledVector.count())
   << "New bits must be set due to second parameter -> true";
@@ -269,7 +270,7 @@ TEST_F(VECTOR_TEST_FIXTURE, SWAP_METHOD)
   emptyVector.swap(filledVector);
 
   EXPECT_EQ(16UL, emptyVector.size());
-  EXPECT_EQ(2UL, emptyVector.capacity());
+  EXPECT_EQ(1UL, emptyVector.capacity());
   EXPECT_EQ(16UL, emptyVector.count());
   EXPECT_EQ(0UL, filledVector.size());
   EXPECT_EQ(0UL, filledVector.capacity());
@@ -331,7 +332,7 @@ TEST_F(VECTOR_TEST_FIXTURE, MOVE_ASSIGNMENT_OPERATOR)
   emptyVector = std::move(filledVector);
 
   EXPECT_EQ(16UL, emptyVector.size());
-  EXPECT_EQ(2UL, emptyVector.capacity());
+  EXPECT_EQ(1UL, emptyVector.capacity());
   EXPECT_EQ(16UL, emptyVector.count());
   EXPECT_EQ(0UL, filledVector.size());
   EXPECT_EQ(0UL, filledVector.capacity());
@@ -346,14 +347,14 @@ TEST_F(VECTOR_TEST_FIXTURE, BITWISE_AND_ASSIGNMENT_OPERATOR_TEST)
   filledVector &= emptyVector;
 
   ASSERT_EQ(16UL, filledVector.size());
-  ASSERT_EQ(2UL, filledVector.capacity());
+  ASSERT_EQ(1UL, filledVector.capacity());
   ASSERT_EQ(16UL, filledVector.count());
 
   emptyVector.reset();
   filledVector &= emptyVector;
 
   EXPECT_EQ(16UL, filledVector.size());
-  EXPECT_EQ(2UL, filledVector.capacity());
+  EXPECT_EQ(1UL, filledVector.capacity());
   EXPECT_EQ(true, filledVector.none());
 }
 
@@ -365,14 +366,14 @@ TEST_F(VECTOR_TEST_FIXTURE, BITWISE_OR_ASSIGNMENT_OPERATOR_TEST)
   filledVector |= emptyVector;
 
   ASSERT_EQ(16UL, filledVector.size());
-  ASSERT_EQ(2UL, filledVector.capacity());
+  ASSERT_EQ(1UL, filledVector.capacity());
   ASSERT_EQ(16UL, filledVector.count());
 
   emptyVector.reset();
   filledVector |= emptyVector;
 
   EXPECT_EQ(16UL, filledVector.size());
-  EXPECT_EQ(2UL, filledVector.capacity());
+  EXPECT_EQ(1UL, filledVector.capacity());
   EXPECT_EQ(false, filledVector.none());
 }
 
@@ -384,13 +385,13 @@ TEST_F(VECTOR_TEST_FIXTURE, BITWISE_XOR_ASSIGNMENT_OPERATOR_TEST)
   filledVector ^= emptyVector;
 
   ASSERT_EQ(16UL, filledVector.size());
-  ASSERT_EQ(2UL, filledVector.capacity());
+  ASSERT_EQ(1UL, filledVector.capacity());
   ASSERT_EQ(true, filledVector.none());
 
   filledVector ^= emptyVector;
 
   EXPECT_EQ(16UL, filledVector.size());
-  EXPECT_EQ(2UL, filledVector.capacity());
+  EXPECT_EQ(1UL, filledVector.capacity());
   EXPECT_EQ(16UL, filledVector.count());
 }
 
@@ -401,7 +402,7 @@ TEST_F(VECTOR_TEST_FIXTURE, BITWISE_INVERSE_OPERATOR_TEST)
   emptyVector = ~filledVector;
 
   ASSERT_EQ(16UL, emptyVector.size());
-  ASSERT_EQ(2UL, emptyVector.capacity());
+  ASSERT_EQ(1UL, emptyVector.capacity());
   ASSERT_EQ(true, emptyVector.none());
 }
 
@@ -418,7 +419,7 @@ TEST_F(VECTOR_TEST_FIXTURE, LHS_ASSIGNMENT_TEST)
   filledVector >>= 0UL;
 
   ASSERT_EQ(16UL, filledVector.size());
-  ASSERT_EQ(2UL, filledVector.capacity());
+  ASSERT_EQ(1UL, filledVector.capacity());
   ASSERT_EQ(16UL, filledVector.count());
 
   filledVector >>= 8UL;
@@ -447,7 +448,7 @@ TEST_F(VECTOR_TEST_FIXTURE, RHS_ASSIGNMENT_TEST)
   filledVector <<= 0UL;
 
   ASSERT_EQ(16, filledVector.size());
-  ASSERT_EQ(2, filledVector.capacity());
+  ASSERT_EQ(1, filledVector.capacity());
   ASSERT_EQ(16, filledVector.count());
 
   filledVector <<= 8UL;
@@ -535,7 +536,7 @@ TEST_F(VECTOR_TEST_FIXTURE, ADVANCED_LHS_RHS_TEST)
 
 TEST_F(VECTOR_TEST_FIXTURE, ITERATOR_TEST)
 {
-  for (auto& iter : filledVector)
+  for (auto&& iter : filledVector)
   {
     ASSERT_EQ(true, iter);
     iter = false;
@@ -558,7 +559,7 @@ TEST_F(VECTOR_TEST_FIXTURE, STRESS_TEST)
 {
   nop::Vector<bool> testVector;
 
-  constexpr nop::size_t SIZE{nop::vectorLimits::MAX_SIZE >> 6UL};
+  constexpr nop::size_t SIZE{nop::vectorLimits::MAX_SIZE};
 
   for (nop::size_t i{}; i != SIZE; ++i)
   {
@@ -568,8 +569,49 @@ TEST_F(VECTOR_TEST_FIXTURE, STRESS_TEST)
   ASSERT_EQ(SIZE, testVector.count());
 
   for (nop::size_t i{}; i != SIZE; ++i)
-    (void)testVector.popBack();
+  {
+    testVector.popBack();
+  }
+
+  ASSERT_EQ(0UL, testVector.size());
+
+  testVector.shrinkToFit();
+
+  constexpr nop::size_t MID_SIZE{SIZE >> 1UL};
+
+  testVector.resize(SIZE, true);
+
+  testVector >>= MID_SIZE;
+
+  ASSERT_EQ(MID_SIZE, testVector.count());
+
+  testVector <<= MID_SIZE;
+
+  ASSERT_EQ(MID_SIZE, testVector.count());
+
+  testVector.clear();
+}
+
+TEST_F(VECTOR_TEST_FIXTURE, TEMPLATE_ALLOCATOR_TEST)
+{
+  nop::u8 buffer[1'000'000UL];
+  std::pmr::monotonic_buffer_resource rs{static_cast<void*>(buffer), 1'000'000UL};
+  std::pmr::polymorphic_allocator<nop::size_t> pAlloc{&rs};
+  nop::Vector<bool, decltype(pAlloc)> testVector{pAlloc};
+  constexpr nop::size_t SIZE{nop::vectorLimits::MAX_SIZE};
+
+  for (nop::size_t i{}; i != SIZE; ++i)
+  {
+    testVector.pushBack(true);
+  }
   
+  ASSERT_EQ(SIZE, testVector.count());
+
+  for (nop::size_t i{}; i != SIZE; ++i)
+  {
+    testVector.popBack();
+  }
+
   ASSERT_EQ(true, testVector.none());
 
   testVector.shrinkToFit();
