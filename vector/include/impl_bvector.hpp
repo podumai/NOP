@@ -64,39 +64,39 @@ namespace vectorLimits /* Begin namespace vectorLimits */
   public:
 #if __cplusplus >= 201103L
     using valueType = bool;
-    using value_type = bool; /* For standard library compatability */
-    using allocator_type = AllocatorType; /* For standard library compatability */
+    using value_type = bool; /* For standard library compatibility */
+    using allocator_type = AllocatorType; /* For standard library compatibility */
     using sizeType = size_t;
-    using size_type = size_t; /* For standard library compatability */
+    using size_type = size_t; /* For standard library compatibility */
     using differenceType = ptrdiff_t;
-    using difference_type = ptrdiff_t; /* For standard library compatability */
-    using reference = value_type&; /* For standard library compatability */
+    using difference_type = ptrdiff_t; /* For standard library compatibility */
+    using reference = value_type&; /* For standard library compatibility */
     using constReference = const valueType&;
-    using const_reference = const value_type&; /* For standard library compatability */
+    using const_reference = const value_type&; /* For standard library compatibility */
     using pointer = std::allocator_traits<AllocatorType>::pointer;
     using constPointer = std::allocator_traits<AllocatorType>::const_pointer;
-    using const_pointer = std::allocator_traits<AllocatorType>::const_pointer; /* For standard library compatability */
-    using iterator = Iterator; /* For standard library compatability */
-    using const_iterator = ConstIterator; /* For standard library compatability */
+    using const_pointer = std::allocator_traits<AllocatorType>::const_pointer; /* For standard library compatibility */
+    using iterator = Iterator; /* For standard library compatibility */
+    using const_iterator = ConstIterator; /* For standard library compatibility */
     using bitState = bool;
     using storageState = bool;
     using bitString = std::string;
 #else
     typedef bool valueType;
-    typedef bool value_type; /* For standard library compatability */
-    typedef AllocatorType allocator_type; /* For standard library compatability */
+    typedef bool value_type; /* For standard library compatibility */
+    typedef AllocatorType allocator_type; /* For standard library compatibility */
     typedef size_t sizeType;
-    typedef size_t size_type; /* For standard library compatability */
+    typedef size_t size_type; /* For standard library compatibility */
     typedef ptrdiff_t differenceType;
-    typedef ptrdiff_t difference_type; /* For standard library compatability */
-    typedef value_type& reference; /* For standard library compatability */
+    typedef ptrdiff_t difference_type; /* For standard library compatibility */
+    typedef value_type& reference; /* For standard library compatibility */
     typedef const valueType& constReference;
-    typedef const value_type& const_reference; /* For standard library compatability */
+    typedef const value_type& const_reference; /* For standard library compatibility */
     typedef AllocatorType::pointer pointer;
     typedef AllocatorType::const_pointer constPointer;
-    typedef AllocatorType::const_pointer const_pointer; /* For standard library compatability */
-    typedef Iterator iterator; /* For standard library compatability */
-    typedef ConstIterator const_iterator; /* For standard library compatability */
+    typedef AllocatorType::const_pointer const_pointer; /* For standard library compatibility */
+    typedef Iterator iterator; /* For standard library compatibility */
+    typedef ConstIterator const_iterator; /* For standard library compatibility */
     typedef bool bitState;
     typedef bool storageState;
     typedef std::string bitString;
@@ -116,25 +116,25 @@ namespace vectorLimits /* Begin namespace vectorLimits */
     public:
 #if __cplusplus >= 201103L
       using differenceType = Vector::differenceType;
-      using difference_type = Vector::differenceType; /* For standard library compatability */
+      using difference_type = Vector::differenceType; /* For standard library compatibility */
       using valueType = Vector::valueType;
-      using value_type = Vector::valueType; /* For standard library compatability */
+      using value_type = Vector::valueType; /* For standard library compatibility */
       using pointer = Vector::pointer;
       using reference = Vector::reference;
       using iteratorCategory = std::random_access_iterator_tag;
-      using iterator_category = std::random_access_iterator_tag; /* For standard library compatability */
+      using iterator_category = std::random_access_iterator_tag; /* For standard library compatibility */
   #if __cplusplus >= 202002L
-      using iterator_concept = std::contiguous_iterator_tag; /* For standard library compatability */
+      using iterator_concept = std::contiguous_iterator_tag; /* For standard library compatibility */
   #endif
 #else
       typedef ptrdiff_t differenceType;
-      typedef ptrdiff_t difference_type; /* For standard library compatability */
+      typedef ptrdiff_t difference_type; /* For standard library compatibility */
       typedef bool valueType;
-      typedef bool value_type; /* For standard library compatability */
+      typedef bool value_type; /* For standard library compatibility */
       typedef size_t* pointer;
       typedef size_t& reference;
       typedef std::random_access_iterator_tag iteratorCategory;
-      typedef std::random_access_iterator_tag iterator_category; /* For standard library compatability */
+      typedef std::random_access_iterator_tag iterator_category; /* For standard library compatibility */
 #endif
     private:
       class alignas(sizeof(pointer) + sizeof(differenceType)) ProxyIterator
@@ -453,25 +453,25 @@ namespace vectorLimits /* Begin namespace vectorLimits */
     public:
 #if __cplusplus >= 201103L
       using differenceType = Vector::differenceType;
-      using difference_type = Vector::differenceType; /* For standard library compatability */
+      using difference_type = Vector::differenceType; /* For standard library compatibility */
       using valueType = Vector::valueType;
-      using value_type = Vector::valueType; /* For standard library compatability */
+      using value_type = Vector::valueType; /* For standard library compatibility */
       using pointer = Vector::constPointer;
       using reference = Vector::valueType;
       using iteratorCategory = std::random_access_iterator_tag;
-      using iterator_category = std::random_access_iterator_tag; /* For standard library compatability */
+      using iterator_category = std::random_access_iterator_tag; /* For standard library compatibility */
   #if __cplusplus >= 202002L
-      using iterator_concept = std::contiguous_iterator_tag; /* For standard library compatability */
+      using iterator_concept = std::contiguous_iterator_tag; /* For standard library compatibility */
   #endif
 #else
       typedef ptrdiff_t differenceType;
-      typedef ptrdiff_t difference_type; /* For standard library compatability */
+      typedef ptrdiff_t difference_type; /* For standard library compatibility */
       typedef bool valueType;
-      typedef bool value_type; /* For standard library compatability */
+      typedef bool value_type; /* For standard library compatibility */
       typedef Vector::pointer pointer;
       typedef Vector::valueType reference;
       typedef std::random_access_iterator_tag iteratorCategory;
-      typedef std::random_access_iterator_tag iterator_category; /* For standard library compatability */
+      typedef std::random_access_iterator_tag iterator_category; /* For standard library compatibility */
 #endif
 
     private:
