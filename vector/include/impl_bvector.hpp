@@ -674,7 +674,9 @@ namespace vectorLimits /* Begin namespace vectorLimits */
     void copyData(__NOP_VECTOR_POINTER__ source, __NOP_VECTOR_POINTER__ destination, __NOP_VECTOR_SIZE_TYPE__ n) __NOP_ATTRIBUTE_NOEXCEPT__
     {
       __NOP_VECTOR_POINTER__ end = source + n;
+#if __cplusplus >= 202002L /* The support for this attribute is in progress */
       [[likely]]
+#endif
       while (source < end)
       {
         *destination = *source;
@@ -687,7 +689,9 @@ namespace vectorLimits /* Begin namespace vectorLimits */
     void fillData(__NOP_VECTOR_POINTER__ source, __NOP_VECTOR_SIZE_TYPE__ n, __NOP_VECTOR_SIZE_TYPE__ fillValue) __NOP_ATTRIBUTE_NOEXCEPT__
     {
       __NOP_VECTOR_POINTER__ end = source + n;
+#if __cplusplus >= 202002L /* The support for this attribute is in progress */
       [[likely]]
+#endif
       while (source < end)
       {
         *source = fillValue;
@@ -1643,8 +1647,9 @@ bool operator==(const nop::__NOP_VECTOR__<bool, Alloc1>& lhs,
     auto beginLhs = lhs.data();
     auto end = beginLhs + lhs.capacity();
     auto beginRhs = rhs.data();
-
+#if __cplusplus >= 202002L /* The support for this attribute is in progress */
     [[likely]]
+#endif
     while (beginLhs < end)
     {
       if (*beginLhs != *beginRhs)
