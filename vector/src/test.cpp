@@ -1,12 +1,14 @@
 #include <gtest/gtest.h>
 #include <memory_resource>
+
+#define __NOP_DISABLE_WARNINGS__
 #include "vector.hpp"
 
 class VECTOR_TEST_FIXTURE : public ::testing::Test
 {
 protected:
-  nop::Vector<bool> emptyVector;
-  nop::Vector<bool> filledVector{16UL, 0xffffUL};
+  nop::Vector<bool, std::allocator<nop::size_t>> emptyVector;
+  nop::Vector<bool, std::allocator<nop::size_t>> filledVector{16UL, 0xffffUL};
 };
 
 TEST_F(VECTOR_TEST_FIXTURE, CONSTRUCTOR_TEST)
@@ -27,7 +29,7 @@ TEST_F(VECTOR_TEST_FIXTURE, CONSTRUCTOR_TEST)
 
 TEST_F(VECTOR_TEST_FIXTURE, COPY_CONSTRUCTOR_TEST)
 {
-  nop::Vector<bool> testVector{filledVector};
+  nop::Vector<bool, std::allocator<nop::size_t>> testVector{filledVector};
 
   EXPECT_EQ(testVector.size(), filledVector.size());
   EXPECT_EQ(testVector.capacity(), filledVector.capacity());
@@ -215,7 +217,7 @@ TEST_F(VECTOR_TEST_FIXTURE, SET_METHOD)
 {
   EXPECT_THROW(emptyVector.set(), nop::err::OutOfRange);
 
-  nop::Vector<bool> testVector{16UL};
+  nop::Vector<bool, std::allocator<nop::size_t>> testVector{16UL};
   testVector.set();
 
   EXPECT_EQ(false, testVector.none())
@@ -557,7 +559,7 @@ TEST_F(VECTOR_TEST_FIXTURE, ITERATOR_TEST)
 
 TEST_F(VECTOR_TEST_FIXTURE, STRESS_TEST)
 {
-  nop::Vector<bool> testVector;
+  nop::Vector<bool, std::allocator<nop::size_t>> testVector;
 
   constexpr nop::size_t SIZE{nop::vectorLimits::MAX_SIZE};
 
@@ -594,20 +596,20 @@ TEST_F(VECTOR_TEST_FIXTURE, STRESS_TEST)
 
 TEST_F(VECTOR_TEST_FIXTURE, TEMPLATE_ALLOCATOR_TEST)
 {
-  nop::u8 buffer[1'000'000UL];
-  std::pmr::monotonic_buffer_resource rs{static_cast<void*>(buffer), 1'000'000UL};
+  nop::size_t buffer[10'000UL];
+  std::pmr::monotonic_buffer_resource rs{static_cast<void*>(buffer), 10'000UL};
   std::pmr::polymorphic_allocator<nop::size_t> pAlloc{&rs};
   nop::Vector<bool, decltype(pAlloc)> testVector{pAlloc};
   constexpr nop::size_t SIZE{nop::vectorLimits::MAX_SIZE};
 
-  for (nop::size_t i{}; i != SIZE; ++i)
+  for (nop::size_t i{}; i < SIZE; ++i)
   {
     testVector.pushBack(true);
   }
   
   ASSERT_EQ(SIZE, testVector.count());
 
-  for (nop::size_t i{}; i != SIZE; ++i)
+  for (nop::size_t i{}; i < SIZE; ++i)
   {
     testVector.popBack();
   }
