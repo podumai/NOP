@@ -73,9 +73,9 @@ namespace vectorLimits /* Begin namespace vectorLimits */
     using reference = value_type&; /* For standard library compatibility */
     using constReference = const valueType&;
     using const_reference = const value_type&; /* For standard library compatibility */
-    using pointer = std::allocator_traits<AllocatorType>::pointer;
-    using constPointer = std::allocator_traits<AllocatorType>::const_pointer;
-    using const_pointer = std::allocator_traits<AllocatorType>::const_pointer; /* For standard library compatibility */
+    using pointer = size_t*;
+    using constPointer = const pointer;
+    using const_pointer = const pointer; /* For standard library compatibility */
     using iterator = Iterator; /* For standard library compatibility */
     using const_iterator = ConstIterator; /* For standard library compatibility */
     using bitState = bool;
@@ -92,9 +92,9 @@ namespace vectorLimits /* Begin namespace vectorLimits */
     typedef value_type& reference; /* For standard library compatibility */
     typedef const valueType& constReference;
     typedef const value_type& const_reference; /* For standard library compatibility */
-    typedef AllocatorType::pointer pointer;
-    typedef AllocatorType::const_pointer constPointer;
-    typedef AllocatorType::const_pointer const_pointer; /* For standard library compatibility */
+    typedef size_t* pointer;
+    typedef const pointer constPointer;
+    typedef const pointer const_pointer; /* For standard library compatibility */
     typedef Iterator iterator; /* For standard library compatibility */
     typedef ConstIterator const_iterator; /* For standard library compatibility */
     typedef bool bitState;
@@ -530,7 +530,7 @@ namespace vectorLimits /* Begin namespace vectorLimits */
       __NOP_ATTRIBUTE_FUNC_CONSTEXPR__
       friend ConstIterator operator+(differenceType index, const ConstIterator& iter) __NOP_ATTRIBUTE_NOEXCEPT__
       {
-        return tempIterator(iter.m_byte, iter.m_bit + index);
+        return ConstIterator(iter.m_byte, iter.m_bit + index);
       }
 
       __NOP_ATTRIBUTE_FUNC_CONSTEXPR__
@@ -569,7 +569,7 @@ namespace vectorLimits /* Begin namespace vectorLimits */
       __NOP_ATTRIBUTE_FUNC_CONSTEXPR__
       friend ConstIterator operator-(differenceType index, const ConstIterator& other) __NOP_ATTRIBUTE_NOEXCEPT__
       {
-        return tempIterator(other.m_byte, other.m_bit - index);
+        return ConstIterator(other.m_byte, other.m_bit - index);
       }
 
       __NOP_ATTRIBUTE_NODISCARD__
@@ -650,7 +650,7 @@ namespace vectorLimits /* Begin namespace vectorLimits */
     };
 
   private:
-    __NOP_ATTRIBUTE_NO_UNIQUE_ADDRESS__ AllocatorType xmalloc;
+    __NOP_ATTRIBUTE_NO_UNIQUE_ADDRESS__ std::allocator<size_t> xmalloc;//AllocatorType xmalloc;
     pointer m_storage;
     sizeType m_bits;
     sizeType m_bytes;
@@ -737,24 +737,24 @@ namespace vectorLimits /* Begin namespace vectorLimits */
 
     __NOP_ATTRIBUTE_CTOR_CONSTEXPR__
     Vector() __NOP_ATTRIBUTE_NOEXCEPT_EXPR(__NOP_ATTRIBUTE_NOEXCEPT_EXPR(AllocatorType()))
-      : xmalloc(AllocatorType())
-      , m_storage(__NOP_NULLPTR__)
+//      : xmalloc(AllocatorType())
+      : m_storage(__NOP_NULLPTR__)
       , m_bits(ZERO_VALUE)
       , m_bytes(ZERO_VALUE)
     {}
 
     __NOP_ATTRIBUTE_CTOR_CONSTEXPR__
     explicit Vector(const AllocatorType& allocator) __NOP_ATTRIBUTE_NOEXCEPT__
-      : xmalloc(allocator)
-      , m_storage(__NOP_NULLPTR__)
+//      : xmalloc(allocator)
+      : m_storage(__NOP_NULLPTR__)
       , m_bits(ZERO_VALUE)
       , m_bytes(ZERO_VALUE)
     {}
 
     __NOP_ATTRIBUTE_CTOR_CONSTEXPR__
     Vector(sizeType bitsNumber, sizeType value = ZERO_VALUE, const AllocatorType& allocator = AllocatorType())
-      : xmalloc(allocator)
-      , m_bits(bitsNumber)
+//     : xmalloc(allocator)
+      : m_bits(bitsNumber)
       , m_bytes(calculateCapacity(bitsNumber))
     {
       if (m_bits > vectorLimits::MAX_SIZE)
@@ -791,8 +791,8 @@ namespace vectorLimits /* Begin namespace vectorLimits */
 
     __NOP_ATTRIBUTE_CTOR_CONSTEXPR__
     Vector(const Vector<bool, AllocatorType>& other)
-      : xmalloc(AllocatorType())
-      , m_storage(__NOP_NULLPTR__)
+//      : xmalloc(AllocatorType())
+      : m_storage(__NOP_NULLPTR__)
       , m_bits(other.m_bits)
       , m_bytes(other.m_bytes)
     {
@@ -816,8 +816,8 @@ namespace vectorLimits /* Begin namespace vectorLimits */
 
     __NOP_ATTRIBUTE_CTOR_CONSTEXPR__
     Vector(const Vector<bool, AllocatorType>& other, const AllocatorType& allocator)
-      : xmalloc(allocator)
-      , m_storage(__NOP_NULLPTR__)
+//      : xmalloc(allocator)
+      : m_storage(__NOP_NULLPTR__)
       , m_bits(other.m_bits)
       , m_bytes(other.m_bytes)
     {
@@ -842,8 +842,8 @@ namespace vectorLimits /* Begin namespace vectorLimits */
 #if __cplusplus >= 201103L
     __NOP_ATTRIBUTE_MCTOR_CONSTEXPR__
     Vector(Vector&& other) __NOP_ATTRIBUTE_NOEXCEPT_EXPR(__NOP_ATTRIBUTE_NOEXCEPT_EXPR(AllocatorType{}))
-      : xmalloc{AllocatorType{}}
-      , m_storage{other.m_storage}
+//      : xmalloc{AllocatorType{}}
+      : m_storage{other.m_storage}
       , m_bits{other.m_bits}
       , m_bytes{other.m_bytes}
     {
@@ -855,8 +855,8 @@ namespace vectorLimits /* Begin namespace vectorLimits */
 #if __cplusplus >= 201402L
     __NOP_ATTRIBUTE_MCTOR_CONSTEXPR__
     Vector(Vector&& other, const AllocatorType& allocator) __NOP_ATTRIBUTE_NOEXCEPT__
-      : xmalloc{allocator}
-      , m_storage{other.m_storage}
+//      : xmalloc{allocator}
+      : m_storage{other.m_storage}
       , m_bits{other.m_bits}
       , m_bytes{other.m_bytes}
     {
