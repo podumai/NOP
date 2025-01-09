@@ -1,7 +1,7 @@
-#ifndef NOP_TYPE_TRAITS_REMOVE_REFERENCE_HPP
+#ifndef NOP_TYPE_TRAITS_REMOVE_REFERENCE_HPP /* Begin Remove reference header file */
 #define NOP_TYPE_TRAITS_REMOVE_REFERENCE_HPP 1
 
-namespace nop
+namespace nop /* Begin namespace nop */
 {
 
   template<typename T>
@@ -42,6 +42,6 @@ namespace nop
   using RemoveReferenceT = typename RemoveReference<T>::type;
 #endif
 
-}
+} /* End namespace nop */
 
-#endif
+#endif /* End Remove reference header file */

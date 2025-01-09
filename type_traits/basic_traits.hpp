@@ -8,12 +8,32 @@ namespace nop /* Begin namespace nop */
   {
   public:
     static constexpr bool value{false};
+
+    [[nodiscard]] constexpr bool operator()() const noexcept
+    {
+      return value;
+    }
+
+    operator bool() const noexcept
+    {
+      return value;
+    }
   };
 
   struct TrueType
   {
   public:
     static constexpr bool value{true};
+
+    [[nodiscard]] constexpr bool operator()() const noexcept
+    {
+      return value;
+    }
+
+    operator bool() const noexcept
+    {
+      return value;
+    }
   };
 
 } /* End namespace nop */
