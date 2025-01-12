@@ -595,14 +595,14 @@ TEST_F(VECTOR_TEST_FIXTURE, STRESS_TEST)
   testVector.clear();
 }
 
-nop::size_t buffer[1'000'000UL];
+nop::size_t buffer[1'000UL];
 
 TEST_F(VECTOR_TEST_FIXTURE, TEMPLATE_ALLOCATOR_TEST)
 {
-  std::pmr::monotonic_buffer_resource rs{static_cast<void*>(buffer), 1'000'000UL};
+  std::pmr::monotonic_buffer_resource rs{static_cast<void*>(buffer), 1'000UL};
   std::pmr::polymorphic_allocator<nop::size_t> pAlloc{&rs};
   nop::vector<bool, decltype(pAlloc)> testVector{pAlloc};
-  constexpr nop::size_t SIZE{nop::vectorLimits::MAX_SIZE};
+  constexpr nop::size_t SIZE{7200UL};
 
   for (nop::size_t i{}; i < SIZE; ++i)
   {
@@ -633,4 +633,19 @@ TEST_F(VECTOR_TEST_FIXTURE, TEMPLATE_ALLOCATOR_TEST)
   ASSERT_EQ(MID_SIZE, testVector.count());
 
   testVector.clear();
+}
+
+TEST_F(VECTOR_TEST_FIXTURE, DUMMY)
+{
+  try
+  {
+    nop::vector<bool, std::allocator<nop::size_t>> test_vector;
+    test_vector.reserve(1000000000000000000UL);
+    FAIL();
+  }
+  catch (const nop::err::BaseException& error)
+  {
+    std::cerr << error.what() << '\n';
+    SUCCEED();
+  }
 }

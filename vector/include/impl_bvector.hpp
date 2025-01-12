@@ -1,8 +1,12 @@
 #ifndef NOP_IMPL_VECTOR_BOOL_HPP /* Begin implementation vector bool header file */
 #define NOP_IMPL_VECTOR_BOOL_HPP 1
 
+/*
+ * TODO: Improve iterators to provide stl_algo support.
+ */
 
-#if !defined(__cplusplus)
+
+#ifndef __cplusplus
   #error CXX compiler required
 #endif
 
@@ -28,9 +32,9 @@ namespace vectorLimits /* Begin namespace vectorLimits */
 
 #if __WORDSIZE == 64UL
 
-  #if !defined(__NOP_DISABLE_WARNINGS__)
-  #error Library "NOP" : vector class requires explicit allocator template parameter.
-  #error Library "NOP" : To disable this message provide : __NOP_DISABLE_WARNINGS__
+  #ifndef __NOP_DISABLE_WARNINGS__
+    #error Library "NOP" : vector class requires explicit allocator template parameter.
+    #error Library "NOP" : To disable this message provide : __NOP_DISABLE_WARNINGS__
   #endif
 
   #if __cplusplus >= 201103L
@@ -174,11 +178,13 @@ namespace vectorLimits /* Begin namespace vectorLimits */
         {
           if (value == BIT_SET)
           {
-            m_byte[byteDivision(static_cast<__NOP_VECTOR_SIZE_TYPE__>(m_bit), UL)] |= __NOP_VECTOR__::BitMask::Bit << byteModule(static_cast<__NOP_VECTOR_SIZE_TYPE__>(m_bit), UL);
+            m_byte[byteDivision(static_cast<__NOP_VECTOR_SIZE_TYPE__>(m_bit), UL)] |=
+            __NOP_VECTOR__::BitMask::Bit << byteModule(static_cast<__NOP_VECTOR_SIZE_TYPE__>(m_bit), UL);
           }
           else
           {
-            m_byte[byteDivision(static_cast<__NOP_VECTOR_SIZE_TYPE__>(m_bit), UL)] &= ~(__NOP_VECTOR__::BitMask::Bit << byteModule(static_cast<__NOP_VECTOR_SIZE_TYPE__>(m_bit), UL));
+            m_byte[byteDivision(static_cast<__NOP_VECTOR_SIZE_TYPE__>(m_bit), UL)] &=
+            ~(__NOP_VECTOR__::BitMask::Bit << byteModule(static_cast<__NOP_VECTOR_SIZE_TYPE__>(m_bit), UL));
           }
 
           return *this;
@@ -188,7 +194,8 @@ namespace vectorLimits /* Begin namespace vectorLimits */
         __NOP_ATTRIBUTE_FUNC_CONSTEXPR__
         bitState getBit() const __NOP_ATTRIBUTE_NOEXCEPT__
         {
-          return m_byte[byteDivision(static_cast<__NOP_VECTOR_SIZE_TYPE__>(m_bit), UL)] & __NOP_VECTOR__::BitMask::Bit << byteModule(static_cast<__NOP_VECTOR_SIZE_TYPE__>(m_bit), UL);
+          return m_byte[byteDivision(static_cast<__NOP_VECTOR_SIZE_TYPE__>(m_bit), UL)] &
+          __NOP_VECTOR__::BitMask::Bit << byteModule(static_cast<__NOP_VECTOR_SIZE_TYPE__>(m_bit), UL);
         }
 
 #if __cplusplus >= 201103L
@@ -206,7 +213,8 @@ namespace vectorLimits /* Begin namespace vectorLimits */
         __NOP_ATTRIBUTE_FUNC_CONSTEXPR__
         bool operator==(const __NOP_VECTOR_PROXY_ITERATOR__& other) const __NOP_ATTRIBUTE_NOEXCEPT__
         {
-          if (m_byte == __NOP_NULLPTR__ || other.m_byte == __NOP_NULLPTR__)
+          if (m_byte == __NOP_NULLPTR__ ||
+              other.m_byte == __NOP_NULLPTR__)
           {
             return false;
           }
@@ -420,7 +428,7 @@ namespace vectorLimits /* Begin namespace vectorLimits */
       __NOP_ATTRIBUTE_FUNC_CONSTEXPR__
       __NOP_VECTOR_PROXY_ITERATOR__ operator[](__NOP_VECTOR_DIFFERENCE_TYPE__ index) __NOP_ATTRIBUTE_NOEXCEPT__
       {
-        return __NOP_VECTOR_PROXY_ITERATOR__(m_iter.m_byte, index);
+        return __NOP_VECTOR_PROXY_ITERATOR__(m_iter.m_byte, m_iter.m_bit + index);
       }
 
 #if __cplusplus >= 201103L
@@ -767,6 +775,7 @@ namespace vectorLimits /* Begin namespace vectorLimits */
       , m_bytes(ZERO_VALUE)
     {}
 
+    /* TODO: Made [[maybe_unused]], __attrbiute__((unused)) */
     __NOP_ATTRIBUTE_CTOR_CONSTEXPR__
     explicit __NOP_VECTOR__(__attribute__((unused)) const __NOP_VECTOR_ALLOCATOR_TYPE__& allocator) __NOP_ATTRIBUTE_NOEXCEPT__
       : xmalloc(allocator)
@@ -775,6 +784,7 @@ namespace vectorLimits /* Begin namespace vectorLimits */
       , m_bytes(ZERO_VALUE)
     {}
 
+    /* TODO: Made [[maybe_unused]], __attrbiute__((unused)) */
     __NOP_ATTRIBUTE_CTOR_CONSTEXPR__
     __NOP_VECTOR__(__NOP_VECTOR_SIZE_TYPE__ bitsNumber, __NOP_VECTOR_SIZE_TYPE__ value = ZERO_VALUE, __attribute__((unused)) const __NOP_VECTOR_ALLOCATOR_TYPE__& allocator = __NOP_VECTOR_ALLOCATOR_TYPE__())
      : xmalloc(allocator)
@@ -783,21 +793,25 @@ namespace vectorLimits /* Begin namespace vectorLimits */
     {
       if (m_bits > vectorLimits::MAX_SIZE)
       {
-        __NOP_THROW_EXCEPTION(err::LengthError, "__NOP_VECTOR__:__NOP_VECTOR__(__NOP_VECTOR_SIZE_TYPE__, __NOP_VECTOR_SIZE_TYPE__) -> invalid number of bits");
+        __NOP_THROW_EXCEPTION(err::LengthError, __NOP_VECTOR_STR__ ":" __NOP_VECTOR_STR__
+                                                "(" __NOP_VECTOR_STR_SIZE_TYPE__ ", " __NOP_VECTOR_STR_SIZE_TYPE__
+                                                ") -> invalid number of bits");
       }
       else if (bitsNumber == ZERO_VALUE)
       {
         return;
       }
 
-#if defined(__ALLOCATOR_BASE_EXCEPTION__)
+#ifdef __ALLOCATOR_BASE_EXCEPTION__
       try
       {
         m_storage = xmalloc.allocate(m_bytes);
       }
       catch (const __ALLOCATOR_BASE_EXCEPTION__& error)
       {
-        __NOP_THROW_EXCEPTION(err::LengthError, "__NOP_VECTOR__:__NOP_VECTOR__(__NOP_VECTOR_SIZE_TYPE__, __NOP_VECTOR_SIZE_TYPE__) -> Cannot allocate memory");
+        __NOP_THROW_EXCEPTION(err::LengthError, __NOP_VECTOR_STR__ ":" __NOP_VECTOR_STR__
+                                                "(" __NOP_VECTOR_STR_SIZE_TYPE__ ", " __NOP_VECTOR_STR_SIZE_TYPE__
+                                                ") -> Cannot allocate memory");
       }
 #else
       m_storage = xmalloc.allocate(m_bytes);
@@ -822,14 +836,15 @@ namespace vectorLimits /* Begin namespace vectorLimits */
     {
       if (m_bytes > ZERO_VALUE)
       {
-#if defined(__ALLOCATOR_BASE_EXCEPTION__)
+#ifdef __ALLOCATOR_BASE_EXCEPTION__
         try
         {
           m_storage = xmalloc.allocate(m_bytes);
         }
         catch (const __ALLOCATOR_BASE_EXCEPTION__& error)
         {
-          __NOP_THROW_EXCEPTION(err::BadAlloc, "__NOP_VECTOR__:__NOP_VECTOR__(const __NOP_VECTOR__&) -> Cannot allocate memory");
+          __NOP_THROW_EXCEPTION(err::BadAlloc, __NOP_VECTOR_STR__ ":" __NOP_VECTOR_STR__
+                                               "(const " __NOP_VECTOR_STR__ "&) -> Cannot allocate memory");
         }
 #else
         m_storage = xmalloc.allocate(m_bytes);
@@ -838,8 +853,9 @@ namespace vectorLimits /* Begin namespace vectorLimits */
       }
     }
 
+    /* TODO: Made [[maybe_unused]], __attrbiute__((unused)) */
     __NOP_ATTRIBUTE_CTOR_CONSTEXPR__
-    __NOP_VECTOR__(const __NOP_VECTOR__<bool, __NOP_VECTOR_ALLOCATOR_TYPE__>& other, const __NOP_VECTOR_ALLOCATOR_TYPE__& allocator)
+    __NOP_VECTOR__(const __NOP_VECTOR__<bool, __NOP_VECTOR_ALLOCATOR_TYPE__>& other, __attribute__((unused)) const __NOP_VECTOR_ALLOCATOR_TYPE__& allocator)
       : xmalloc(allocator)
       , m_storage(__NOP_NULLPTR__)
       , m_bits(other.m_bits)
@@ -847,14 +863,15 @@ namespace vectorLimits /* Begin namespace vectorLimits */
     {
       if (m_bytes > ZERO_VALUE)
       {
-#if defined(__ALLOCATOR_BASE_EXCEPTION__)
+#ifdef __ALLOCATOR_BASE_EXCEPTION__
         try
         {
           m_storage = xmalloc.allocate(m_bytes);
         }
         catch (const __ALLOCATOR_BASE_EXCEPTION__& error)
         {
-          __NOP_THROW_EXCEPTION(err::BadAlloc, "__NOP_VECTOR__:__NOP_VECTOR__(const __NOP_VECTOR__&, const Allocator&) -> Cannot allocate memory");
+          __NOP_THROW_EXCEPTION(err::BadAlloc, __NOP_VECTOR_STR__ ":" __NOP_VECTOR_STR__
+                                               "(const " __NOP_VECTOR_STR__ "&, const Allocator&) -> Cannot allocate memory");
         }
 #else
         m_storage = xmalloc.allocate(m_bytes);
@@ -877,8 +894,9 @@ namespace vectorLimits /* Begin namespace vectorLimits */
 #endif
 
 #if __cplusplus >= 201402L
+    /* TODO: Made [[maybe_unused]], __attrbiute__((unused)) */
     __NOP_ATTRIBUTE_MCTOR_CONSTEXPR__
-    __NOP_VECTOR__(__NOP_VECTOR__&& other, const __NOP_VECTOR_ALLOCATOR_TYPE__& allocator) __NOP_ATTRIBUTE_NOEXCEPT__
+    __NOP_VECTOR__(__NOP_VECTOR__&& other, __attribute__((unused)) const __NOP_VECTOR_ALLOCATOR_TYPE__& allocator) __NOP_ATTRIBUTE_NOEXCEPT__
       : xmalloc{allocator}
       , m_storage{other.m_storage}
       , m_bits{other.m_bits}
@@ -995,14 +1013,15 @@ namespace vectorLimits /* Begin namespace vectorLimits */
 #ifdef __ALLOCATOR_BASE_EXCEPTION__
         try
         {
-          tempPtr = static_cast<__NOP_VECTOR_POINTER__>(xmalloc.allocate(currentBytes));
+          tempPtr = xmalloc.allocate(currentBytes);
         }
         catch (const __ALLOCATOR_BASE_EXCEPTION__& error)
         {
-          __NOP_THROW_EXCEPTION(err::BadAlloc, "__NOP_VECTOR__:shrinkToFit() -> Cannot allocate memory");
+          __NOP_THROW_EXCEPTION(err::BadAlloc, __NOP_VECTOR_STR__ ":" __NOP_VECTOR_STR_SHRINK_TO_FIT__
+                                               "() -> Cannot allocate memory");
         }
 #else
-        tempPtr = static_cast<__NOP_VECTOR_POINTER__>(xmalloc.allocate(currentBytes));
+        tempPtr = xmalloc.allocate(currentBytes);
 #endif
         copyData(m_storage, tempPtr, m_bytes);
         xmalloc.deallocate(m_storage, m_bytes);
@@ -1112,11 +1131,12 @@ namespace vectorLimits /* Begin namespace vectorLimits */
 #ifdef __ALLOCATOR_BASE_EXCEPTION__
         try
         {
-          tempPtr = static_cast<__NOP_VECTOR_POINTER__>(xmalloc.allocate(newSize));
+          tempPtr = xmalloc.allocate(newSize);
         }
         catch (const __ALLOCATOR_BASE_EXCEPTION__& error)
         {
-          __NOP_THROW_EXCEPTION(err::BadAlloc, "__NOP_VECTOR__:resize(__NOP_VECTOR_SIZE_TYPE__, bitState) -> Cannot allocate memory");
+          __NOP_THROW_EXCEPTION(err::BadAlloc, __NOP_VECTOR_STR__ ":resize(" __NOP_VECTOR_STR_SIZE_TYPE__
+                                               ", bitState) -> Cannot allocate memory");
         }
 #else
         tempPtr = static_cast<__NOP_VECTOR_POINTER__>(xmalloc.allocate(newSize));
@@ -1153,7 +1173,7 @@ namespace vectorLimits /* Begin namespace vectorLimits */
 
       if (newSize > vectorLimits::MAX_CAPACITY)
       {
-        __NOP_THROW_EXCEPTION(err::LengthError, "__NOP_VECTOR__:reserve() -> invalid number of bytes");
+        __NOP_THROW_EXCEPTION(err::LengthError, __NOP_VECTOR_STR__ ":reserve() -> invalid number of bytes");
       }
       else if (bytesNumber == ZERO_VALUE ||
                m_bytes == vectorLimits::MAX_CAPACITY)
@@ -1170,7 +1190,7 @@ namespace vectorLimits /* Begin namespace vectorLimits */
       }
       catch (const __ALLOCATOR_BASE_EXCEPTION__& error)
       {
-        __NOP_THROW_EXCEPTION(err::BadAlloc, "__NOP_VECTOR__:reserve(__NOP_VECTOR_SIZE_TYPE__) -> Cannot allocate memory");
+        __NOP_THROW_EXCEPTION(err::BadAlloc, __NOP_VECTOR_STR__ ":reserve(__NOP_VECTOR_SIZE_TYPE__) -> Cannot allocate memory");
       }
 #else
       tempPtr = static_cast<__NOP_VECTOR_POINTER__>(xmalloc.allocate(newSize));
@@ -1242,7 +1262,8 @@ namespace vectorLimits /* Begin namespace vectorLimits */
     {
       if (m_bits == ZERO_VALUE)
       {
-        __NOP_THROW_EXCEPTION(err::OutOfRange, "__NOP_VECTOR__:popBack() -> invalid number of bits");
+        __NOP_THROW_EXCEPTION(err::OutOfRange, __NOP_VECTOR_STR__ ":" __NOP_VECTOR_STR_POP_BACK__
+                                               "() -> invalid number of bits");
       }
       --m_bits;
     }
@@ -1252,7 +1273,8 @@ namespace vectorLimits /* Begin namespace vectorLimits */
     {
       if (index >= m_bits)
       {
-        __NOP_THROW_EXCEPTION(err::OutOfRange, "__NOP_VECTOR__:set(__NOP_VECTOR_SIZE_TYPE__, bitState) -> index is out of range");
+        __NOP_THROW_EXCEPTION(err::OutOfRange, __NOP_VECTOR_STR__ ":set(" __NOP_VECTOR_STR_SIZE_TYPE__
+                                               ", bitState) -> index is out of range");
       }
 
       setBit(index, value);
@@ -1264,7 +1286,7 @@ namespace vectorLimits /* Begin namespace vectorLimits */
     {
       if (m_bits == ZERO_VALUE)
       {
-        __NOP_THROW_EXCEPTION(err::OutOfRange, "__NOP_VECTOR__:set() -> invalid number of bits");
+        __NOP_THROW_EXCEPTION(err::OutOfRange, __NOP_VECTOR_STR__ ":set() -> invalid number of bits");
       }
 
       fillData(m_storage, calculateCapacity(m_bits), BitMask::Set);
@@ -1276,7 +1298,8 @@ namespace vectorLimits /* Begin namespace vectorLimits */
     {
       if (index >= m_bits)
       {
-        __NOP_THROW_EXCEPTION(err::OutOfRange, "__NOP_VECTOR__:reset(__NOP_VECTOR_SIZE_TYPE__) -> index is out of range");
+        __NOP_THROW_EXCEPTION(err::OutOfRange, __NOP_VECTOR_STR__ ":reset("
+                                               __NOP_VECTOR_STR_SIZE_TYPE__ ") -> index is out of range");
       }
 
       m_storage[byteDivision(index, UL)] &= ~(BitMask::Bit << byteModule(index, UL));
@@ -1288,7 +1311,7 @@ namespace vectorLimits /* Begin namespace vectorLimits */
     {
       if (m_bits == ZERO_VALUE)
       {
-        __NOP_THROW_EXCEPTION(err::OutOfRange, "__NOP_VECTOR__:reset() -> invalid number of bits");
+        __NOP_THROW_EXCEPTION(err::OutOfRange, __NOP_VECTOR_STR__ ":reset() -> invalid number of bits");
       }
 
       fillData(m_storage, calculateCapacity(m_bits), BitMask::Reset);
@@ -1300,7 +1323,8 @@ namespace vectorLimits /* Begin namespace vectorLimits */
     {
       if (index >= m_bits)
       {
-        __NOP_THROW_EXCEPTION(err::OutOfRange, "__NOP_VECTOR__:flip(__NOP_VECTOR_SIZE_TYPE__) -> index is out of range");
+        __NOP_THROW_EXCEPTION(err::OutOfRange, __NOP_VECTOR_STR__ ":flip(" __NOP_VECTOR_STR_SIZE_TYPE__
+                                               ") -> index is out of range");
       }
 
       m_storage[byteDivision(index, UL)] ^= BitMask::Bit << byteModule(index, UL);
@@ -1312,7 +1336,7 @@ namespace vectorLimits /* Begin namespace vectorLimits */
     {
       if (m_bits == ZERO_VALUE)
       {
-        __NOP_THROW_EXCEPTION(err::OutOfRange, "__NOP_VECTOR__:flip() -> invalid number of bits");
+        __NOP_THROW_EXCEPTION(err::OutOfRange, __NOP_VECTOR_STR__ ":flip() -> invalid number of bits");
       }
 
       __NOP_VECTOR_POINTER__ end = m_storage + calculateCapacity(m_bits);
@@ -1364,7 +1388,7 @@ namespace vectorLimits /* Begin namespace vectorLimits */
     {
       if (m_bits == ZERO_VALUE)
       {
-        __NOP_THROW_EXCEPTION(err::OutOfRange, "__NOP_VECTOR__:front() -> invalid number of bits");
+        __NOP_THROW_EXCEPTION(err::OutOfRange, __NOP_VECTOR_STR__ ":front() -> invalid number of bits");
       }
 
       return *m_storage & BitMask::Bit;
@@ -1376,7 +1400,7 @@ namespace vectorLimits /* Begin namespace vectorLimits */
     {
       if (m_bits == ZERO_VALUE)
       {
-        __NOP_THROW_EXCEPTION(err::OutOfRange, "__NOP_VECTOR__:back() -> invalid number of bits");
+        __NOP_THROW_EXCEPTION(err::OutOfRange, __NOP_VECTOR_STR__ ":back() -> invalid number of bits");
       }
 
       return m_storage[byteDivision(m_bits - 1UL, UL)] & BitMask::Bit << byteModule(m_bits - 1UL, UL);
@@ -1388,7 +1412,7 @@ namespace vectorLimits /* Begin namespace vectorLimits */
     {
       if (index >= m_bits || m_storage == __NOP_NULLPTR__)
       {
-        __NOP_THROW_EXCEPTION(err::OutOfRange, "__NOP_VECTOR__:at(__NOP_VECTOR_SIZE_TYPE__) -> index is out of range");
+        __NOP_THROW_EXCEPTION(err::OutOfRange, __NOP_VECTOR_STR__ ":at(" __NOP_VECTOR_STR_SIZE_TYPE__ ") -> index is out of range");
       }
       return __NOP_TYPENAME__ __NOP_VECTOR_ITERATOR__::__NOP_VECTOR_PROXY_ITERATOR__(m_storage, static_cast<__NOP_VECTOR_DIFFERENCE_TYPE__>(index));
     }
@@ -1399,7 +1423,8 @@ namespace vectorLimits /* Begin namespace vectorLimits */
     {
       if (index >= m_bits || m_storage == __NOP_NULLPTR__)
       {
-        __NOP_THROW_EXCEPTION(err::OutOfRange, "__NOP_VECTOR__:at(__NOP_VECTOR_SIZE_TYPE__) -> index is out of range");
+        __NOP_THROW_EXCEPTION(err::OutOfRange, __NOP_VECTOR_STR__ ":at(" __NOP_VECTOR_STR_SIZE_TYPE__
+                                               ") -> index is out of range");
       }
 
       return m_storage[byteDivision(index, UL)] & BitMask::Bit << byteModule(index, UL);
@@ -1414,14 +1439,14 @@ namespace vectorLimits /* Begin namespace vectorLimits */
         {
           xmalloc.deallocate(m_storage, m_bytes);
 
-#if defined(__ALLOCATOR_BASE_EXCEPTION__)
+#ifdef __ALLOCATOR_BASE_EXCEPTION__
           try
           {
             m_storage = xmalloc.allocate(other.m_bytes);
           }
           catch (const __ALLOCATOR_BASE_EXCEPTION__& error)
           {
-            __NOP_THROW_EXCEPTION(err::BadAlloc, "__NOP_VECTOR__:copy assignment operator -> Cannot allocate memory");
+            __NOP_THROW_EXCEPTION(err::BadAlloc, __NOP_VECTOR_STR__ ":copy assignment operator -> Cannot allocate memory");
           }
 #else
           m_storage = xmalloc.allocate(other.m_bytes);
@@ -1459,7 +1484,7 @@ namespace vectorLimits /* Begin namespace vectorLimits */
     {
       if (m_bits != rhs.m_bits || m_bits == ZERO_VALUE || rhs.m_bits == ZERO_VALUE)
       {
-        __NOP_THROW_EXCEPTION(err::InvalidArgument, "__NOP_VECTOR__:operator(&=) -> invalid storage size");
+        __NOP_THROW_EXCEPTION(err::InvalidArgument, __NOP_VECTOR_STR__ ":operator(&=) -> invalid storage size");
       }
       __NOP_VECTOR_POINTER__ beginLhs = m_storage;
       __NOP_VECTOR_POINTER__ beginRhs = rhs.m_storage;
@@ -1480,7 +1505,7 @@ namespace vectorLimits /* Begin namespace vectorLimits */
     {
       if (m_bits != rhs.m_bits || m_bits == ZERO_VALUE || rhs.m_bits == ZERO_VALUE)
       {
-        __NOP_THROW_EXCEPTION(err::InvalidArgument, "__NOP_VECTOR__:operator(|=) -> invalid storage size");
+        __NOP_THROW_EXCEPTION(err::InvalidArgument, __NOP_VECTOR_STR__ ":operator(|=) -> invalid storage size");
       }
 
       __NOP_VECTOR_POINTER__ beginLhs = m_storage;
@@ -1502,7 +1527,7 @@ namespace vectorLimits /* Begin namespace vectorLimits */
     {
       if (m_bits != rhs.m_bits || m_bits == ZERO_VALUE || rhs.m_bits == ZERO_VALUE)
       {
-        __NOP_THROW_EXCEPTION(err::InvalidArgument, "__NOP_VECTOR__:operator(^=) -> invalid storage size");
+        __NOP_THROW_EXCEPTION(err::InvalidArgument, __NOP_VECTOR_STR__ ":operator(^=) -> invalid storage size");
       }
 
       __NOP_VECTOR_POINTER__ beginLhs = m_storage;
@@ -1525,7 +1550,7 @@ namespace vectorLimits /* Begin namespace vectorLimits */
     {
       if (m_storage == __NOP_NULLPTR__)
       {
-        __NOP_THROW_EXCEPTION(err::OutOfRange, "__NOP_VECTOR__:operator(~) -> invalid storage pointer (nullptr)");
+        __NOP_THROW_EXCEPTION(err::OutOfRange, __NOP_VECTOR_STR__ ":operator(~) -> invalid storage pointer (nullptr)");
       }
 
       auto tempObj(*this);
@@ -1544,7 +1569,7 @@ namespace vectorLimits /* Begin namespace vectorLimits */
     {
       if (m_storage == __NOP_NULLPTR__)
       {
-        __NOP_THROW_EXCEPTION(err::OutOfRange, "__NOP_VECTOR__:operator(>>=) -> invalid storage pointer (nullptr)");
+        __NOP_THROW_EXCEPTION(err::OutOfRange, __NOP_VECTOR_STR__ ":operator(>>=) -> invalid storage pointer (nullptr)");
       }
       else if (bitOffset >= m_bits)
       {
@@ -1578,7 +1603,7 @@ namespace vectorLimits /* Begin namespace vectorLimits */
     {
       if (m_storage == __NOP_NULLPTR__)
       {
-        __NOP_THROW_EXCEPTION(err::OutOfRange, "__NOP_VECTOR__:operator(<<=) -> invalid storage pointer (nullptr)");
+        __NOP_THROW_EXCEPTION(err::OutOfRange, __NOP_VECTOR_STR__ ":operator(<<=) -> invalid storage pointer (nullptr)");
       }
       else if (bitOffset >= m_bits)
       {
@@ -1620,7 +1645,8 @@ namespace vectorLimits /* Begin namespace vectorLimits */
       }
       catch (const std::exception& error)
       {
-        __NOP_THROW_EXCEPTION(err::BadAlloc, "__NOP_VECTOR__:toString() -> Cannot allocate memory\n");
+        __NOP_THROW_EXCEPTION(err::BadAlloc, __NOP_VECTOR_STR__ ":" __NOP_VECTOR_STR_TO_STRING__
+                                             "() -> Cannot allocate memory\n");
       }
 
       for (__NOP_VECTOR_SIZE_TYPE__ currentBit = 0UL; currentBit != m_bits; ++currentBit)
