@@ -102,7 +102,8 @@ namespace vectorLimits /* Begin namespace vectorLimits */
     };
 
   public:
-    class alignas(sizeof(__NOP_VECTOR_POINTER__) + sizeof(__NOP_VECTOR_SIZE_TYPE__)) __NOP_VECTOR_ITERATOR__
+    class alignas(sizeof(__NOP_VECTOR_POINTER__) +
+                  sizeof(__NOP_VECTOR_SIZE_TYPE__)) __NOP_VECTOR_ITERATOR__
     {
       friend __NOP_VECTOR__;
     public:
@@ -126,7 +127,8 @@ namespace vectorLimits /* Begin namespace vectorLimits */
       typedef std::random_access_iterator_tag iterator_category; /* For standard library compatibility */
 #endif
     private:
-      class alignas(sizeof(__NOP_VECTOR_POINTER__) + sizeof(__NOP_VECTOR_DIFFERENCE_TYPE__)) __NOP_VECTOR_PROXY_ITERATOR__
+      class alignas(sizeof(__NOP_VECTOR_POINTER__) +
+                    sizeof(__NOP_VECTOR_DIFFERENCE_TYPE__)) __NOP_VECTOR_PROXY_ITERATOR__
       {
         friend __NOP_VECTOR_ITERATOR__;
       private:
@@ -135,7 +137,8 @@ namespace vectorLimits /* Begin namespace vectorLimits */
 
       public:
         __NOP_ATTRIBUTE_CTOR_CONSTEXPR__
-        __NOP_VECTOR_PROXY_ITERATOR__(__NOP_VECTOR_POINTER__ ptr, __NOP_VECTOR_DIFFERENCE_TYPE__ bitPosition) __NOP_ATTRIBUTE_NOEXCEPT__
+        __NOP_VECTOR_PROXY_ITERATOR__(__NOP_VECTOR_POINTER__ ptr,
+                                      __NOP_VECTOR_DIFFERENCE_TYPE__ bitPosition) __NOP_ATTRIBUTE_NOEXCEPT__
           : m_byte(ptr)
           , m_bit(bitPosition)
         {}
@@ -253,7 +256,8 @@ namespace vectorLimits /* Begin namespace vectorLimits */
 
     public:
       __NOP_ATTRIBUTE_CTOR_CONSTEXPR__
-      __NOP_VECTOR_ITERATOR__(__NOP_VECTOR_POINTER__ ptr, __NOP_VECTOR_DIFFERENCE_TYPE__ bitPosition) __NOP_ATTRIBUTE_NOEXCEPT__
+      __NOP_VECTOR_ITERATOR__(__NOP_VECTOR_POINTER__ ptr,
+                              __NOP_VECTOR_DIFFERENCE_TYPE__ bitPosition) __NOP_ATTRIBUTE_NOEXCEPT__
         : m_iter(ptr, bitPosition)
       {}
 #if __cplusplus >= 201103L
@@ -305,7 +309,8 @@ namespace vectorLimits /* Begin namespace vectorLimits */
 
       __NOP_ATTRIBUTE_NODISCARD__
       __NOP_ATTRIBUTE_FUNC_CONSTEXPR__
-      friend __NOP_VECTOR_ITERATOR__ operator+(__NOP_VECTOR_DIFFERENCE_TYPE__ index, const __NOP_VECTOR_ITERATOR__& iter) __NOP_ATTRIBUTE_NOEXCEPT__
+      friend __NOP_VECTOR_ITERATOR__ operator+(__NOP_VECTOR_DIFFERENCE_TYPE__ index,
+                                               const __NOP_VECTOR_ITERATOR__& iter) __NOP_ATTRIBUTE_NOEXCEPT__
       {
         auto temp__NOP_VECTOR_ITERATOR__(iter);
         temp__NOP_VECTOR_ITERATOR__ += index;
@@ -345,7 +350,8 @@ namespace vectorLimits /* Begin namespace vectorLimits */
 
       __NOP_ATTRIBUTE_NODISCARD__
       __NOP_ATTRIBUTE_FUNC_CONSTEXPR__
-      friend __NOP_VECTOR_ITERATOR__ operator-(__NOP_VECTOR_DIFFERENCE_TYPE__ index, const __NOP_VECTOR_ITERATOR__& iter) __NOP_ATTRIBUTE_NOEXCEPT__
+      friend __NOP_VECTOR_ITERATOR__ operator-(__NOP_VECTOR_DIFFERENCE_TYPE__ index,
+                                               const __NOP_VECTOR_ITERATOR__& iter) __NOP_ATTRIBUTE_NOEXCEPT__
       {
         auto temp__NOP_VECTOR_ITERATOR__(iter);
         temp__NOP_VECTOR_ITERATOR__ -= index;
@@ -361,7 +367,8 @@ namespace vectorLimits /* Begin namespace vectorLimits */
 
       __NOP_ATTRIBUTE_NODISCARD__
       __NOP_ATTRIBUTE_FUNC_CONSTEXPR__
-      friend bool operator<(const __NOP_VECTOR_ITERATOR__& lhs, const __NOP_VECTOR_ITERATOR__& rhs) __NOP_ATTRIBUTE_NOEXCEPT__
+      friend bool operator<(const __NOP_VECTOR_ITERATOR__& lhs,
+                            const __NOP_VECTOR_ITERATOR__& rhs) __NOP_ATTRIBUTE_NOEXCEPT__
       {
         if (lhs.m_iter.m_bit < rhs.m_iter.m_bit)
         {
@@ -372,7 +379,8 @@ namespace vectorLimits /* Begin namespace vectorLimits */
 
       __NOP_ATTRIBUTE_NODISCARD__
       __NOP_ATTRIBUTE_FUNC_CONSTEXPR__
-      friend bool operator<=(const __NOP_VECTOR_ITERATOR__& lhs, const __NOP_VECTOR_ITERATOR__& rhs) __NOP_ATTRIBUTE_NOEXCEPT__
+      friend bool operator<=(const __NOP_VECTOR_ITERATOR__& lhs,
+                             const __NOP_VECTOR_ITERATOR__& rhs) __NOP_ATTRIBUTE_NOEXCEPT__
       {
         if (lhs.m_iter.m_bit <= rhs.m_iter.m_bit)
         {
@@ -383,7 +391,8 @@ namespace vectorLimits /* Begin namespace vectorLimits */
 
       __NOP_ATTRIBUTE_NODISCARD__
       __NOP_ATTRIBUTE_FUNC_CONSTEXPR__
-      friend bool operator>(const __NOP_VECTOR_ITERATOR__& lhs, const __NOP_VECTOR_ITERATOR__& rhs) __NOP_ATTRIBUTE_NOEXCEPT__
+      friend bool operator>(const __NOP_VECTOR_ITERATOR__& lhs,
+                            const __NOP_VECTOR_ITERATOR__& rhs) __NOP_ATTRIBUTE_NOEXCEPT__
       {
         if (lhs.m_iter.m_bit > rhs.m_iter.m_bit)
         {
@@ -394,7 +403,8 @@ namespace vectorLimits /* Begin namespace vectorLimits */
 
       __NOP_ATTRIBUTE_NODISCARD__
       __NOP_ATTRIBUTE_FUNC_CONSTEXPR__
-      friend bool operator>=(const __NOP_VECTOR_ITERATOR__& lhs, const __NOP_VECTOR_ITERATOR__& rhs) __NOP_ATTRIBUTE_NOEXCEPT__
+      friend bool operator>=(const __NOP_VECTOR_ITERATOR__& lhs,
+                             const __NOP_VECTOR_ITERATOR__& rhs) __NOP_ATTRIBUTE_NOEXCEPT__
       {
         if (lhs.m_iter.m_bit >= rhs.m_iter.m_bit)
         {
@@ -405,14 +415,16 @@ namespace vectorLimits /* Begin namespace vectorLimits */
 
       __NOP_ATTRIBUTE_NODISCARD__
       __NOP_ATTRIBUTE_FUNC_CONSTEXPR__
-      friend bool operator==(const __NOP_VECTOR_ITERATOR__& lhs, const __NOP_VECTOR_ITERATOR__& rhs) __NOP_ATTRIBUTE_NOEXCEPT__
+      friend bool operator==(const __NOP_VECTOR_ITERATOR__& lhs,
+                             const __NOP_VECTOR_ITERATOR__& rhs) __NOP_ATTRIBUTE_NOEXCEPT__
       {
         return lhs.m_iter.m_bit == rhs.m_iter.m_bit;
       }
 
       __NOP_ATTRIBUTE_NODISCARD__
       __NOP_ATTRIBUTE_FUNC_CONSTEXPR__
-      friend bool operator!=(const __NOP_VECTOR_ITERATOR__& lhs, const __NOP_VECTOR_ITERATOR__& rhs) __NOP_ATTRIBUTE_NOEXCEPT__
+      friend bool operator!=(const __NOP_VECTOR_ITERATOR__& lhs,
+                             const __NOP_VECTOR_ITERATOR__& rhs) __NOP_ATTRIBUTE_NOEXCEPT__
       {
         return lhs.m_iter.m_bit != rhs.m_iter.m_bit;
       }
@@ -444,7 +456,8 @@ namespace vectorLimits /* Begin namespace vectorLimits */
 
     };
 
-    class alignas(sizeof(__NOP_VECTOR_POINTER__) + sizeof(__NOP_VECTOR_SIZE_TYPE__)) __NOP_VECTOR_CONST_ITERATOR__
+    class alignas(sizeof(__NOP_VECTOR_POINTER__) +
+                  sizeof(__NOP_VECTOR_SIZE_TYPE__)) __NOP_VECTOR_CONST_ITERATOR__
     {
     public:
 #if __cplusplus >= 201103L
@@ -475,7 +488,8 @@ namespace vectorLimits /* Begin namespace vectorLimits */
 
     public:
       __NOP_ATTRIBUTE_CTOR_CONSTEXPR__
-      __NOP_VECTOR_CONST_ITERATOR__(__NOP_VECTOR_POINTER__ ptr, __NOP_VECTOR_DIFFERENCE_TYPE__ bitPosition) __NOP_ATTRIBUTE_NOEXCEPT__
+      __NOP_VECTOR_CONST_ITERATOR__(__NOP_VECTOR_POINTER__ ptr,
+                                    __NOP_VECTOR_DIFFERENCE_TYPE__ bitPosition) __NOP_ATTRIBUTE_NOEXCEPT__
         : m_byte(ptr)
         , m_bit(bitPosition)
       {}
@@ -523,7 +537,8 @@ namespace vectorLimits /* Begin namespace vectorLimits */
 
       __NOP_ATTRIBUTE_NODISCARD__
       __NOP_ATTRIBUTE_FUNC_CONSTEXPR__
-      friend __NOP_VECTOR_CONST_ITERATOR__ operator+(__NOP_VECTOR_DIFFERENCE_TYPE__ index, const __NOP_VECTOR_CONST_ITERATOR__& iter) __NOP_ATTRIBUTE_NOEXCEPT__
+      friend __NOP_VECTOR_CONST_ITERATOR__ operator+(__NOP_VECTOR_DIFFERENCE_TYPE__ index,
+                                                     const __NOP_VECTOR_CONST_ITERATOR__& iter) __NOP_ATTRIBUTE_NOEXCEPT__
       {
         return __NOP_VECTOR_CONST_ITERATOR__(iter.m_byte, iter.m_bit + index);
       }
@@ -562,7 +577,8 @@ namespace vectorLimits /* Begin namespace vectorLimits */
 
       __NOP_ATTRIBUTE_NODISCARD__
       __NOP_ATTRIBUTE_FUNC_CONSTEXPR__
-      friend __NOP_VECTOR_CONST_ITERATOR__ operator-(__NOP_VECTOR_DIFFERENCE_TYPE__ index, const __NOP_VECTOR_CONST_ITERATOR__& other) __NOP_ATTRIBUTE_NOEXCEPT__
+      friend __NOP_VECTOR_CONST_ITERATOR__ operator-(__NOP_VECTOR_DIFFERENCE_TYPE__ index,
+                                                     const __NOP_VECTOR_CONST_ITERATOR__& other) __NOP_ATTRIBUTE_NOEXCEPT__
       {
         return __NOP_VECTOR_CONST_ITERATOR__(other.m_byte, other.m_bit - index);
       }
@@ -576,28 +592,32 @@ namespace vectorLimits /* Begin namespace vectorLimits */
 
       __NOP_ATTRIBUTE_NODISCARD__
       __NOP_ATTRIBUTE_FUNC_CONSTEXPR__
-      friend bool operator>(const __NOP_VECTOR_CONST_ITERATOR__& lhs, const __NOP_VECTOR_CONST_ITERATOR__& rhs) __NOP_ATTRIBUTE_NOEXCEPT__
+      friend bool operator>(const __NOP_VECTOR_CONST_ITERATOR__& lhs,
+                            const __NOP_VECTOR_CONST_ITERATOR__& rhs) __NOP_ATTRIBUTE_NOEXCEPT__
       {
         return lhs.m_bit > rhs.m_bit;
       }
 
       __NOP_ATTRIBUTE_NODISCARD__
       __NOP_ATTRIBUTE_FUNC_CONSTEXPR__
-      friend bool operator>=(const __NOP_VECTOR_CONST_ITERATOR__& lhs, const __NOP_VECTOR_CONST_ITERATOR__& rhs) __NOP_ATTRIBUTE_NOEXCEPT__
+      friend bool operator>=(const __NOP_VECTOR_CONST_ITERATOR__& lhs,
+                             const __NOP_VECTOR_CONST_ITERATOR__& rhs) __NOP_ATTRIBUTE_NOEXCEPT__
       {
         return lhs.m_bit >= rhs.m_bit;
       }
 
       __NOP_ATTRIBUTE_NODISCARD__
       __NOP_ATTRIBUTE_FUNC_CONSTEXPR__
-      friend bool operator<(const __NOP_VECTOR_CONST_ITERATOR__& lhs, const __NOP_VECTOR_CONST_ITERATOR__& rhs) __NOP_ATTRIBUTE_NOEXCEPT__
+      friend bool operator<(const __NOP_VECTOR_CONST_ITERATOR__& lhs,
+                            const __NOP_VECTOR_CONST_ITERATOR__& rhs) __NOP_ATTRIBUTE_NOEXCEPT__
       {
         return lhs.m_bit < rhs.m_bit;
       }
 
       __NOP_ATTRIBUTE_NODISCARD__
       __NOP_ATTRIBUTE_FUNC_CONSTEXPR__
-      friend bool operator<=(const __NOP_VECTOR_CONST_ITERATOR__& lhs, const __NOP_VECTOR_CONST_ITERATOR__& rhs) __NOP_ATTRIBUTE_NOEXCEPT__
+      friend bool operator<=(const __NOP_VECTOR_CONST_ITERATOR__& lhs,
+                             const __NOP_VECTOR_CONST_ITERATOR__& rhs) __NOP_ATTRIBUTE_NOEXCEPT__
       {
         return lhs.m_bit <= rhs.m_bit;
       }
@@ -679,7 +699,9 @@ namespace vectorLimits /* Begin namespace vectorLimits */
     }
 
     __NOP_ATTRIBUTE_FUNC_CONSTEXPR__
-    void copyData(__NOP_VECTOR_POINTER__ source, __NOP_VECTOR_POINTER__ destination, __NOP_VECTOR_SIZE_TYPE__ n) __NOP_ATTRIBUTE_NOEXCEPT__
+    void copyData(__NOP_VECTOR_POINTER__ source,
+                  __NOP_VECTOR_POINTER__ destination,
+                  __NOP_VECTOR_SIZE_TYPE__ n) __NOP_ATTRIBUTE_NOEXCEPT__
     {
       __NOP_VECTOR_POINTER__ end = source + n;
 #if __cplusplus >= 202002L /* The support for this attribute is in progress */
@@ -694,7 +716,9 @@ namespace vectorLimits /* Begin namespace vectorLimits */
     }
 
     __NOP_ATTRIBUTE_FUNC_CONSTEXPR__
-    void fillData(__NOP_VECTOR_POINTER__ source, __NOP_VECTOR_SIZE_TYPE__ n, __NOP_VECTOR_SIZE_TYPE__ fillValue) __NOP_ATTRIBUTE_NOEXCEPT__
+    void fillData(__NOP_VECTOR_POINTER__ source,
+                  __NOP_VECTOR_SIZE_TYPE__ n,
+                  __NOP_VECTOR_SIZE_TYPE__ fillValue) __NOP_ATTRIBUTE_NOEXCEPT__
     {
       __NOP_VECTOR_POINTER__ end = source + n;
 #if __cplusplus >= 202002L /* The support for this attribute is in progress */
@@ -716,14 +740,15 @@ namespace vectorLimits /* Begin namespace vectorLimits */
 #ifdef __ALLOCATOR_BASE_EXCEPTION__
       try
       {
-        tempPtr = static_cast<__NOP_VECTOR_POINTER__>(xmalloc.allocate(newSize));
+        tempPtr = xmalloc.allocate(newSize);
       }
       catch (const __ALLOCATOR_BASE_EXCEPTION__& error)
       {
-        __NOP_THROW_EXCEPTION(err::BadAlloc, "__NOP_VECTOR__:reserve(__NOP_VECTOR_SIZE_TYPE__) -> Cannot allocate memory");
+        __NOP_THROW_EXCEPTION(err::BadAlloc, __NOP_VECTOR_STR__ ":reserve("
+                                             __NOP_VECTOR_STR_SIZE_TYPE__ ") -> Cannot allocate memory");
       }
 #else
-      tempPtr = static_cast<__NOP_VECTOR_POINTER__>(xmalloc.allocate(newSize));
+      tempPtr = xmalloc.allocate(newSize);
 #endif
 
       if (m_storage != __NOP_NULLPTR__)
@@ -750,7 +775,8 @@ namespace vectorLimits /* Begin namespace vectorLimits */
     __NOP_ATTRIBUTE_FUNC_CONSTEXPR__
     __NOP_VECTOR_ITERATOR__ end() __NOP_ATTRIBUTE_NOEXCEPT__
     {
-      return __NOP_VECTOR_ITERATOR__(m_storage, static_cast<__NOP_VECTOR_DIFFERENCE_TYPE__>(m_bits));
+      return __NOP_VECTOR_ITERATOR__(m_storage,
+                                     static_cast<__NOP_VECTOR_DIFFERENCE_TYPE__>(m_bits));
     }
 
     __NOP_ATTRIBUTE_NODISCARD__
@@ -786,7 +812,9 @@ namespace vectorLimits /* Begin namespace vectorLimits */
 
     /* TODO: Made [[maybe_unused]], __attrbiute__((unused)) */
     __NOP_ATTRIBUTE_CTOR_CONSTEXPR__
-    __NOP_VECTOR__(__NOP_VECTOR_SIZE_TYPE__ bitsNumber, __NOP_VECTOR_SIZE_TYPE__ value = ZERO_VALUE, __attribute__((unused)) const __NOP_VECTOR_ALLOCATOR_TYPE__& allocator = __NOP_VECTOR_ALLOCATOR_TYPE__())
+    __NOP_VECTOR__(__NOP_VECTOR_SIZE_TYPE__ bitsNumber,
+                   __NOP_VECTOR_SIZE_TYPE__ value = ZERO_VALUE,
+                   __attribute__((unused)) const __NOP_VECTOR_ALLOCATOR_TYPE__& allocator = __NOP_VECTOR_ALLOCATOR_TYPE__())
      : xmalloc(allocator)
       , m_bits(bitsNumber)
       , m_bytes(calculateCapacity(bitsNumber))
@@ -855,7 +883,8 @@ namespace vectorLimits /* Begin namespace vectorLimits */
 
     /* TODO: Made [[maybe_unused]], __attrbiute__((unused)) */
     __NOP_ATTRIBUTE_CTOR_CONSTEXPR__
-    __NOP_VECTOR__(const __NOP_VECTOR__<bool, __NOP_VECTOR_ALLOCATOR_TYPE__>& other, __attribute__((unused)) const __NOP_VECTOR_ALLOCATOR_TYPE__& allocator)
+    __NOP_VECTOR__(const __NOP_VECTOR__<bool, __NOP_VECTOR_ALLOCATOR_TYPE__>& other,
+                   __attribute__((unused)) const __NOP_VECTOR_ALLOCATOR_TYPE__& allocator)
       : xmalloc(allocator)
       , m_storage(__NOP_NULLPTR__)
       , m_bits(other.m_bits)
@@ -896,7 +925,8 @@ namespace vectorLimits /* Begin namespace vectorLimits */
 #if __cplusplus >= 201402L
     /* TODO: Made [[maybe_unused]], __attrbiute__((unused)) */
     __NOP_ATTRIBUTE_MCTOR_CONSTEXPR__
-    __NOP_VECTOR__(__NOP_VECTOR__&& other, __attribute__((unused)) const __NOP_VECTOR_ALLOCATOR_TYPE__& allocator) __NOP_ATTRIBUTE_NOEXCEPT__
+    __NOP_VECTOR__(__NOP_VECTOR__&& other,
+                   __attribute__((unused)) const __NOP_VECTOR_ALLOCATOR_TYPE__& allocator) __NOP_ATTRIBUTE_NOEXCEPT__
       : xmalloc{allocator}
       , m_storage{other.m_storage}
       , m_bits{other.m_bits}
@@ -1110,7 +1140,8 @@ namespace vectorLimits /* Begin namespace vectorLimits */
     }
 
     __NOP_ATTRIBUTE_FUNC_CONSTEXPR__
-    void resize(__NOP_VECTOR_SIZE_TYPE__ bitsNumber, bitState value = BIT_UNSET)
+    void resize(__NOP_VECTOR_SIZE_TYPE__ bitsNumber,
+                bitState value = BIT_UNSET)
     {
       if (bitsNumber == ZERO_VALUE)
       {
@@ -1139,7 +1170,7 @@ namespace vectorLimits /* Begin namespace vectorLimits */
                                                ", bitState) -> Cannot allocate memory");
         }
 #else
-        tempPtr = static_cast<__NOP_VECTOR_POINTER__>(xmalloc.allocate(newSize));
+        tempPtr = xmalloc.allocate(newSize);
 #endif
 
         if (m_storage != __NOP_NULLPTR__)
@@ -1186,14 +1217,14 @@ namespace vectorLimits /* Begin namespace vectorLimits */
 #ifdef __ALLOCATOR_BASE_EXCEPTION__
       try
       {
-        tempPtr = static_cast<__NOP_VECTOR_POINTER__>(xmalloc.allocate(newSize));
+        tempPtr = xmalloc.allocate(newSize);
       }
       catch (const __ALLOCATOR_BASE_EXCEPTION__& error)
       {
         __NOP_THROW_EXCEPTION(err::BadAlloc, __NOP_VECTOR_STR__ ":reserve(__NOP_VECTOR_SIZE_TYPE__) -> Cannot allocate memory");
       }
 #else
-      tempPtr = static_cast<__NOP_VECTOR_POINTER__>(xmalloc.allocate(newSize));
+      tempPtr = xmalloc.allocate(newSize);
 #endif
 
       if (m_storage != __NOP_NULLPTR__)
@@ -1269,7 +1300,8 @@ namespace vectorLimits /* Begin namespace vectorLimits */
     }
 
     __NOP_ATTRIBUTE_FUNC_CONSTEXPR__
-    __NOP_VECTOR__<bool, __NOP_VECTOR_ALLOCATOR_TYPE__>& set(__NOP_VECTOR_SIZE_TYPE__ index, bitState value = BIT_UNSET)
+    __NOP_VECTOR__<bool, __NOP_VECTOR_ALLOCATOR_TYPE__>& set(__NOP_VECTOR_SIZE_TYPE__ index,
+                                                             bitState value = BIT_UNSET)
     {
       if (index >= m_bits)
       {
@@ -1372,7 +1404,8 @@ namespace vectorLimits /* Begin namespace vectorLimits */
 #endif
     operator[](__NOP_VECTOR_SIZE_TYPE__ index) __NOP_ATTRIBUTE_NOEXCEPT__
     {
-      return __NOP_TYPENAME__ __NOP_VECTOR_ITERATOR__::__NOP_VECTOR_PROXY_ITERATOR__(m_storage, static_cast<__NOP_VECTOR_DIFFERENCE_TYPE__>(index));
+      return __NOP_TYPENAME__ __NOP_VECTOR_ITERATOR__::__NOP_VECTOR_PROXY_ITERATOR__(m_storage,
+                                                                                     static_cast<__NOP_VECTOR_DIFFERENCE_TYPE__>(index));
     }
 
     __NOP_ATTRIBUTE_NODISCARD__
@@ -1414,7 +1447,8 @@ namespace vectorLimits /* Begin namespace vectorLimits */
       {
         __NOP_THROW_EXCEPTION(err::OutOfRange, __NOP_VECTOR_STR__ ":at(" __NOP_VECTOR_STR_SIZE_TYPE__ ") -> index is out of range");
       }
-      return __NOP_TYPENAME__ __NOP_VECTOR_ITERATOR__::__NOP_VECTOR_PROXY_ITERATOR__(m_storage, static_cast<__NOP_VECTOR_DIFFERENCE_TYPE__>(index));
+      return __NOP_TYPENAME__ __NOP_VECTOR_ITERATOR__::__NOP_VECTOR_PROXY_ITERATOR__(m_storage,
+                                                                                     static_cast<__NOP_VECTOR_DIFFERENCE_TYPE__>(index));
     }
 
     __NOP_ATTRIBUTE_NODISCARD__
@@ -1761,7 +1795,8 @@ namespace std /* Begin namespace std */
 
   template<__NOP_TYPENAME__ T, class Alloc>
   __NOP_ATTRIBUTE_FUNC_CONSTEXPR__
-  void swap(nop::__NOP_VECTOR__<T, Alloc>& lhs, nop::__NOP_VECTOR__<T, Alloc>& rhs) __NOP_ATTRIBUTE_NOEXCEPT__
+  void swap(nop::__NOP_VECTOR__<T, Alloc>& lhs,
+            nop::__NOP_VECTOR__<T, Alloc>& rhs) __NOP_ATTRIBUTE_NOEXCEPT__
   {
     lhs.swap(rhs);
   }
