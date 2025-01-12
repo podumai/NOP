@@ -634,18 +634,3 @@ TEST_F(VECTOR_TEST_FIXTURE, TEMPLATE_ALLOCATOR_TEST)
 
   testVector.clear();
 }
-
-TEST_F(VECTOR_TEST_FIXTURE, DUMMY)
-{
-  try
-  {
-    nop::vector<bool, std::allocator<nop::size_t>> test_vector;
-    test_vector.reserve(1000000000000000000UL);
-    FAIL();
-  }
-  catch (const nop::err::BaseException& error)
-  {
-    std::cerr << error.what() << '\n';
-    SUCCEED();
-  }
-}

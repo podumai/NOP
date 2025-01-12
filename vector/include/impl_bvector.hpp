@@ -1583,7 +1583,7 @@ namespace vectorLimits /* Begin namespace vectorLimits */
         {
           __NOP_VECTOR_SIZE_TYPE__ bitShift = bit - bitOffset;
           __NOP_VECTOR_SIZE_TYPE__ byte = m_storage[byteDivision(bitShift, UL)] &
-                          static_cast<__NOP_VECTOR_SIZE_TYPE__>(BitMask::Bit) << byteModule(bitShift, UL);
+                                          BitMask::Bit << byteModule(bitShift, UL);
           setBit(bit, byte);
         }
 
@@ -1616,7 +1616,7 @@ namespace vectorLimits /* Begin namespace vectorLimits */
         {
           __NOP_VECTOR_SIZE_TYPE__ bitShift = bit + bitOffset;
           __NOP_VECTOR_SIZE_TYPE__ state = m_storage[byteDivision(bitShift, UL)] &
-                          (static_cast<__NOP_VECTOR_SIZE_TYPE__>(BitMask::Bit) << byteModule(bitShift, UL));
+                                           BitMask::Bit << byteModule(bitShift, UL);
           setBit(bit, state);
         }
         __NOP_VECTOR_SIZE_TYPE__ byteShift(byteDivision(bitOffset, UL));
