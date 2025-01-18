@@ -37,6 +37,9 @@ class iterator
   template<typename _C, typename _T>
   using _predicate_i = std::enable_if_t<std::is_base_of_v<_C, _T>, bool>;
 
+  template<typename _C, typename _T>
+  using _operator_i = std::enable_if_t<std::is_base_of_v<_C, _T>, iterator>;
+
  private:
   pointer m_element;
 
@@ -78,14 +81,14 @@ class iterator
   }
 
   template<typename U = Category>
-  [[nodiscard]] constexpr std::enable_if_t<std::is_base_of_v<detail::bidir_tag, U>, iterator>& operator--() noexcept
+  [[nodiscard]] constexpr _operator_i<detail::bidir_tag, U>& operator--() noexcept
   {
     --m_element;
     return *this;
   }
 
   template<typename U = Category>
-  [[nodiscard]] constexpr std::enable_if_t<std::is_base_of_v<detail::bidir_tag, U>, iterator> operator--(std::int32_t) noexcept
+  [[nodiscard]] constexpr _operator_i<detail::bidir_tag, U> operator--(std::int32_t) noexcept
   {
     auto temp_iterator{m_element};
     --m_element;
@@ -93,41 +96,41 @@ class iterator
   }
 
   template<typename U = Category>
-  constexpr std::enable_if_t<std::is_base_of_v<detail::ra_tag, U>, iterator>& operator+=(difference_type offset) noexcept
+  constexpr _operator_i<detail::ra_tag, U>& operator+=(difference_type offset) noexcept
   {
     m_element += offset;
     return *this;
   }
 
   template<typename U = Category>
-  [[nodiscard]] constexpr std::enable_if_t<std::is_base_of_v<detail::ra_tag, U>, iterator> operator+(difference_type offset) noexcept
+  [[nodiscard]] constexpr _operator_i<detail::ra_tag, U> operator+(difference_type offset) noexcept
   {
     return iterator{m_element + offset};
   }
 
   template<typename U = Category>
-  [[nodiscard]] friend constexpr std::enable_if_t<std::is_base_of_v<detail::ra_tag, U>, iterator> operator+(difference_type offset,
-                                                                                                                             const iterator& iter) noexcept
+  [[nodiscard]] friend constexpr _operator_i<detail::ra_tag, U> operator+(difference_type offset,
+                                                                          const iterator& iter) noexcept
   {
     return iterator{offset + iter.m_element};
   }
 
   template<typename U = Category>
-  constexpr std::enable_if_t<std::is_base_of_v<detail::ra_tag, U>, iterator>& operator-=(difference_type offset) noexcept
+  constexpr _operator_i<detail::ra_tag, U>& operator-=(difference_type offset) noexcept
   {
     m_element -= offset;
     return *this;
   }
 
   template<typename U = Category>
-  [[nodiscard]] constexpr std::enable_if_t<std::is_base_of_v<detail::ra_tag, U>, iterator> operator-(difference_type offset) noexcept
+  [[nodiscard]] constexpr _operator_i<detail::ra_tag, U> operator-(difference_type offset) noexcept
   {
     return iterator{m_element - offset};
   }
 
   template<typename U = Category>
-  [[nodiscard]] friend constexpr std::enable_if_t<std::is_base_of_v<detail::ra_tag, U>, iterator> operator-(difference_type offset,
-                                                                                                                             const iterator& iter) noexcept
+  [[nodiscard]] friend constexpr _operator_i<detail::ra_tag, U> operator-(difference_type offset,
+                                                                          const iterator& iter) noexcept
   {
     return iterator{offset - iter.m_element};
   }
