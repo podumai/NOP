@@ -4,6 +4,7 @@
 #include <cstdint>
 
 #include <type_traits>
+#include <concepts>
 #include <iterator>
 
 namespace nop /* Begin namespace nop */
