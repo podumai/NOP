@@ -34,13 +34,6 @@ class iterator
   using iterator_category = Category;
 
  private:
-  template<typename _C, typename _T>
-  using _predicate_i = std::enable_if_t<std::is_base_of_v<_C, _T>, bool>;
-
-  template<typename _C, typename _T>
-  using _operator_i = std::enable_if_t<std::is_base_of_v<_C, _T>, iterator>;
-
- private:
   pointer m_element;
 
  public:
@@ -61,8 +54,8 @@ class iterator
     return *m_element;
   }
 
-  template<typename U = T>
-  [[nodiscard]] constexpr std::enable_if_t<std::is_class_v<U>, pointer> operator->() noexcept
+  [[nodiscard]] constexpr pointer operator->() noexcept
+  //[[nodiscard]] constexpr std::enable_if_t<std::is_class_v<U>, pointer> operator->() noexcept
   {
     return m_element;
   }
@@ -75,110 +68,106 @@ class iterator
 
   [[nodiscard]] constexpr iterator operator++(std::int32_t) noexcept
   {
-    auto temp_iterator{m_element};
-    ++m_element;
-    return temp_iterator;
+    return iterator{m_element++};
   }
 
-  template<typename U = Category>
-  [[nodiscard]] constexpr _operator_i<detail::bidir_tag, U>& operator--() noexcept
+  [[nodiscard]] constexpr iterator& operator--() noexcept
+  requires std::derived_from<Category, detail::bidir_tag>
   {
     --m_element;
     return *this;
   }
 
-  template<typename U = Category>
-  [[nodiscard]] constexpr _operator_i<detail::bidir_tag, U> operator--(std::int32_t) noexcept
+  [[nodiscard]] constexpr iterator operator--(std::int32_t) noexcept
+  requires std::derived_from<Category, detail::bidir_tag>
   {
-    auto temp_iterator{m_element};
-    --m_element;
-    return temp_iterator;
+    return iterator{m_element--};
   }
 
-  template<typename U = Category>
-  constexpr _operator_i<detail::ra_tag, U>& operator+=(difference_type offset) noexcept
+  constexpr iterator& operator+=(difference_type offset) noexcept
+  requires std::derived_from<Category, detail::ra_tag>
   {
     m_element += offset;
     return *this;
   }
 
-  template<typename U = Category>
-  [[nodiscard]] constexpr _operator_i<detail::ra_tag, U> operator+(difference_type offset) noexcept
+  [[nodiscard]] constexpr iterator operator+(difference_type offset) noexcept
+  requires std::derived_from<Category, detail::ra_tag>
   {
     return iterator{m_element + offset};
   }
 
-  template<typename U = Category>
-  [[nodiscard]] friend constexpr _operator_i<detail::ra_tag, U> operator+(difference_type offset,
-                                                                          const iterator& iter) noexcept
+  [[nodiscard]] friend constexpr iterator operator+(difference_type offset,
+                                                    const iterator& iter) noexcept
+  requires std::derived_from<Category, detail::ra_tag>
   {
     return iterator{offset + iter.m_element};
   }
 
-  template<typename U = Category>
-  constexpr _operator_i<detail::ra_tag, U>& operator-=(difference_type offset) noexcept
+  constexpr iterator& operator-=(difference_type offset) noexcept
+  requires std::derived_from<Category, detail::ra_tag>
   {
     m_element -= offset;
     return *this;
   }
 
-  template<typename U = Category>
-  [[nodiscard]] constexpr _operator_i<detail::ra_tag, U> operator-(difference_type offset) noexcept
+  [[nodiscard]] constexpr iterator operator-(difference_type offset) noexcept
+  requires std::derived_from<Category, detail::ra_tag>
   {
     return iterator{m_element - offset};
   }
 
-  template<typename U = Category>
-  [[nodiscard]] friend constexpr _operator_i<detail::ra_tag, U> operator-(difference_type offset,
-                                                                          const iterator& iter) noexcept
+  [[nodiscard]] friend constexpr iterator operator-(difference_type offset,
+                                                    const iterator& iter) noexcept
+  requires std::derived_from<Category, detail::ra_tag>
   {
     return iterator{offset - iter.m_element};
   }
 
-  template<typename U = Category>
-  [[nodiscard]] constexpr std::enable_if_t<std::is_base_of_v<detail::ra_tag, U>, difference_type> operator-(const iterator& other) noexcept
+  [[nodiscard]] constexpr difference_type operator-(const iterator& other) noexcept
+  requires std::derived_from<Category, detail::ra_tag>
   {
     return m_element - other.m_element;
   }
 
-  template<typename U = Category>
-  [[nodiscard]] constexpr std::enable_if_t<std::is_base_of_v<detail::ra_tag, U>, reference> operator[](difference_type index) noexcept
+  [[nodiscard]] constexpr reference operator[](difference_type index) noexcept
+  requires std::derived_from<Category, detail::ra_tag>
   {
     return m_element[index];
   }
 
-  template<typename U = Category>
-  [[nodiscard]] constexpr _predicate_i<detail::fwd_tag, U> operator==(const iterator& other) noexcept
+  [[nodiscard]] constexpr bool operator==(const iterator& other) noexcept
+  requires std::derived_from<Category, detail::fwd_tag>
   {
     return m_element == other.m_element;
   }
 
-  template<typename U = Category>
-  [[nodiscard]] constexpr _predicate_i<detail::fwd_tag, U> operator!=(const iterator& other) noexcept
+  [[nodiscard]] constexpr bool operator!=(const iterator& other) noexcept
+  requires std::derived_from<Category, detail::fwd_tag>
   {
     return m_element != other.m_element;
   }
 
-  template<typename U = Category>
-  [[nodiscard]] constexpr _predicate_i<detail::ra_tag, U> operator>(const iterator& other) noexcept
+  [[nodiscard]] constexpr bool operator>(const iterator& other) noexcept
+  requires std::derived_from<Category, detail::ra_tag>
   {
     return m_element > other.m_element;
   }
 
-  template<typename U = Category>
-  [[nodiscard]] constexpr _predicate_i<detail::ra_tag, U> operator>=(const iterator& other) noexcept
+  [[nodiscard]] constexpr bool operator>=(const iterator& other) noexcept
+  requires std::derived_from<Category, detail::ra_tag>
   {
     return m_element >= other.m_element;
   }
 
-  template<typename U = Category>
-  [[nodiscard]] constexpr _predicate_i<detail::ra_tag, U> operator<(const iterator& other) noexcept
+  [[nodiscard]] constexpr bool operator<(const iterator& other) noexcept
+  requires std::derived_from<Category, detail::ra_tag>
   {
     return m_element < other.m_element;
   }
 
-  template<typename U = Category>
-  [[nodiscard]] constexpr _predicate_i<detail::ra_tag, U> operator<=(const iterator& other) noexcept
+  [[nodiscard]] constexpr bool operator<=(const iterator& other) noexcept
+  requires std::derived_from<Category, detail::ra_tag>
   {
     return m_element <= other.m_element;
   }
