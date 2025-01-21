@@ -56,7 +56,6 @@ class iterator
   }
 
   [[nodiscard]] constexpr pointer operator->() noexcept
-  //[[nodiscard]] constexpr std::enable_if_t<std::is_class_v<U>, pointer> operator->() noexcept
   {
     return m_element;
   }
