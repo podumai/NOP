@@ -9,7 +9,7 @@
 #include <initializer_list>
 #include <cstdint>
 
-#include "/home/podumai/NOP/iterator/iterator.hpp"
+#include "iterator.hpp"
 
 namespace nop /* Begin namespace nop */
 {
