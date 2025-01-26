@@ -154,19 +154,27 @@ class forward_list
   pointer m_head;
 
  private:
-  template<typename U>
-  pointer create_node(U&& value)
+  [[nodiscard]] pointer create_node(const value_type& value)
   {
-    pointer temp_node{xmalloc.allocate(sizeof(node_type))};
-    (void) new (temp_node) node_type(std::forward<U>(value));
+    pointer temp_node{xmalloc.allocate(1UL)};
+    (void) new (temp_node) node_type(value);
+
+    return temp_node;
+  }
+
+  [[nodiscard]] pointer create_node(value_type&& value)
+  requires (!std::is_fundamental_v<value_type>)
+  {
+    pointer temp_node{xmalloc.allocate(1UL)};
+    (void) new (temp_node) node_type(std::move(value));
 
     return temp_node;
   }
 
   template<typename... Args>
-  pointer emplace_node(Args... args)
+  [[nodiscard]] pointer emplace_node(Args... args)
   {
-    pointer temp_node{xmalloc.allocate(sizeof(node_type))};
+    pointer temp_node{xmalloc.allocate(1UL)};
     (void) new (temp_node) node_type(std::forward<Args>(args)...);
 
     return temp_node;
@@ -205,7 +213,7 @@ class forward_list
     {
       pointer temp_ptr{m_head->next};
       m_head->~node_type();
-      xmalloc.deallocate(m_head, sizeof(node_type));
+      xmalloc.deallocate(m_head, 1UL);
       m_head = temp_ptr;
     }
 
@@ -350,7 +358,7 @@ class forward_list
     pointer temp_ptr{m_head};
     m_head = m_head->next;
     temp_ptr->~node_type();
-    xmalloc.deallocate(temp_ptr, sizeof(node_type));
+    xmalloc.deallocate(temp_ptr, 1UL);
   }
 
   [[nodiscard]] reference front()
@@ -373,7 +381,7 @@ class forward_list
     clear_list();
   }
 
-  [[nodiscard]] allocator_type get_allocator() const noexcept
+  [[nodiscard]] constexpr allocator_type get_allocator() const noexcept
   {
     return xmalloc;
   }
