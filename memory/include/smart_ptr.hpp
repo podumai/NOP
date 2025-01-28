@@ -1,56 +1,65 @@
 #ifndef NOP_SMART_PTR_HPP /* Begin smart ptr header file */
 #define NOP_SMART_PTR_HPP 1
 
+#pragma once
+
 #include <type_traits>
+
 #include <fmt/format.h>
-#include <cassert>
+
 #include "exception.hpp"
-#include "types.hpp"
+
+#include <cstdint>
+#include <cassert>
+
 
 namespace nop /* Begin namespace nop */
 {
 
-  /*************************************************************************//**
+namespace strategy /* Begin namespace strategy */
+{
+
+  /**
    * @brief Strategy class/struct for conversion policy
    *
-   * @class AllowConversion
-   * AllowConversion Applies the implicit conversions to bool, void*
+   * @class all_conversion
+   * all_conversion Applies the implicit conversions to bool, void*
    *
    * @enum Consists compile-time constants for valid/invalid conversions
-   ****************************************************************************/
-  class AllowConversion
+   */
+  class all_conversion
   {
-  public:
-    enum
+   public:
+    enum : bool
     {
       VOID_POINTER = true,
       BOOL = true
     };
   };
 
-  /*************************************************************************//**
+  /**
    * @brief Strategy class for conversion policy
    *
-   * @class DisallowConversion
-   * DisallowConversion Denies the implicit conversions to bool, void*
+   * @class no_conversion
+   * no_conversion Denies the implicit conversions to bool, void*
    *
    * @enum Consists compile-time constants for valid/invalid conversions
-   ****************************************************************************/
-  class DisallowConversion
+   */
+  class no_conversion
   {
-  public:
-    enum
+   public:
+    enum : bool
     {
       VOID_POINTER = false,
       BOOL = false
     };
   };
-  
-  /*************************************************************************//**
+ 
+  /**
    * @brief Strategy class for store policy
    *
-   * @class SingleStorage
-   * SingleStorage Create, Delete and provide compile-time constant
+   * @class single_storage
+   * single_storage Create, Delete and provide compile-time constant
    * to check the operator subscript support
    * This support gives information that this pointer is containing the
    * single object
@@ -67,36 +76,34 @@ namespace nop /* Begin namespace nop */
    * @return None
    *
    * @enum Consist the information about operator subscript overloading
-   ****************************************************************************/
-  template <typename T>
-  class SingleStorage 
+   */
+  template<typename T>
+  class single_storage
   {
-  public:
-    using pointer = T*;
+   public:
+    using value_type = T;
+    using pointer    = value_type*;
 
-  public:
+   public:
     template<typename... Args>
-    [[nodiscard]] static pointer Create(Args... args) noexcept(false)
+    [[nodiscard]] static pointer Create(Args&&... args)
     {
-      return new T(std::forward<Args>(args)...);
+      return new value_type(std::forward<Args>(args)...);
     }
 
-    static void Delete(T* pointer) noexcept
+    static void Delete(pointer ptr) noexcept
     {
-      if (pointer != nullptr)
-      {
-        delete pointer;
-      }
+      delete ptr;
     }
 
-    enum { RND_ACCESS = false };
+    enum : bool { RND_ACCESS = false };
   };
 
-  /*************************************************************************//**
+  /**
    * @brief Strategy class for store policy
    *
-   * @class MultipleStorage
-   * MultipleStorage Create, Delete and provide compile-time constant
+   * @class multiple_storage
+   * multiple_storage Create, Delete and provide compile-time constant
    * to check the operator subscript support
    * This support gives information that this pointer is containing the
    * contiguios storage allocated on the heap
@@ -115,46 +122,43 @@ namespace nop /* Begin namespace nop */
    * @return None
    *
    * @enum Consist the information about operator subscript overloading
-   ****************************************************************************/
+   */
   template<typename T>
-  class MultipleStorage
+  class multiple_storage
   {
-  public:
-    using pointer = T*;
+   public:
+    using value_type = T;
+    using pointer    = value_type*;
 
-  public:
-    /* Maybe a bit expensive */
+   public:
+    /* Maybe a bit expensive, Naive approach */
     template<typename... Args>
-    [[nodiscard]] static pointer Create(size_t initSize, Args... args) noexcept(false)
+    [[nodiscard]] static pointer Create(size_t initSize, Args&&... args)
     {
       pointer ptr{new T[initSize]};
-      if constexpr (pointer tempPtr{ptr}; sizeof... (Args) > 0UL)
+      if constexpr (pointer tempPtr{ptr}; sizeof... (Args))
       {
         for (size_t i{}; i < initSize; ++i)
         {
-          tempPtr = new(tempPtr) T(std::forward<Args>(args)...);
-          ++tempPtr;
+          (void) ::new (tempPtr++) value_type(std::forward<Args>(args)...);
         }
       }
       return ptr;
     }
 
-    static void Delete(T* pointer) noexcept
+    static void Delete(pointer ptr) noexcept
     {
-      if (pointer != nullptr)
-      {
-        delete[] pointer;
-      }
+      delete[] ptr;
     }
 
-    enum { RND_ACCESS = true };
+    enum : bool { RND_ACCESS = true };
   };
 
-  /*************************************************************************//**
+  /**
   * @brief Template strategy class for safety policy
   *
-  * @class ExceptionSafety
-  * ExceptionSafety checks the validness of the provided pointer
+  * @class exception_safety
+  * exception_safety checks the validness of the provided pointer
   *
   * @tparam T -> The target type
   *
@@ -162,30 +166,31 @@ namespace nop /* Begin namespace nop */
   * @param [in] ptr -> Pointer that need to be checked
   * @throw nop::err::InvalidArgument
   * @return None
-  *****************************************************************************/
+  */
   template<typename T>
-  class ExceptionSafety
+  class exception_safety
   {
-  public:
-    using pointer = T*;
+   public:
+    using value_type = T;
+    using pointer    = value_type*;
 
-  public:
-    static void Check(pointer ptr) noexcept(false)
+   public:
+    static void Check(pointer ptr)
     {
-      if (ptr == nullptr)
+      if (!ptr)
       {
         throw err::InvalidArgument{
-              fmt::format("ExceptionSafety:Check(pointer ptr) -> {}"
-                          , static_cast<const void*>(ptr))};
+              fmt::format("exception_safety::Check(pointer ptr) -> {}",
+                          static_cast<const void*>(ptr))};
       }
     }
   };
 
-  /*************************************************************************//**
+  /**
    * @brief Template strategy class for safety policy
    *
-   * @class AssertSafety
-   * AssertSafety uses the C assert macro to check the validness
+   * @class assert_safety
+   * assert_safety uses the C assert macro to check the validness
    * of the provided pointer
    *
    * @tparam T -> The target type
@@ -193,186 +198,199 @@ namespace nop /* Begin namespace nop */
    * @function Check
    * @param [in] ptr -> Pointer that need to be checked
    * @return None
-   ****************************************************************************/
+   */
   template<typename T>
-  class AssertSafety
+  class assert_safety
   {
-  public:
-    using pointer = T*;
+   public:
+    using value_type = T;
+    using pointer    = value_type*;
 
-  public:
+   public:
     static void Check(pointer ptr) noexcept
     {
       assert(ptr != nullptr);
     }
   };
 
-  /*************************************************************************//**
+  /**
    * @brief Template strategy class for safety policy
    *
-   * @class NoSafety
-   * NoSafety does not check the passed parameter and acts like stub
+   * @class no_safety
+   * no_safety does not check the passed parameter and acts like stub
    *
    * @tparam T -> The target type
    *
    * @function Check
    * @param [in] ptr -> Pointer that need to be checked
    * @return None
-   ****************************************************************************/
+   */
   template<typename T>
-  class NoSafety
+  class no_safety
   {
-  public:
-    using pointer = T*;
+   public:
+    using value_type = T;
+    using pointer    = value_type*;
 
-  public:
+   public:
     static void Check([[maybe_unused]] pointer ptr) noexcept
-    {}
+    {
+      /* Empty */
+    }
   };
 
-  /************************************************************************//**
+} /* End namespace strategy */
+
+  /**
    * @brief Template smart pointer
    *
-   * @class SmartPtr
+   * @class smart_ptr
    * SmartPtr Recieves four strategies and maintain it's storage depending
    * on provided strategies
    *
    * @tparam T -> The target type
    * @tparam Conversion -> Strategy struct/class for conversion policy
-   * Default: AllowConversion
-   * @see AllowConversion
+   * Default: all_conversion
+   * @see all_conversion
    * @tparam Safety -> Strategy struct/class for safety policy
-   * Default: NoSafety
-   * @see NoSafety
+   * Default: no_safety
+   * @see no_safety
    * @tparam Storage -> Strategy struct/class for storage policy
-   * Default: SingleStorage
-   * @see SingleStorage
-   ****************************************************************************/
+   * Default: single_storage
+   * @see single_storage
+   */
   template<
            typename T,
 // TODO: Implement new class-strategies -> Ownership
 // {template<typename> class Ownership = unique_ownership}
-           class Conversion = AllowConversion,
-           template<typename> class Safety = NoSafety,
-           template<typename> class Storage = SingleStorage
+           class Conversion = strategy::all_conversion,
+           template<typename> class Safety = strategy::no_safety,
+           template<typename> class Storage = strategy::single_storage
           >
-  class SmartPtr
+  class smart_ptr
   {
-  public:
-    using sizeType = size_t;
-    using valueType = T;
-    using pointer = T*;
-    using constPointer = const T*;
-    using reference = T&;
-    using constReference = const T&;
+   public:
+    using value_type      = T;
+    using size_type       = std::size_t;
+    using pointer         = value_type*;
+    using const_pointer   = const value_type*;
+    using reference       = value_type&;
+    using const_reference = const value_type&;
 
-  private:
+   private:
     pointer m_pointer;
 
-  public:
-    constexpr SmartPtr() noexcept
+   public:
+    constexpr smart_ptr() noexcept
       : m_pointer{nullptr}
-    {}
+    {
+      /* Empty */
+    }
 
-    explicit SmartPtr(pointer ptr) noexcept
+    explicit constexpr smart_ptr(pointer ptr) noexcept
       : m_pointer{ptr}
-    {}
+    {
+      /* Empty */
+    }
 
-    SmartPtr(const SmartPtr&) = delete;
+    smart_ptr(const smart_ptr&) = delete;
 
-    SmartPtr(SmartPtr&& other) noexcept
+    constexpr smart_ptr(smart_ptr&& other) noexcept
       : m_pointer{other.release()}
-    {}
-
-    ~SmartPtr()
     {
-      Storage<T>::Delete(m_pointer);
+      /* Empty */
     }
 
-    [[nodiscard]] pointer get() noexcept(noexcept(Safety<T>::Check(nullptr)))
+    ~smart_ptr()
     {
-      Safety<T>::Check(m_pointer);
+      Storage<value_type>::Delete(m_pointer);
+    }
+
+    [[nodiscard]] constexpr pointer get() noexcept(noexcept(Safety<T>::Check(nullptr)))
+    {
+      Safety<value_type>::Check(m_pointer);
       return m_pointer;
     }
 
-    [[nodiscard]] constPointer get() const noexcept(noexcept(Safety<T>::Check(nullptr)))
+    [[nodiscard]] constexpr const_pointer get() const noexcept(noexcept(Safety<T>::Check(nullptr)))
     {
-      Safety<T>::Check(m_pointer);
+      Safety<value_type>::Check(m_pointer);
       return m_pointer;
     }
 
-    void reset(pointer ptr = nullptr) noexcept
+    constexpr void reset(pointer ptr = nullptr) noexcept
     {
-      Storage<T>::Delete(m_pointer);
+      Storage<value_type>::Delete(m_pointer);
       m_pointer = ptr;
     }
 
-    pointer release() noexcept
+    [[nodiscard]] constexpr pointer release() noexcept
     {
       pointer tmp_ptr{m_pointer};
       m_pointer = nullptr;
       return tmp_ptr;
     }
 
-    [[nodiscard]] reference operator*() noexcept(noexcept(Safety<T>::Check(nullptr)))
+    [[nodiscard]] constexpr reference operator*() noexcept(noexcept(Safety<T>::Check(nullptr)))
     {
-      Safety<T>::Check(m_pointer);
+      Safety<value_type>::Check(m_pointer);
       return *m_pointer;
     }
 
-    [[nodiscard]] constReference operator*() const noexcept(noexcept(Safety<T>::Check(nullptr)))
+    [[nodiscard]] constexpr const_reference operator*() const noexcept(noexcept(Safety<T>::Check(nullptr)))
     {
-      Safety<T>::Check(m_pointer);
+      Safety<value_type>::Check(m_pointer);
       return *m_pointer;
     }
 
-    template<typename U = T>
-    [[nodiscard]] std::enable_if_t<std::is_class_v<U> == true, T>* operator->() noexcept(noexcept(Safety<T>::Check(nullptr)))
+    [[nodiscard]] pointer operator->() noexcept(noexcept(Safety<T>::Check(nullptr)))
     {
-      Safety<T>::Check(m_pointer);
+      Safety<value_type>::Check(m_pointer);
       return m_pointer;
     }
 
-    template<typename U = T>
-    [[nodiscard]] const std::enable_if_t<std::is_class_v<U> == true, T>* operator->() const noexcept(noexcept(Safety<T>::Check(nullptr)))
+    [[nodiscard]] const_pointer operator->() const noexcept(noexcept(Safety<T>::Check(nullptr)))
     {
-      Safety<T>::Check(m_pointer);
+      Safety<value_type>::Check(m_pointer);
       return m_pointer;
     }
 
-    template<typename U = T>
-    [[nodiscard]] std::enable_if_t<Storage<U>::RND_ACCESS == true, T>& operator[](sizeType index) noexcept(noexcept(Safety<T>::Check(nullptr)))
+    [[nodiscard]] reference operator[](size_type index) noexcept(noexcept(Safety<T>::Check(nullptr)))
+    requires (static_cast<bool>(Storage<value_type>::RND_ACCESS))
+    {
+      Safety<value_type>::Check(m_pointer);
+      return m_pointer[index];
+    }
+
+    [[nodiscard]] const_reference operator[](size_type index) const noexcept(noexcept(Safety<T>::Check(nullptr)))
+    requires (static_cast<bool>(Storage<value_type>::RND_ACCESS))
     {
       Safety<T>::Check(m_pointer);
       return m_pointer[index];
     }
 
-    template<typename U = T>
-    [[nodiscard]] const std::enable_if_t<Storage<U>::RND_ACCESS == true, T>& operator[](sizeType index) const noexcept(noexcept(Safety<T>::Check(nullptr)))
-    {
-      Safety<T>::Check(m_pointer);
-      return m_pointer[index];
-    }
+    smart_ptr& operator=(const smart_ptr&) = delete;
 
-    SmartPtr& operator=(const SmartPtr&) = delete;
-
-    SmartPtr& operator=(SmartPtr&& other) noexcept
+    smart_ptr& operator=(smart_ptr&& other) noexcept
     {
       Storage<T>::Delete(m_pointer);
       m_pointer = other.release();
     }
 
-    [[nodiscard]] operator std::enable_if_t<Conversion::VOID_POINTER == true, void*>() noexcept
+    [[nodiscard]] explicit operator void*() noexcept
+    requires (static_cast<bool>(Conversion::VOID_POINTER))
     {
       return m_pointer;
     }
 
-    [[nodiscard]] operator const std::enable_if_t<Conversion::VOID_POINTER == true, void*>() const noexcept
+    [[nodiscard]] explicit operator const void*() const noexcept
+    requires (static_cast<bool>(Conversion::VOID_POINTER))
     {
       return m_pointer;
     }
 
-    [[nodiscard]] operator std::enable_if_t<Conversion::BOOL == true, bool>() const noexcept
+    [[nodiscard]] operator bool() const noexcept
+    requires (static_cast<bool>(Conversion::BOOL))
     {
       return m_pointer != nullptr;
     }
@@ -383,77 +401,77 @@ namespace nop /* Begin namespace nop */
     }
 
     template<typename U>
-    [[nodiscard]] bool operator==(const SmartPtr<U>& s_ptr) const noexcept
+    [[nodiscard]] bool operator==(const smart_ptr<U>& s_ptr) const noexcept
     {
       return static_cast<const void*>(m_pointer) == static_cast<const void*>(s_ptr);
     }
 
     template<typename U>
-    [[nodiscard]] inline friend bool operator==(const SmartPtr& s_ptr, const U* r_ptr) noexcept
+    [[nodiscard]] inline friend bool operator==(const smart_ptr& s_ptr, const U* r_ptr) noexcept
     {
       return static_cast<const void*>(s_ptr.m_pointer) == static_cast<const void*>(r_ptr);
     }
 
     template<typename U>
-    [[nodiscard]] inline friend bool operator==(const U* r_ptr, const SmartPtr& s_ptr) noexcept
+    [[nodiscard]] inline friend bool operator==(const U* r_ptr, const smart_ptr& s_ptr) noexcept
     {
       return static_cast<const void*>(r_ptr) == static_cast<const void*>(s_ptr.m_pointer);
     }
 
     template<typename U>
-    [[nodiscard]] bool operator!=(const SmartPtr<U>& s_ptr) const noexcept(noexcept(s_ptr.get()))
+    [[nodiscard]] bool operator!=(const smart_ptr<U>& s_ptr) const noexcept(noexcept(s_ptr.get()))
     {
       return static_cast<const void*>(m_pointer) != static_cast<const void*>(s_ptr.get());
     }
 
     template<typename U>
-    [[nodiscard]] inline friend bool operator!=(const SmartPtr& s_ptr, const U* r_ptr) noexcept
+    [[nodiscard]] inline friend bool operator!=(const smart_ptr& s_ptr, const U* r_ptr) noexcept
     {
       return static_cast<const void*>(s_ptr.m_pointer) != static_cast<const void*>(r_ptr);
     }
 
     template<typename U>
-    [[nodiscard]] inline friend bool operator!=(const U* r_ptr, const SmartPtr& s_ptr) noexcept
+    [[nodiscard]] inline friend bool operator!=(const U* r_ptr, const smart_ptr& s_ptr) noexcept
     {
       return static_cast<const void*>(r_ptr) != static_cast<const void*>(s_ptr.m_pointer);
     }
 
   };
 
-  /************************************************************************//**
-   * @brief Factory function for constructing smart ptr with perfect forwarding
+  /**
+   * @brief Factory function for constructing smart_ptr with perfect forwarding
    *
-   * @function makeSmartPtr
+   * @function make_smart_ptr
    * @tparam [in, out] T Is the target type
    * @tparam [in, out] Conversion -> Strategy struct/class
    * for obtaining the conversion policy
-   * Default: AllowConversion
-   * @see AllowConversion
+   * Default: all_conversion
+   * @see all_conversion
    * @tparam [in, out] Safety -> Strategy struct/class
    * for obtaining the safety policy
-   * Default: NoSafety
-   * @see NoSafety
+   * Default: no_safety
+   * @see no_safety
    * @tparam [in, out] Storage -> Strategy struct/class
    * for obtaining the storage policy
-   * Default: SingleStorage
-   * @see SingleStorage
+   * Default: single_storage
+   * @see single_storage
    * @tparam [in] Args -> The parameter pack for the object constructors
-   * (perfect forward)
+   * (perfect forwarding)
    * @throw std::bad_alloc() if nop storage policy provided
    * or strategy dependent
-   * @result SmartPtr rvalue reference
+   * @result smart_ptr
    ****************************************************************************/
   template<
            typename T,
-           class Conversion = AllowConversion,
-           template<typename> class Safety = NoSafety,
-           template<typename> class Storage = SingleStorage,
+           class Conversion = strategy::all_conversion,
+           template<typename> class Safety = strategy::no_safety,
+           template<typename> class Storage = strategy::single_storage,
            typename... Args
           >
-  [[nodiscard]] SmartPtr<T, Conversion, Safety, Storage> makeSmartPtr(Args&&... args) noexcept(Storage<T>::RND_ACCESS == true &&
-                                                                                      noexcept(Storage<T>::Create(10000000000000UL)))
+  [[nodiscard]] smart_ptr<T, Conversion, Safety, Storage> make_smart_ptr(Args&&... args) noexcept(Storage<T>::RND_ACCESS == true &&
+                                                                                                  noexcept(Storage<T>::Create(10000000000000UL)))
   {
-    SmartPtr<T, Conversion, Safety, Storage> ptr{Storage<T>::Create(std::forward<Args>(args)...)};
+    smart_ptr<T, Conversion, Safety, Storage> ptr{Storage<T>::Create(std::forward<Args>(args)...)};
     return ptr;
   }
 
