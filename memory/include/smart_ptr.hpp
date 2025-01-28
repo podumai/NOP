@@ -129,18 +129,28 @@ namespace strategy /* Begin namespace strategy */
    public:
     using value_type = T;
     using pointer    = value_type*;
+    using size_type  = std::size_t;
 
    public:
     /* Maybe a bit expensive, Naive approach */
     template<typename... Args>
-    [[nodiscard]] static pointer Create(size_t initSize, Args&&... args)
+    [[nodiscard]] static pointer Create(size_type init_size, Args&&... args)
     {
-      pointer ptr{new T[initSize]};
-      if constexpr (pointer tempPtr{ptr}; sizeof... (Args))
+      pointer ptr{new value_type[init_size]};
+      if constexpr (std::is_move_assignable_v<value_type> &&
+                    !std::is_fundamental_v<value_type>)
       {
-        for (size_t i{}; i < initSize; ++i)
+        for (std::size_t i{}; i < init_size; ++i)
         {
-          (void) ::new (tempPtr++) value_type(std::forward<Args>(args)...);
+          ptr[i] = static_cast<value_type&&>(value_type(std::forward<Args>(args)...));
+        }
+      }
+      else if constexpr (std::is_copy_assignable_v<value_type>)
+      {
+        value_type temp_val(std::forward<Args>(args)...);
+        for (std::size_t i{}; i < init_size; ++i)
+        {
+          ptr[i] = temp_val;
         }
       }
       return ptr;
