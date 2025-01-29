@@ -3,8 +3,6 @@
 
 #pragma once
 
-/* TODO: Keep safety when using placement new -> can lead to memory leak if ctor throws */
-
 #include <memory>           /* std::allocator<T> */
 #include <type_traits>      /* type_traits */
 #include <initializer_list> /* std::initializer_list */
@@ -16,9 +14,6 @@ namespace nop /* Begin namespace nop */
 
 namespace details /* Begin namespace details */
 {
-
-template<class UnaryPredicate, typename T>
-concept valid_predicate_forward_list = requires(UnaryPredicate p, const T& val) { { p(val) } noexcept -> std::same_as<bool>; };
 
 template<typename T>
 struct forward_list_node
@@ -96,30 +91,44 @@ struct forward_list_node
 
 };
 
+template<class UnaryPredicate, typename T>
+concept valid_predicate_forward_list = requires(UnaryPredicate p, const T& val)
+                                       {
+                                         { p(val) } noexcept -> std::same_as<bool>;
+                                       };
+
+template<typename T, class Alloc>
+concept valid_tparams_forward_list = std::is_same_v<typename std::allocator_traits<Alloc>::pointer, nop::details::forward_list_node<T>*> &&
+                                     std::is_nothrow_destructible_v<T>;
+
 } /* End namespace details */
 
 template<
          typename T,
          class Alloc = std::allocator<nop::details::forward_list_node<T>>
         >
-requires std::is_nothrow_destructible_v<T>
+requires nop::details::valid_tparams_forward_list<T, Alloc>
 class forward_list
 {
  public:
   using value_type      = T;
-  using reference       = T&;
-  using const_reference = const T&;
+  using allocator_type  = Alloc;
   using size_type       = std::size_t;
   using difference_type = std::ptrdiff_t;
-  using allocator_type  = Alloc;
+  using reference       = T&;
+  using const_reference = const T&;
+  using pointer         = typename std::allocator_traits<allocator_type>::pointer;
+  using const_pointer   = typename std::allocator_traits<allocator_type>::const_pointer;
 
  private:
   using node_type = nop::details::forward_list_node<value_type>;
-  using pointer   = nop::details::forward_list_node<value_type>*;
 
  public:
   class iterator
   {
+   private:
+    friend forward_list;
+
    public:
     using value_type        = T;
     using reference         = T&;
@@ -141,6 +150,12 @@ class forward_list
 
     iterator(pointer ptr) noexcept
       : m_element{ptr}
+    {
+      /* Empty */
+    }
+
+    iterator(const_pointer ptr) noexcept
+      : m_element{const_cast<pointer>(ptr)}
     {
       /* Empty */
     }
@@ -197,74 +212,8 @@ class forward_list
 
   };
 
-  class const_iterator
-  {
-   public:
-    using value_type        = T;
-    using reference         = T&;
-    using const_reference   = const T&;
-    using pointer           = nop::details::forward_list_node<T>*;
-    using const_pointer     = const nop::details::forward_list_node<T>*;
-    using difference_type   = std::ptrdiff_t;
-    using iterator_category = std::forward_iterator_tag;
-
-   private:
-    const_pointer m_element;
-
-   public:
-    const_iterator() noexcept
-      : m_element{nullptr}
-    {
-      /* Empty */
-    }
-
-    const_iterator(pointer ptr) noexcept
-      : m_element{ptr}
-    {
-      /* Empty */
-    }
-
-    const_iterator(const const_iterator&) noexcept = default;
-    const_iterator(const_iterator&&) noexcept = default;
-    ~const_iterator() = default;
-
-    [[nodiscard]] const_reference operator*() const noexcept
-    {
-      return m_element->value;
-    }
-
-    [[nodiscard]] const_pointer operator->() const noexcept
-    {
-      return std::addressof(m_element->value);
-    }
-
-    const_iterator& operator++() noexcept
-    {
-      m_element = m_element->next;
-      return *this;
-    }
-
-    const_iterator operator++(std::int32_t) noexcept
-    {
-      auto temp_iterator{m_element};
-      m_element = m_element->next;
-      return temp_iterator;
-    }
-
-    const_iterator& operator=(const const_iterator&) noexcept = default;
-    const_iterator& operator=(const_iterator&&) noexcept = default;
-
-    [[nodiscard]] bool operator==(const const_iterator& other) const noexcept
-    {
-      return m_element == other.m_element;
-    }
-
-    [[nodiscard]] bool operator!=(const const_iterator& other) const noexcept
-    {
-      return m_element != other.m_element;
-    }
-
-  };
+ public:
+  using const_iterator = const iterator;
 
  private:
   [[no_unique_address]] allocator_type xmalloc;
@@ -320,8 +269,7 @@ class forward_list
         while (begin != ilist.end())
         {
           temp_ptr->next = xmalloc.allocate(1UL);
-          temp_ptr = temp_ptr->next;
-          (void) ::new (temp_ptr) node_type(std::move(*begin++));
+          temp_ptr = ::new (temp_ptr->next) node_type(std::move(*begin++));
         }
       }
       else
@@ -332,8 +280,7 @@ class forward_list
         while (begin != ilist.end())
         {
           temp_ptr->next = xmalloc.allocate(1UL);
-          temp_ptr = temp_ptr->next;
-          (void) ::new (temp_ptr) node_type(*begin++);
+          temp_ptr = ::new (temp_ptr->next) node_type(*begin++);
         }
       }
     }
@@ -355,8 +302,7 @@ class forward_list
       while (begin != end)
       {
         temp_ptr->next = xmalloc.allocate(1UL);
-        temp_ptr = temp_ptr->next;
-        (void) ::new (temp_ptr) node_type(*begin++);
+        temp_ptr = ::new (temp_ptr->next) node_type(*begin++);
       }
     }
   }
@@ -428,6 +374,132 @@ class forward_list
     xmalloc.deallocate(temp_ptr, 1UL);
   }
 
+  iterator push_after(const_iterator position, const value_type& value)
+  {
+    pointer temp_ptr{xmalloc.allocate(1UL)};
+    (void) ::new (temp_ptr) node_type(position.m_element->next, value);
+    position.m_element->next = temp_ptr;
+    return {temp_ptr};
+  }
+
+  iterator push_after(const_iterator position, value_type&& value)
+  requires std::is_move_constructible_v<value_type>
+  {
+    pointer temp_ptr{xmalloc.allocate(1UL)};
+
+    if constexpr (!std::is_fundamental_v<value_type>)
+    {
+      position.m_element->next = ::new (temp_ptr) node_type(position.m_element->next, std::move(value));
+    }
+    else
+    {
+      position.m_element->next = ::new (temp_ptr) node_type(position.m_element->next, value);
+    }
+
+    return {temp_ptr};
+  }
+
+  [[deprecated("May be potentially dangerous due to creation of linked list (ctor may throw and all info is lost)")]]
+  iterator push_after(const_iterator position,
+                      size_type n,
+                      const value_type& value)
+  {
+    if (n--)
+    {
+      pointer temp_last{position.m_element->next};
+      pointer temp_ptr{xmalloc.allocate(1UL)};
+      position.m_element->next = ::new (temp_ptr) node_type(value);
+
+      while (n--)
+      {
+        temp_ptr->next = xmalloc.allocate(1UL);
+        temp_ptr = ::new (temp_ptr->next) node_type(value);
+      }
+
+      temp_ptr->next = temp_last;
+
+      return {temp_ptr};
+    }
+
+    return position;
+  }
+
+  [[deprecated("May be potentially dangerous due to creation of linked list (ctor may throw and all info is lost)")]]
+  iterator push_after(const_iterator position,
+                      std::initializer_list<value_type> ilist)
+  {
+    if (auto begin{ilist.begin()}; begin != ilist.end())
+    {
+      pointer temp_last{position.m_element->next};
+      pointer temp_ptr{xmalloc.allocate(1UL)};
+
+      if constexpr (std::is_move_constructible_v<value_type> &&
+                    !std::is_fundamental_v<value_type>)
+      {
+        position.m_element->next = ::new (temp_ptr) node_type(std::move(*begin++));
+      }
+      else
+      {
+        position.m_element->next = ::new (temp_ptr) node_type(*begin++);
+      }
+
+      while (begin != ilist.end())
+      {
+        temp_ptr->next = xmalloc.allocate(1UL);
+
+        if constexpr (std::is_move_constructible_v<value_type> &&
+                      !std::is_fundamental_v<value_type>)
+        {
+          temp_ptr = ::new (temp_ptr->next) node_type(std::move(*begin++));
+        }
+        else
+        {
+          temp_ptr = ::new (temp_ptr->next) node_type(*begin++);
+        }
+      }
+
+      temp_ptr->next = temp_last;
+
+      return {temp_ptr};
+    }
+
+    return position;
+  }
+
+  template<typename InIterator>
+  [[deprecated("May be potentially dangerous due to creation of linked list (ctor may throw and all info is lost)")]]
+  iterator push_after(const_iterator position,
+                      InIterator begin,
+                      InIterator end)
+  {
+    if (begin != end)
+    {
+      pointer temp_last{position.m_element->next};
+      pointer temp_ptr{xmalloc.allocate(1UL)};
+      position.m_element->next = ::new (temp_ptr) node_type(*begin++);
+
+      while (begin != end)
+      {
+        temp_ptr->next = xmalloc.allocate(1UL);
+        temp_ptr = ::new (temp_ptr->next) node_type(*begin++);
+      }
+
+      temp_ptr->next = temp_last;
+
+      return {temp_ptr};
+    }
+
+    return position;
+  }
+
+  template<typename... Args>
+  iterator emplace_after(const_iterator position, Args&&... args)
+  {
+    pointer temp_ptr{xmalloc.allocate(1UL)};
+    position.m_element->next = ::new (temp_ptr) node_type(position.m_element->next, std::forward<Args>(args)...);
+    return {temp_ptr};
+  }
+
   [[nodiscard]] reference front()
   {
     return m_head->value;
@@ -435,7 +507,7 @@ class forward_list
 
   [[nodiscard]] bool empty() const noexcept
   {
-    return m_head == nullptr;
+    return !m_head;
   }
 
   void clear() noexcept
@@ -468,8 +540,7 @@ class forward_list
       while (begin != end)
       {
         temp_ptr->next = xmalloc.allocate(1UL);
-        temp_ptr = temp_ptr->next;
-        (void) ::new (temp_ptr) node_type(*begin++);
+        temp_ptr = ::new (temp_ptr->next) node_type(*begin++);
       }
     }
   }
@@ -496,16 +567,15 @@ class forward_list
       while (begin != end)
       {
         temp_ptr->next = xmalloc.allocate(1UL);
-        temp_ptr = temp_ptr->next;
 
         if constexpr (std::is_move_constructible_v<value_type> &&
                       !std::is_fundamental_v<value_type>)
         {
-          (void) ::new (temp_ptr) node_type(std::move(*begin++));
+          temp_ptr = ::new (temp_ptr->next) node_type(std::move(*begin++));
         }
         else
         {
-          (void) ::new (temp_ptr) node_type(*begin++);
+          temp_ptr = ::new (temp_ptr->next) node_type(*begin++);
         }
       }
     }
@@ -625,8 +695,7 @@ class forward_list
         while (temp_ptr)
         {
           temp_ptr->next = xmalloc.allocate(1UL);
-          temp_ptr = temp_ptr->next;
-          (void) ::new (temp_ptr) node_type(*temp_ptr++);
+          temp_ptr = ::new (temp_ptr->next) node_type(*temp_ptr++);
         }
       }
     }
@@ -658,16 +727,15 @@ class forward_list
       while (begin != ilist.end())
       {
         temp_ptr->next = xmalloc.allocate(1UL);
-        temp_ptr = temp_ptr->next;
 
         if constexpr (std::is_move_constructible_v<value_type> &&
                       !std::is_fundamental_v<value_type>)
         {
-          (void) ::new (temp_ptr) node_type(std::move(*begin++));
+          temp_ptr = ::new (temp_ptr->next) node_type(std::move(*begin++));
         }
         else
         {
-          (void) ::new (temp_ptr) node_type(*begin++);
+          temp_ptr = ::new (temp_ptr->next) node_type(*begin++);
         }
       }
     }
@@ -701,7 +769,7 @@ class forward_list
         return false;
       }
 
-      temp_ptr   = temp_ptr->next;
+      temp_ptr = temp_ptr->next;
       temp_other = temp_other->next;
     }
 
@@ -716,16 +784,12 @@ class forward_list
     [[likely]]
     while (temp_ptr && temp_other)
     {
-      if (temp_ptr->value == temp_other->value)
-      {
-        return false;
-      }
-      else
+      if (temp_ptr->value != temp_other->value)
       {
         return true;
       }
 
-      temp_ptr   = temp_ptr->next;
+      temp_ptr = temp_ptr->next;
       temp_other = temp_other->next;
     }
 
