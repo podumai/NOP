@@ -195,6 +195,73 @@ class forward_list
 
   };
 
+  class const_iterator
+  {
+   public:
+    using pointer         = nop::details::forward_list_node<T>*;
+    using const_pointer   = const nop::details::forward_list_node<T>*;
+    using reference       = T&;
+    using const_reference = const T&;
+    using difference_type = std::ptrdiff_t;
+
+   private:
+    const_pointer m_element;
+
+   public:
+    const_iterator() noexcept
+      : m_element{nullptr}
+    {
+      /* Empty */
+    }
+
+    const_iterator(pointer ptr) noexcept
+      : m_element{ptr}
+    {
+      /* Empty */
+    }
+
+    const_iterator(const const_iterator&) noexcept = default;
+    const_iterator(const_iterator&&) noexcept = default;
+    ~const_iterator() = default;
+
+    [[nodiscard]] const_reference operator*() const noexcept
+    {
+      return m_element->value;
+    }
+
+    [[nodiscard]] const_pointer operator->() const noexcept
+    {
+      return std::addressof(m_element->value);
+    }
+
+    const_iterator& operator++() noexcept
+    {
+      m_element = m_element->next;
+      return *this;
+    }
+
+    const_iterator operator++(std::int32_t) noexcept
+    {
+      auto temp_iterator{m_element};
+      m_element = m_element->next;
+      return temp_iterator;
+    }
+
+    const_iterator& operator=(const const_iterator&) noexcept = default;
+    const_iterator& operator=(const_iterator&&) noexcept = default;
+
+    [[nodiscard]] bool operator==(const const_iterator& other) const noexcept
+    {
+      return m_element == other.m_element;
+    }
+
+    [[nodiscard]] bool operator!=(const const_iterator& other) const noexcept
+    {
+      return m_element != other.m_element;
+    }
+
+  };
+
  private:
   [[no_unique_address]] allocator_type xmalloc;
   pointer m_head;
@@ -307,6 +374,16 @@ class forward_list
   }
 
   [[nodiscard]] iterator end() noexcept
+  {
+    return {};
+  }
+
+  [[nodiscard]] const_iterator cbegin() const noexcept
+  {
+    return {m_head};
+  }
+
+  [[nodiscard]] const_iterator cend() const noexcept
   {
     return {};
   }
