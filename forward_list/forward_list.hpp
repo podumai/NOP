@@ -121,11 +121,13 @@ class forward_list
   class iterator
   {
    public:
-    using pointer         = nop::details::forward_list_node<T>*;
-    using const_pointer   = const nop::details::forward_list_node<T>*;
-    using reference       = T&;
-    using const_reference = const T&;
-    using difference_type = std::ptrdiff_t;
+    using value_type        = T;
+    using reference         = T&;
+    using const_reference   = const T&;
+    using pointer           = nop::details::forward_list_node<T>*;
+    using const_pointer     = const nop::details::forward_list_node<T>*;
+    using difference_type   = std::ptrdiff_t;
+    using iterator_category = std::forward_iterator_tag;
 
    private:
     pointer m_element;
@@ -198,11 +200,13 @@ class forward_list
   class const_iterator
   {
    public:
-    using pointer         = nop::details::forward_list_node<T>*;
-    using const_pointer   = const nop::details::forward_list_node<T>*;
-    using reference       = T&;
-    using const_reference = const T&;
-    using difference_type = std::ptrdiff_t;
+    using value_type        = T;
+    using reference         = T&;
+    using const_reference   = const T&;
+    using pointer           = nop::details::forward_list_node<T>*;
+    using const_pointer     = const nop::details::forward_list_node<T>*;
+    using difference_type   = std::ptrdiff_t;
+    using iterator_category = std::forward_iterator_tag;
 
    private:
     const_pointer m_element;
