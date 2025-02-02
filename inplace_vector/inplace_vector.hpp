@@ -57,6 +57,9 @@ class inplace_vector : public nop::details::inplace_vector_base<T, N>
  public:
   class iterator
   {
+   private:
+    friend inplace_vector;
+
    public:
     using value_type      = inplace_vector::value_type;
     using size_type       = inplace_vector::size_type;
@@ -205,6 +208,9 @@ class inplace_vector : public nop::details::inplace_vector_base<T, N>
 
   class const_iterator
   {
+   private:
+    friend inplace_vector;
+
    public:
     using value_type      = const inplace_vector::value_type;
     using size_type       = inplace_vector::size_type;
@@ -344,6 +350,16 @@ class inplace_vector : public nop::details::inplace_vector_base<T, N>
   std::conditional_t<std::is_fundamental_v<value_type>, value_type, std::uint8_t> m_storage[std::is_fundamental_v<value_type> ? N : sizeof(value_type) * N];
   size_type m_size;
 
+ private:
+  constexpr void range_check(size_type index) const
+  requires std::is_base_of_v<nop::strategy::inplace_vector_throw, Policy>
+  {
+    if (m_size <= index)
+    {
+      throw std::out_of_range{"inplace_vector::range_check(size_type) -> index is out of range"};
+    }
+  }
+
  public:
   inplace_vector() noexcept
     : m_size{}
@@ -359,7 +375,7 @@ class inplace_vector : public nop::details::inplace_vector_base<T, N>
     {
       if constexpr (!std::is_fundamental_v<value_type>)
       {
-        (void) ::new (reinterpret_cast<pointer>(m_storage) + m_size) value_type(reinterpret_cast<pointer>(other.m_storage)[m_size]);
+        (void) ::new (static_cast<pointer>(static_cast<void*>(m_storage)) + m_size) value_type(static_cast<pointer>(static_cast<void*>(other))[m_size]);
       }
       else
       {
@@ -378,11 +394,11 @@ class inplace_vector : public nop::details::inplace_vector_base<T, N>
     {
       if constexpr (!std::is_fundamental_v<value_type>)
       {
-        (void) ::new (reinterpret_cast<pointer>(m_storage) + m_size) value_type(std::move(reinterpret_cast<pointer>(other.m_storage)[m_size]));
+        (void) ::new (static_cast<pointer>(static_cast<void*>(m_storage)) + m_size) value_type(std::move(static_cast<pointer>(static_cast<void*>(other.m_storage))[m_size]));
       }
       else
       {
-        (void) ::new (m_storage + m_size) value_type(std::move(other.m_storage[m_size]));
+        (void) ::new (m_storage + m_size) value_type(other.m_storage[m_size]);
       }
 
       ++m_size;
@@ -399,7 +415,7 @@ class inplace_vector : public nop::details::inplace_vector_base<T, N>
     {
       if constexpr (!std::is_fundamental_v<value_type>)
       {
-        (void) ::new (reinterpret_cast<pointer>(m_storage) + m_size++) value_type(value);
+        (void) ::new (static_cast<pointer>(static_cast<void*>(m_storage)) + m_size++) value_type(value);
       }
       else
       {
@@ -418,11 +434,11 @@ class inplace_vector : public nop::details::inplace_vector_base<T, N>
       if constexpr (std::is_move_constructible_v<value_type> &&
                     !std::is_fundamental_v<value_type>)
       {
-        (void) ::new (reinterpret_cast<pointer>(m_storage) + m_size) value_type(std::move(*begin++));
+        (void) ::new (static_cast<pointer>(static_cast<void*>(m_storage)) + m_size) value_type(std::move(*begin++));
       }
       else if constexpr (!std::is_fundamental_v<value_type>)
       {
-        (void) ::new (reinterpret_cast<pointer>(m_storage) + m_size) value_type(*begin++);
+        (void) ::new (static_cast<pointer>(static_cast<void*>(m_storage)) + m_size) value_type(*begin++);
       }
       else
       {
@@ -439,7 +455,7 @@ class inplace_vector : public nop::details::inplace_vector_base<T, N>
     {
       if constexpr (!std::is_fundamental_v<value_type>)
       {
-        (void) ::new (reinterpret_cast<pointer>(m_storage) + m_size++) value_type(*begin++);
+        (void) ::new (static_cast<pointer>(static_cast<void*>(m_storage)) + m_size++) value_type(*begin++);
       }
       else
       {
@@ -454,7 +470,7 @@ class inplace_vector : public nop::details::inplace_vector_base<T, N>
     {
       while (m_size)
       {
-        (reinterpret_cast<pointer>(m_storage) + --m_size)->~value_type();
+        (static_cast<pointer>(static_cast<void*>(m_storage)) + --m_size)->~value_type();
       }
     }
   }
@@ -463,7 +479,7 @@ class inplace_vector : public nop::details::inplace_vector_base<T, N>
   {
     if constexpr (!std::is_fundamental_v<value_type>)
     {
-      return {reinterpret_cast<pointer>(m_storage)};
+      return {static_cast<pointer>(static_cast<void*>(m_storage))};
     }
     else
     {
@@ -475,7 +491,7 @@ class inplace_vector : public nop::details::inplace_vector_base<T, N>
   {
     if constexpr (!std::is_fundamental_v<value_type>)
     {
-      return {reinterpret_cast<pointer>(m_storage) + m_size};
+      return {static_cast<pointer>(static_cast<void*>(m_storage)) + m_size};
     }
     else
     {
@@ -487,7 +503,7 @@ class inplace_vector : public nop::details::inplace_vector_base<T, N>
   {
     if constexpr (!std::is_fundamental_v<value_type>)
     {
-      return {reinterpret_cast<const_pointer>(m_storage)};
+      return {static_cast<const_pointer>(static_cast<void*>(m_storage))};
     }
     else
     {
@@ -499,7 +515,7 @@ class inplace_vector : public nop::details::inplace_vector_base<T, N>
   {
     if constexpr (!std::is_fundamental_v<value_type>)
     {
-      return {reinterpret_cast<const_pointer>(m_storage) + m_size};
+      return {static_cast<const_pointer>(static_cast<const void*>(m_storage)) + m_size};
     }
     else
     {
@@ -511,7 +527,7 @@ class inplace_vector : public nop::details::inplace_vector_base<T, N>
   {
     if constexpr (!std::is_fundamental_v<value_type>)
     {
-      return reinterpret_cast<pointer>(m_storage);
+      return static_cast<pointer>(static_cast<void*>(m_storage));
     }
     else
     {
@@ -523,7 +539,7 @@ class inplace_vector : public nop::details::inplace_vector_base<T, N>
   {
     if constexpr (!std::is_fundamental_v<value_type>)
     {
-      return reinterpret_cast<const_pointer>(m_storage);
+      return static_cast<const_pointer>(static_cast<const void*>(m_storage));
     }
     else
     {
@@ -547,7 +563,7 @@ class inplace_vector : public nop::details::inplace_vector_base<T, N>
     {
       while (m_size)
       {
-        (reinterpret_cast<pointer>(m_storage) + --m_size)->~value_type();
+        (static_cast<pointer>(static_cast<void*>(m_storage)) + --m_size)->~value_type();
       }
     }
   }
@@ -561,7 +577,7 @@ class inplace_vector : public nop::details::inplace_vector_base<T, N>
       {
         if constexpr (!std::is_fundamental_v<value_type>)
         {
-          (void) ::new (reinterpret_cast<pointer>(m_storage) + m_size++) value_type(value);
+          (void) ::new (static_cast<pointer>(static_cast<void*>(m_storage)) + m_size++) value_type(value);
         }
         else
         {
@@ -575,7 +591,7 @@ class inplace_vector : public nop::details::inplace_vector_base<T, N>
       {
         if constexpr (!std::is_fundamental_v<value_type>)
         {
-          (void) ::new (reinterpret_cast<pointer>(m_storage) + m_size++) value_type(value);
+          (void) ::new (static_cast<pointer>(static_cast<void*>(m_storage)) + m_size++) value_type(value);
         }
         else
         {
@@ -598,7 +614,7 @@ class inplace_vector : public nop::details::inplace_vector_base<T, N>
       {
         if constexpr (!std::is_fundamental_v<value_type>)
         {
-          (void) ::new (reinterpret_cast<pointer>(m_storage) + m_size++) value_type(std::move(value));
+          (void) ::new (static_cast<pointer>(static_cast<void*>(m_storage)) + m_size++) value_type(std::move(value));
         }
         else
         {
@@ -612,7 +628,7 @@ class inplace_vector : public nop::details::inplace_vector_base<T, N>
       {
         if constexpr (!std::is_fundamental_v<value_type>)
         {
-          (void) ::new (reinterpret_cast<pointer>(m_storage) + m_size++) value_type(std::move(value));
+          (void) ::new (static_cast<pointer>(static_cast<void*>(m_storage)) + m_size++) value_type(std::move(value));
         }
         else
         {
@@ -635,7 +651,7 @@ class inplace_vector : public nop::details::inplace_vector_base<T, N>
       {
         if constexpr (!std::is_fundamental_v<value_type>)
         {
-          (void) ::new (reinterpret_cast<pointer>(m_storage) + m_size++) value_type(std::forward<Args>(args)...);
+          (void) ::new (static_cast<pointer>(static_cast<void*>(m_storage)) + m_size++) value_type(std::forward<Args>(args)...);
         }
         else
         {
@@ -649,7 +665,7 @@ class inplace_vector : public nop::details::inplace_vector_base<T, N>
       {
         if constexpr (!std::is_fundamental_v<value_type>)
         {
-          (void) ::new (reinterpret_cast<pointer>(m_storage) + m_size++) value_type(std::forward<Args>(args)...);
+          (void) ::new (static_cast<pointer>(static_cast<void*>(m_storage)) + m_size++) value_type(std::forward<Args>(args)...);
         }
         else
         {
@@ -676,7 +692,7 @@ class inplace_vector : public nop::details::inplace_vector_base<T, N>
 
     if constexpr (!std::is_trivially_destructible_v<value_type>)
     {
-      (reinterpret_cast<pointer>(m_storage) + --m_size)->~value_type();
+      (static_cast<pointer>(static_cast<void*>(m_storage)) + --m_size)->~value_type();
     }
     else
     {
@@ -688,7 +704,7 @@ class inplace_vector : public nop::details::inplace_vector_base<T, N>
   {
     if constexpr (!std::is_fundamental_v<value_type>)
     {
-      return reinterpret_cast<pointer>(m_storage)[index];
+      return static_cast<pointer>(static_cast<void*>(m_storage))[index];
     }
     else
     {
@@ -700,7 +716,7 @@ class inplace_vector : public nop::details::inplace_vector_base<T, N>
   {
     if constexpr (!std::is_fundamental_v<value_type>)
     {
-      return reinterpret_cast<pointer>(m_storage)[index];
+      return static_cast<pointer>(static_cast<void*>(m_storage))[index];
     }
     else
     {
@@ -712,15 +728,12 @@ class inplace_vector : public nop::details::inplace_vector_base<T, N>
   {
     if constexpr (std::is_base_of_v<nop::strategy::inplace_vector_throw, Policy>)
     {
-      if (!m_size)
-      {
-        throw std::out_of_range{"inplace_vector::front() -> storage underflow"};
-      }
+      this->range_check(0UL);
     }
 
     if constexpr (!std::is_fundamental_v<value_type>)
     {
-      return *reinterpret_cast<pointer>(m_storage);
+      return *static_cast<pointer>(static_cast<void*>(m_storage));
     }
     else
     {
@@ -732,15 +745,12 @@ class inplace_vector : public nop::details::inplace_vector_base<T, N>
   {
     if constexpr (std::is_base_of_v<nop::strategy::inplace_vector_throw, Policy>)
     {
-      if (!m_size)
-      {
-        throw std::out_of_range{"inplace_vector::front() -> storage underflow"};
-      }
+      this->range_check(0UL);
     }
 
     if constexpr (!std::is_fundamental_v<value_type>)
     {
-      return *reinterpret_cast<pointer>(m_storage);
+      return *static_cast<pointer>(static_cast<void*>(m_storage));
     }
     else
     {
@@ -752,15 +762,12 @@ class inplace_vector : public nop::details::inplace_vector_base<T, N>
   {
     if constexpr (std::is_base_of_v<nop::strategy::inplace_vector_throw, Policy>)
     {
-      if (!m_size)
-      {
-        throw std::out_of_range{"inplace_vector::front() -> storage underflow"};
-      }
+      this->range_check(m_size - 1UL);
     }
 
     if constexpr (!std::is_fundamental_v<value_type>)
     {
-      return reinterpret_cast<pointer>(m_storage)[m_size - 1UL];
+      return static_cast<pointer>(static_cast<void*>(m_storage))[m_size - 1UL];
     }
     else
     {
@@ -772,15 +779,12 @@ class inplace_vector : public nop::details::inplace_vector_base<T, N>
   {
     if constexpr (std::is_base_of_v<nop::strategy::inplace_vector_throw, Policy>)
     {
-      if (!m_size)
-      {
-        throw std::out_of_range{"inplace_vector::front() -> storage underflow"};
-      }
+      this->range_check(m_size - 1UL);
     }
 
     if constexpr (!std::is_fundamental_v<value_type>)
     {
-      return reinterpret_cast<pointer>(m_storage)[m_size - 1UL];
+      return static_cast<pointer>(static_cast<void*>(m_storage))[m_size - 1UL];
     }
     else
     {
@@ -792,15 +796,12 @@ class inplace_vector : public nop::details::inplace_vector_base<T, N>
   {
     if constexpr (std::is_base_of_v<nop::strategy::inplace_vector_throw, Policy>)
     {
-      if (index >= m_size)
-      {
-        throw std::out_of_range{"inplace_vector::at() -> index is out of range"};
-      }
+      this->range_check(index);
     }
 
     if constexpr (!std::is_fundamental_v<value_type>)
     {
-      return reinterpret_cast<pointer>(m_storage)[index];
+      return static_cast<pointer>(static_cast<void*>(m_storage))[index];
     }
     else
     {
@@ -812,15 +813,12 @@ class inplace_vector : public nop::details::inplace_vector_base<T, N>
   {
     if constexpr (std::is_base_of_v<nop::strategy::inplace_vector_throw, Policy>)
     {
-      if (index >= m_size)
-      {
-        throw std::out_of_range{"inplace_vector::at() -> index is out of range"};
-      }
+      this->range_check(index);
     }
 
     if constexpr (!std::is_fundamental_v<value_type>)
     {
-      return reinterpret_cast<pointer>(m_storage)[index];
+      return static_cast<pointer>(static_cast<void*>(m_storage))[index];
     }
     else
     {
@@ -828,7 +826,7 @@ class inplace_vector : public nop::details::inplace_vector_base<T, N>
     }
   }
 
-  void assign(std::initializer_list<value_type> ilist)
+  void assign(std::initializer_list<value_type> ilist) noexcept(std::is_fundamental_v<value_type>)
   requires ((std::is_copy_constructible_v<value_type> ||
              std::is_move_constructible_v<value_type>) &&
             (std::is_copy_assignable_v<value_type> ||
@@ -843,11 +841,11 @@ class inplace_vector : public nop::details::inplace_vector_base<T, N>
         if constexpr (!std::is_fundamental_v<value_type> &&
                       std::is_move_assignable_v<value_type>)
         {
-          reinterpret_cast<pointer>(m_storage)[i] = std::move(*begin++);
+          static_cast<pointer>(static_cast<void*>(m_storage))[i] = std::move(*begin++);
         }
         else if constexpr (!std::is_fundamental_v<value_type>)
         {
-          reinterpret_cast<pointer>(m_storage)[i] = *begin++;
+          static_cast<pointer>(static_cast<void*>(m_storage))[i] = *begin++;
         }
         else
         {
@@ -861,11 +859,11 @@ class inplace_vector : public nop::details::inplace_vector_base<T, N>
       if constexpr (!std::is_fundamental_v<value_type> &&
                     std::is_move_constructible_v<value_type>)
       {
-        (void) ::new (reinterpret_cast<pointer>(m_storage) + m_size++) value_type(std::move(*begin++));
+        (void) ::new (static_cast<pointer>(static_cast<void*>(m_storage)) + m_size++) value_type(std::move(*begin++));
       }
       else if constexpr (!std::is_fundamental_v<value_type>)
       {
-        (void) ::new (reinterpret_cast<pointer>(m_storage) + m_size++) value_type(*begin++);
+        (void) ::new (static_cast<pointer>(static_cast<void*>(m_storage)) + m_size++) value_type(*begin++);
       }
       else
       {
@@ -885,7 +883,7 @@ class inplace_vector : public nop::details::inplace_vector_base<T, N>
       {
         if constexpr (!std::is_fundamental_v<value_type>)
         {
-          reinterpret_cast<pointer>(m_storage)[i] = *begin++;
+          static_cast<pointer>(static_cast<void*>(m_storage))[i] = *begin++;
         }
         else
         {
@@ -898,7 +896,7 @@ class inplace_vector : public nop::details::inplace_vector_base<T, N>
     {
       if constexpr (!std::is_fundamental_v<value_type>)
       {
-        reinterpret_cast<pointer>(m_storage)[m_size++] = *begin++;
+        static_cast<pointer>(static_cast<void*>(m_storage))[m_size++] = *begin++;
       }
       else
       {
@@ -917,7 +915,7 @@ class inplace_vector : public nop::details::inplace_vector_base<T, N>
       {
         if constexpr (!std::is_fundamental_v<value_type>)
         {
-          reinterpret_cast<pointer>(m_storage)[i] = value;
+          static_cast<pointer>(static_cast<void*>(m_storage))[i] = value;
         }
         else
         {
@@ -931,7 +929,7 @@ class inplace_vector : public nop::details::inplace_vector_base<T, N>
     {
       if constexpr (!std::is_fundamental_v<value_type>)
       {
-        (void) ::new (reinterpret_cast<pointer>(m_storage) + m_size++) value_type(value);
+        (void) ::new (static_cast<pointer>(static_cast<void*>(m_storage)) + m_size++) value_type(value);
       }
       else
       {
@@ -953,7 +951,7 @@ class inplace_vector : public nop::details::inplace_vector_base<T, N>
       {
         if constexpr (!std::is_fundamental_v<value_type>)
         {
-          std::swap(reinterpret_cast<pointer>(m_storage)[i], reinterpret_cast<pointer>(other.m_storage)[i]);
+          std::swap(static_cast<pointer>(static_cast<void*>(m_storage))[i], static_cast<pointer>(static_cast<void*>(other.m_storage))[i]);
         }
         else
         {
@@ -968,11 +966,11 @@ class inplace_vector : public nop::details::inplace_vector_base<T, N>
           if constexpr (std::is_move_constructible_v<value_type> &&
                         !std::is_fundamental_v<value_type>)
           {
-            (void) ::new (reinterpret_cast<pointer>(m_storage) + m_size) value_type(std::move(reinterpret_cast<pointer>(other.m_storage)[m_size]));
+            (void) ::new (static_cast<pointer>(static_cast<void*>(m_storage)) + m_size) value_type(std::move(static_cast<pointer>(static_cast<void*>(other.m_storage))[m_size]));
           }
           else if constexpr (!std::is_fundamental_v<value_type>)
           {
-            (void) ::new (reinterpret_cast<pointer>(m_storage) + m_size) value_type(reinterpret_cast<pointer>(other.m_storage)[m_size]);
+            (void) ::new (static_cast<pointer>(static_cast<void*>(m_storage)) + m_size) value_type(static_cast<pointer>(static_cast<void*>(other.m_storage))[m_size]);
           }
           else
           {
@@ -981,7 +979,7 @@ class inplace_vector : public nop::details::inplace_vector_base<T, N>
 
           if constexpr (!std::is_trivially_destructible_v<value_type>)
           {
-            (reinterpret_cast<pointer>(other.m_storage) + m_size++)->~value_type();
+            (static_cast<pointer>(static_cast<void*>(other.m_storage)) + m_size++)->~value_type();
           }
           else
           {
@@ -996,11 +994,11 @@ class inplace_vector : public nop::details::inplace_vector_base<T, N>
           if constexpr (std::is_move_constructible_v<value_type> &&
                         !std::is_fundamental_v<value_type>)
           {
-            (void) ::new (reinterpret_cast<pointer>(other.m_storage) + other.m_size) value_type(std::move(reinterpret_cast<pointer>(m_storage)[other.m_size]));
+            (void) ::new (static_cast<pointer>(static_cast<void*>(other.m_storage)) + other.m_size) value_type(std::move(reinterpret_cast<pointer>(static_cast<void*>(m_storage))[other.m_size]));
           }
           else if constexpr (!std::is_fundamental_v<value_type>)
           {
-            (void) ::new (reinterpret_cast<pointer>(other.m_storage) + other.m_size) value_type(reinterpret_cast<pointer>(m_storage)[other.m_size]);
+            (void) ::new (static_cast<pointer>(static_cast<void*>(other.m_storage)) + other.m_size) value_type(static_cast<pointer>(static_cast<void*>(m_storage))[other.m_size]);
           }
           else
           {
@@ -1009,11 +1007,11 @@ class inplace_vector : public nop::details::inplace_vector_base<T, N>
 
           if constexpr (!std::is_trivially_destructible_v<value_type>)
           {
-            (reinterpret_cast<pointer>(m_storage) + other.m_size++)->~value_type();
+            (static_cast<pointer>(static_cast<void*>(m_storage)) + other.m_size++)->~value_type();
           }
           else
           {
-            ++m_size;
+            ++other.m_size;
           }
         }
       }
@@ -1023,86 +1021,61 @@ class inplace_vector : public nop::details::inplace_vector_base<T, N>
     }
   }
 
-  inplace_vector& operator=(std::initializer_list<value_type> ilist)
-  requires (std::is_copy_constructible_v<value_type> ||
-            std::is_move_constructible_v<value_type>)
+  iterator erase(const_iterator position)
+  requires (std::is_move_assignable_v<value_type> ||
+            std::is_copy_assignable_v<value_type>)
   {
-    auto begin{ilist.begin()};
-
     if (m_size)
     {
-      for (size_type i{}; i < m_size && i < ilist.size(); ++i)
+      for (size_type i{static_cast<size_type>(position.m_element - static_cast<pointer>(static_cast<void*>(m_storage)))}; i < m_size - 1UL; ++i)
       {
-        if constexpr (std::is_move_constructible_v<value_type> &&
+        if constexpr (std::is_move_assignable_v<value_type> &&
                       !std::is_fundamental_v<value_type>)
         {
-          reinterpret_cast<pointer>(m_storage)[i] = std::move(*begin++);
+          static_cast<pointer>(static_cast<void*>(m_storage))[i] = std::move(static_cast<pointer>(static_cast<void*>(m_storage))[i + 1UL]);
         }
         else if constexpr (!std::is_fundamental_v<value_type>)
         {
-          reinterpret_cast<pointer>(m_storage)[i] = *begin++;
+          static_cast<pointer>(static_cast<void*>(m_storage))[i] = static_cast<pointer>(static_cast<void*>(m_storage))[i + 1UL];
         }
         else
         {
-          (void) ::new (m_storage + i) value_type(*begin++);
+          m_storage[i] = m_storage[i + 1UL];
         }
       }
-    }
 
-    while (m_size < N && begin != ilist.end())
-    {
-      if constexpr (std::is_move_constructible_v<value_type> &&
-                    !std::is_fundamental_v<value_type>)
+      if constexpr (!std::is_trivially_destructible_v<value_type>)
       {
-        (void) ::new (reinterpret_cast<pointer>(m_storage) + m_size++) value_type(std::move(*begin++));
-      }
-      else if constexpr (!std::is_fundamental_v<value_type>)
-      {
-        (void) ::new (reinterpret_cast<pointer>(m_storage) + m_size++) value_type(*begin++);
+        (static_cast<pointer>(static_cast<void*>(m_storage)) + --m_size)->~value_type();
       }
       else
       {
-        (void) ::new (m_storage + m_size++) value_type(*begin++);
+        --m_size;
       }
     }
 
+    return {const_cast<pointer>(position.m_element)};
+  }
+
+  inplace_vector& operator=(std::initializer_list<value_type> ilist)
+  requires ((std::is_copy_constructible_v<value_type> ||
+            std::is_move_constructible_v<value_type>) &&
+            (std::is_copy_assignable_v<value_type> ||
+             std::is_move_assignable_v<value_type>))
+  {
+    this->assign(ilist);
     return *this;
   }
 
   inplace_vector& operator=(const inplace_vector& other)
-  requires (std::is_copy_assignable_v<value_type> &&
-            std::is_copy_constructible_v<value_type>)
+  requires ((std::is_copy_assignable_v<value_type> ||
+            std::is_copy_constructible_v<value_type>) &&
+            (std::is_copy_assignable_v<value_type> ||
+             std::is_move_assignable_v<value_type>))
   {
     if (this != std::addressof(other))
     {
-      if (m_size)
-      {
-        for (size_type i{}; i < m_size && i < other.m_size; ++i)
-        {
-          if constexpr (!std::is_fundamental_v<value_type>)
-          {
-            reinterpret_cast<pointer>(m_storage)[i] = reinterpret_cast<pointer>(other.m_storage)[i];
-          }
-          else
-          {
-            (void) ::new (m_storage + i) value_type(other.m_storage[i]);
-          }
-        }
-      }
-
-      while (m_size < other.m_size)
-      {
-        if constexpr (!std::is_fundamental_v<value_type>)
-        {
-          (void) ::new (reinterpret_cast<pointer>(m_storage) + m_size) value_type(reinterpret_cast<pointer>(other.m_storage)[m_size]);
-        }
-        else
-        {
-          (void) ::new (m_storage + m_size) value_type(other.m_storage[m_size]);
-        }
-
-        ++m_size;
-      }
+      this->assign(other.begin(), other.end());
     }
 
     return *this;
@@ -1118,7 +1091,7 @@ class inplace_vector : public nop::details::inplace_vector_base<T, N>
       {
         if constexpr (!std::is_fundamental_v<value_type>)
         {
-          reinterpret_cast<pointer>(m_storage)[i] = std::move(reinterpret_cast<pointer>(other.m_storage)[i]);
+          static_cast<pointer>(static_cast<void*>(m_storage))[i] = std::move(static_cast<pointer>(static_cast<void*>(other.m_storage))[i]);
         }
         else
         {
@@ -1130,7 +1103,7 @@ class inplace_vector : public nop::details::inplace_vector_base<T, N>
       {
         if constexpr (!std::is_fundamental_v<value_type>)
         {
-          (void) ::new (reinterpret_cast<pointer>(m_storage) + m_size) value_type(std::move(reinterpret_cast<pointer>(other.m_storage)[m_size]));
+          (void) ::new (static_cast<pointer>(static_cast<void*>(m_storage)) + m_size) value_type(std::move(static_cast<pointer>(static_cast<void*>(other.m_storage))[m_size]));
         }
         else
         {
@@ -1185,5 +1158,16 @@ template<typename T, std::size_t N, class Policy>
 
   return false;
 }
+
+namespace std /* Begin namespace std */
+{
+
+template<typename T, std::size_t N, class Policy>
+constexpr void swap(nop::inplace_vector<T, N, Policy>& lhs, nop::inplace_vector<T, N, Policy>& rhs)
+{
+  lhs.swap(rhs);
+}
+
+} /* End namespace std */
 
 #endif /* End inplace vector header file */

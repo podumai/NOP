@@ -19,27 +19,27 @@ class inplace_vector_base
   using size_type       = std::size_t;
   using difference_type = std::ptrdiff_t;
   using reference       = T&;
-  using const_reference  = const T&;
+  using const_reference = const T&;
   using pointer         = T*;
   using const_pointer   = const T*;
 
  public:
-  [[nodiscard]] size_type capacity() const noexcept
+  [[nodiscard]] static size_type capacity() noexcept
   {
     return N;
   }
 
-  [[nodiscard]] size_type max_size() const noexcept
+  [[nodiscard]] static size_type max_size() noexcept
   {
     return N;
   }
 
-  void shrink_to_fit() const noexcept
+  static void shrink_to_fit() noexcept
   {
     /* Empty */
   }
 
-  void reserve() const noexcept
+  static void reserve() noexcept
   {
     /* Empty */
   }
