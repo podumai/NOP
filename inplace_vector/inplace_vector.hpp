@@ -374,7 +374,7 @@ class inplace_vector : public nop::details::inplace_vector_base<T, N>
     /* Empty */
   }
 
-  inplace_vector(const inplace_vector& other)
+  inplace_vector(const inplace_vector& other) noexcept(std::is_nothrow_copy_constructible_v<value_type>)
   requires std::is_copy_constructible_v<value_type>
     : m_size{}
   {
@@ -412,13 +412,45 @@ class inplace_vector : public nop::details::inplace_vector_base<T, N>
     }
   }
 
+  explicit inplace_vector(size_type n) noexcept(std::is_base_of_v<nop::strategy::inplace_vector_nothrow, Policy> &&
+                                                std::is_nothrow_default_constructible_v<value_type>)
+  requires std::is_default_constructible_v<value_type>
+    : m_size{}
+  {
+    if constexpr (std::is_base_of_v<nop::strategy::inplace_vector_throw, Policy>)
+    {
+      if (n > N)
+      {
+        throw std::length_error{"inplace_vector::inplace_vector(size_type) -> invalid number of elements"};
+      }
+    }
+
+    while (m_size < n)
+    {
+      if constexpr (!std::is_fundamental_v<value_type>)
+      {
+        (void) ::new (static_cast<pointer>(static_cast<void*>(m_storage)) + m_size++) value_type();
+      }
+      else
+      {
+        (void) ::new (m_storage + m_size++) value_type();
+      }
+    }
+  }
+
   inplace_vector(size_type n, const value_type& value)
   requires std::is_copy_constructible_v<value_type>
     : m_size{}
   {
-    size_type total_size{n > N ? N : n};
+    if constexpr (std::is_base_of_v<nop::strategy::inplace_vector_throw, Policy>)
+    {
+      if (n > N)
+      {
+        throw std::length_error{"inplace_vector::inplace_vector(size_type, const value_type&) -> invalid number of elements"};
+      }
+    }
 
-    while (m_size < total_size)
+    while (m_size < n)
     {
       if constexpr (!std::is_fundamental_v<value_type>)
       {
@@ -431,28 +463,37 @@ class inplace_vector : public nop::details::inplace_vector_base<T, N>
     }
   }
 
-  inplace_vector(std::initializer_list<value_type> ilist)
+  inplace_vector(std::initializer_list<value_type> ilist) noexcept(std::is_base_of_v<nop::strategy::inplace_vector_nothrow, Policy> &&
+                                                                   std::is_nothrow_copy_constructible_v<value_type>)
   requires std::is_copy_constructible_v<value_type>
     : m_size{}
   {
-    for (auto begin{ilist.begin()}; begin != ilist.end() && m_size < N; ++m_size)
+    if constexpr (std::is_base_of_v<nop::strategy::inplace_vector_throw, Policy>)
+    {
+      if (ilist.size() > N)
+      {
+        throw std::length_error{"inplace_vector::inplace_vector(std::initializer_list) -> invalid number of elements"};
+      }
+    }
+
+    for (auto begin{ilist.begin()}; begin != ilist.end(); ++begin)
     {
       if constexpr (!std::is_fundamental_v<value_type>)
       {
-        (void) ::new (static_cast<pointer>(static_cast<void*>(m_storage)) + m_size) value_type(*begin++);
+        (void) ::new (static_cast<pointer>(static_cast<void*>(m_storage)) + m_size++) value_type(*begin);
       }
       else
       {
-        (void) ::new (m_storage + m_size) value_type(*begin++);
+        (void) ::new (m_storage + m_size++) value_type(*begin);
       }
     }
   }
 
   template<typename InIterator>
-  requires (std::is_copy_constructible_v<value_type>)
-  inplace_vector(InIterator begin, InIterator end)
+  requires std::is_copy_constructible_v<value_type>
+  inplace_vector(InIterator begin, InIterator end) noexcept(std::is_nothrow_copy_constructible_v<value_type>)
   {
-    while (begin != end && m_size < N)
+    while (begin != end)
     {
       if constexpr (!std::is_fundamental_v<value_type>)
       {
