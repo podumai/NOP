@@ -64,13 +64,14 @@ class inplace_vector : public nop::details::inplace_vector_base<T, N>
     friend inplace_vector;
 
    public:
-    using value_type      = inplace_vector::value_type;
-    using size_type       = inplace_vector::size_type;
-    using difference_type = inplace_vector::difference_type;
-    using reference       = inplace_vector::reference;
-    using const_reference = inplace_vector::const_reference;
-    using pointer         = inplace_vector::pointer;
-    using const_pointer   = inplace_vector::const_pointer;
+    using value_type        = inplace_vector::value_type;
+    using size_type         = inplace_vector::size_type;
+    using difference_type   = inplace_vector::difference_type;
+    using reference         = inplace_vector::reference;
+    using const_reference   = inplace_vector::const_reference;
+    using pointer           = inplace_vector::pointer;
+    using const_pointer     = inplace_vector::const_pointer;
+    using iterator_category = std::contiguous_iterator_tag;
 
    private:
     pointer m_element;
@@ -215,11 +216,14 @@ class inplace_vector : public nop::details::inplace_vector_base<T, N>
     friend inplace_vector;
 
    public:
-    using value_type      = const inplace_vector::value_type;
-    using size_type       = inplace_vector::size_type;
-    using difference_type = inplace_vector::difference_type;
-    using const_reference = inplace_vector::const_reference;
-    using const_pointer   = inplace_vector::const_pointer;
+    using value_type        = const inplace_vector::value_type;
+    using size_type         = inplace_vector::size_type;
+    using difference_type   = inplace_vector::difference_type;
+    using reference         = inplace_vector::reference;
+    using const_reference   = inplace_vector::const_reference;
+    using pointer           = inplace_vector::pointer;
+    using const_pointer     = inplace_vector::const_pointer;
+    using iterator_category = std::contiguous_iterator_tag;
 
    private:
     const_pointer m_element;
@@ -428,8 +432,7 @@ class inplace_vector : public nop::details::inplace_vector_base<T, N>
   }
 
   inplace_vector(std::initializer_list<value_type> ilist)
-  requires (std::is_copy_constructible_v<value_type> ||
-            std::is_move_constructible_v<value_type>)
+  requires std::is_copy_constructible_v<value_type>
     : m_size{}
   {
     for (auto begin{ilist.begin()}; begin != ilist.end() && m_size < N; ++m_size)
@@ -518,6 +521,54 @@ class inplace_vector : public nop::details::inplace_vector_base<T, N>
     else
     {
       return {m_storage + m_size};
+    }
+  }
+
+  [[nodiscard]] std::reverse_iterator<iterator> rbegin() noexcept
+  {
+    if constexpr (!std::is_fundamental_v<value_type>)
+    {
+      return std::make_reverse_iterator<iterator>(static_cast<pointer>(static_cast<void*>(m_storage)) + m_size);
+    }
+    else
+    {
+      return std::make_reverse_iterator<iterator>(m_storage + m_size);
+    }
+  }
+
+  [[nodiscard]] std::reverse_iterator<iterator> rend() noexcept
+  {
+    if constexpr (!std::is_fundamental_v<value_type>)
+    {
+      return std::make_reverse_iterator<iterator>(static_cast<pointer>(static_cast<void*>(m_storage)));
+    }
+    else
+    {
+      return std::make_reverse_iterator<iterator>(m_storage);
+    }
+  }
+
+  [[nodiscard]] std::reverse_iterator<const_iterator> crbegin() const noexcept
+  {
+    if constexpr (!std::is_fundamental_v<value_type>)
+    {
+      return std::make_reverse_iterator<const_iterator>(static_cast<pointer>(static_cast<void*>(m_storage)) + m_size);
+    }
+    else
+    {
+      return std::make_reverse_iterator<const_iterator>(m_storage + m_size);
+    }
+  }
+
+  [[nodiscard]] std::reverse_iterator<const_iterator> crend() const noexcept
+  {
+    if constexpr (!std::is_fundamental_v<value_type>)
+    {
+      return std::make_reverse_iterator<const_iterator>(static_cast<pointer>(static_cast<void*>(m_storage)));
+    }
+    else
+    {
+      return std::make_reverse_iterator<const_iterator>(m_storage);
     }
   }
 
