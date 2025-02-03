@@ -1,9 +1,12 @@
 #ifndef NOP_INPLACE_VECTOR_HPP /* Begin inplace vector header file */
 #define NOP_INPLACE_VECTOR_HPP 1UL
 
+#pragma once
+
 #include <type_traits>
-#include <stdexcept>
-#include <initializer_list>
+#include <iterator> /* std::reverse_iterator */
+#include <stdexcept> /* std::out_of_range, std::length_error, std::invalid_argument */
+#include <initializer_list> /* std::initializer_list<T> */
 
 #include "inplace_vector_base.hpp"
 
@@ -431,12 +434,7 @@ class inplace_vector : public nop::details::inplace_vector_base<T, N>
   {
     for (auto begin{ilist.begin()}; begin != ilist.end() && m_size < N; ++m_size)
     {
-      if constexpr (std::is_move_constructible_v<value_type> &&
-                    !std::is_fundamental_v<value_type>)
-      {
-        (void) ::new (static_cast<pointer>(static_cast<void*>(m_storage)) + m_size) value_type(std::move(*begin++));
-      }
-      else if constexpr (!std::is_fundamental_v<value_type>)
+      if constexpr (!std::is_fundamental_v<value_type>)
       {
         (void) ::new (static_cast<pointer>(static_cast<void*>(m_storage)) + m_size) value_type(*begin++);
       }
@@ -642,6 +640,72 @@ class inplace_vector : public nop::details::inplace_vector_base<T, N>
     }
   }
 
+  pointer try_push_back(const value_type& value) noexcept(std::is_nothrow_copy_constructible_v<value_type>)
+  requires std::is_copy_constructible_v<value_type>
+  {
+    if (m_size < N)
+    {
+      if constexpr (!std::is_fundamental_v<value_type>)
+      {
+        return ::new (static_cast<pointer>(static_cast<void*>(m_storage)) + m_size++) value_type(value);
+      }
+      else
+      {
+        return ::new (m_storage + m_size++) value_type(value);
+      }
+    }
+    else
+    {
+      return nullptr;
+    }
+  }
+
+  pointer try_push_back(value_type&& value) noexcept(std::is_nothrow_move_constructible_v<value_type>)
+  requires std::is_move_constructible_v<value_type>
+  {
+    if (m_size < N)
+    {
+      if constexpr (!std::is_fundamental_v<value_type>)
+      {
+        return ::new (static_cast<pointer>(static_cast<void*>(m_storage)) + m_size++) value_type(std::move(value));
+      }
+      else
+      {
+        return ::new (m_storage + m_size++) value_type(value);
+      }
+    }
+    else
+    {
+      return nullptr;
+    }
+  }
+
+  reference unchecked_push_back(const value_type& value) noexcept(std::is_nothrow_copy_constructible_v<value_type>)
+  requires std::is_copy_constructible_v<value_type>
+  {
+    if constexpr (!std::is_fundamental_v<value_type>)
+    {
+      return *(::new (static_cast<pointer>(static_cast<void*>(m_storage)) + m_size++) value_type(value));
+    }
+    else
+    {
+      return *(::new (m_storage + m_size++) value_type(value));
+    }
+  }
+
+  reference unchecked_push_back(value_type&& value) noexcept(std::is_nothrow_move_constructible_v<value_type>)
+  requires std::is_move_constructible_v<value_type>
+  {
+    if constexpr (!std::is_fundamental_v<value_type>)
+    {
+      return *(::new (static_cast<pointer>(static_cast<void*>(m_storage)) + m_size++) value_type(std::move(value)));
+    }
+    else
+    {
+      return *(::new (m_storage + m_size++) value_type(value));
+    }
+  }
+
   template<typename... Args>
   void emplace_back(Args&&... args)
   {
@@ -676,6 +740,39 @@ class inplace_vector : public nop::details::inplace_vector_base<T, N>
       {
         throw std::length_error{"inplace_vector::emplace_back() -> storage overflow"};
       }
+    }
+  }
+
+  template<typename... Args>
+  pointer try_emplace_back(Args&&... args)
+  {
+    if (m_size < N)
+    {
+      if constexpr (!std::is_fundamental_v<value_type>)
+      {
+        return ::new (static_cast<pointer>(static_cast<void*>(m_storage)) + m_size++) value_type(std::forward<Args>(args)...);
+      }
+      else
+      {
+        return ::new (m_storage + m_size++) value_type(std::forward<Args>(args)...);
+      }
+    }
+    else
+    {
+      return nullptr;
+    }
+  }
+
+  template<typename... Args>
+  reference unchecked_emplace_back(Args&&... args)
+  {
+    if constexpr (!std::is_fundamental_v<value_type>)
+    {
+      return *(::new (static_cast<pointer>(static_cast<void*>(m_storage)) + m_size++) value_type(std::forward<Args>(args)...));
+    }
+    else
+    {
+      return *(::new (m_storage + m_size++) value_type(std::forward<Args>(args)...));
     }
   }
 
@@ -827,10 +924,8 @@ class inplace_vector : public nop::details::inplace_vector_base<T, N>
   }
 
   void assign(std::initializer_list<value_type> ilist) noexcept(std::is_fundamental_v<value_type>)
-  requires ((std::is_copy_constructible_v<value_type> ||
-             std::is_move_constructible_v<value_type>) &&
-            (std::is_copy_assignable_v<value_type> ||
-             std::is_move_assignable_v<value_type>))
+  requires (std::is_copy_constructible_v<value_type> &&
+            std::is_copy_assignable_v<value_type>)
   {
     auto begin{ilist.begin()};
 
@@ -838,12 +933,7 @@ class inplace_vector : public nop::details::inplace_vector_base<T, N>
     {
       for (size_type i{}; i < m_size && begin != ilist.end(); ++i)
       {
-        if constexpr (!std::is_fundamental_v<value_type> &&
-                      std::is_move_assignable_v<value_type>)
-        {
-          static_cast<pointer>(static_cast<void*>(m_storage))[i] = std::move(*begin++);
-        }
-        else if constexpr (!std::is_fundamental_v<value_type>)
+        if constexpr (!std::is_fundamental_v<value_type>)
         {
           static_cast<pointer>(static_cast<void*>(m_storage))[i] = *begin++;
         }
@@ -1058,10 +1148,8 @@ class inplace_vector : public nop::details::inplace_vector_base<T, N>
   }
 
   inplace_vector& operator=(std::initializer_list<value_type> ilist)
-  requires ((std::is_copy_constructible_v<value_type> ||
-            std::is_move_constructible_v<value_type>) &&
-            (std::is_copy_assignable_v<value_type> ||
-             std::is_move_assignable_v<value_type>))
+  requires (std::is_copy_constructible_v<value_type> &&
+            std::is_copy_assignable_v<value_type>)
   {
     this->assign(ilist);
     return *this;
