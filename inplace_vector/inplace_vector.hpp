@@ -493,6 +493,7 @@ class inplace_vector : public nop::details::inplace_vector_base<T, N>
   template<typename InIterator>
   requires std::is_copy_constructible_v<value_type>
   inplace_vector(InIterator begin, InIterator end) noexcept(std::is_nothrow_copy_constructible_v<value_type>)
+    : m_size{}
   {
     while (begin != end)
     {
