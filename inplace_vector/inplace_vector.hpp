@@ -438,7 +438,8 @@ class inplace_vector : public nop::details::inplace_vector_base<T, N>
     }
   }
 
-  inplace_vector(size_type n, const value_type& value)
+  inplace_vector(size_type n, const value_type& value) noexcept(std::is_base_of_v<nop::strategy::inplace_vector_nothrow, Policy> &&
+                                                                std::is_nothrow_copy_constructible_v<value_type>)
   requires std::is_copy_constructible_v<value_type>
     : m_size{}
   {
@@ -647,7 +648,7 @@ class inplace_vector : public nop::details::inplace_vector_base<T, N>
     return !m_size;
   }
 
-  void clear() noexcept
+  void clear() noexcept(std::is_nothrow_destructible_v<value_type>)
   {
     if constexpr (!std::is_trivially_destructible_v<value_type>)
     {
@@ -658,7 +659,8 @@ class inplace_vector : public nop::details::inplace_vector_base<T, N>
     }
   }
 
-  void push_back(const value_type& value) noexcept(std::is_nothrow_copy_constructible_v<value_type>)
+  void push_back(const value_type& value) noexcept(std::is_base_of_v<nop::strategy::inplace_vector_nothrow, Policy> &&
+                                                   std::is_nothrow_copy_constructible_v<value_type>)
   requires std::is_copy_constructible_v<value_type>
   {
     if constexpr (std::is_base_of_v<nop::strategy::inplace_vector_nothrow, Policy>)
@@ -695,7 +697,8 @@ class inplace_vector : public nop::details::inplace_vector_base<T, N>
     }
   }
 
-  void push_back(value_type&& value) noexcept(std::is_nothrow_move_constructible_v<value_type>)
+  void push_back(value_type&& value) noexcept(std::is_base_of_v<nop::strategy::inplace_vector_nothrow, Policy> &&
+                                              std::is_nothrow_move_constructible_v<value_type>)
   requires std::is_move_constructible_v<value_type>
   {
     if constexpr (std::is_base_of_v<nop::strategy::inplace_vector_nothrow, Policy>)
@@ -1116,6 +1119,151 @@ class inplace_vector : public nop::details::inplace_vector_base<T, N>
       else
       {
         (void) ::new (m_storage + m_size++) value_type(value);
+      }
+    }
+  }
+
+  iterator insert(const_iterator position, const value_type& value)
+  requires ((std::is_copy_constructible_v<value_type>  ||
+             std::is_move_constructible_v<value_type>) &&
+            (std::is_copy_assignable_v<value_type>     ||
+             std::is_move_assignable_v<value_type>))
+  {
+    if constexpr (std::is_base_of_v<nop::strategy::inplace_vector_throw, Policy>)
+    {
+      if (m_size == N)
+      {
+        throw std::length_error{"inplace_vector::insert(const_iterator, const value_type&) -> storage overflow"};
+      }
+    }
+
+    if (m_size)
+    {
+      if constexpr (!std::is_fundamental_v<value_type>)
+      {
+        pointer begin{static_cast<pointer>(static_cast<void*>(m_storage)) + m_size++ - 1UL};
+
+        if constexpr (std::is_move_constructible_v<value_type>)
+        {
+          (void) ::new (begin + 1UL) value_type(std::move(*begin));
+        }
+        else
+        {
+          (void) ::new (begin + 1UL) value_type(*begin);
+        }
+
+        pointer end{const_cast<pointer>(position.m_element) - 1UL};
+
+        while (begin > end)
+        {
+          if constexpr (std::is_move_assignable_v<value_type>)
+          {
+            *begin = std::move(*(begin - 1UL));
+          }
+          else
+          {
+            *begin = *(begin - 1UL);
+          }
+
+          --begin;
+        }
+
+        *begin = value;
+
+        return {begin};
+      }
+      else
+      {
+        pointer begin{m_storage + m_size++ - 1UL};
+
+        (void) ::new (begin + 1UL) value_type(*begin);
+
+        pointer end{const_cast<pointer>(position.m_element - 1UL)};
+
+        while (begin > end)
+        {
+          *begin = *(begin - 1UL);
+          --begin;
+        }
+
+        *begin = value;
+
+        return {begin};
+      }
+    }
+    else
+    {
+      if constexpr (!std::is_fundamental_v<value_type>)
+      {
+        return {::new (static_cast<pointer>(static_cast<void*>(m_storage)) + m_size++) value_type(value)};
+      }
+      else
+      {
+        return {::new (m_storage + m_size++) value_type(value)};
+      }
+    }
+  }
+
+  iterator insert(const_iterator position, value_type&& value)
+  requires (std::is_copy_constructible_v<value_type> &&
+            std::is_move_assignable_v<value_type>)
+  {
+    if constexpr (std::is_base_of_v<nop::strategy::inplace_vector_throw, Policy>)
+    {
+      if (m_size == N)
+      {
+        throw std::length_error{"inplace_vector::insert(const_iterator, value_type&&) -> storage overflow"};
+      }
+    }
+
+    if (m_size)
+    {
+      if constexpr (!std::is_fundamental_v<value_type>)
+      {
+        pointer begin{static_cast<pointer>(static_cast<void*>(m_storage)) + m_size++ - 1UL};
+
+        (void) ::new (begin + 1UL) value_type(std::move(*begin));
+
+        pointer end{const_cast<pointer>(position.m_element) - 1UL};
+
+        while (begin > end)
+        {
+          *begin = std::move(*(begin - 1UL));
+          --begin;
+        }
+
+        *begin = std::move(value);
+
+        return {begin};
+      }
+      else
+      {
+        pointer begin{m_storage + m_size++ - 1UL};
+
+        (void) ::new (begin + 1UL) value_type(*begin);
+
+        pointer end{const_cast<pointer>(position.m_element) - 1UL};
+
+        while (begin > end)
+        {
+          *begin = *(begin - 1UL);
+          --begin;
+        }
+
+        *begin = value;
+
+        return {begin};
+      }
+    }
+    else
+    {
+      if constexpr (!std::is_fundamental_v<value_type>)
+      {
+        return {::new (static_cast<pointer>(static_cast<void*>(m_storage)) + m_size++) value_type(std::move(value))};
+      }
+      else
+      {
+        return {::new (m_storage + m_size++) value_type(value)};
       }
     }
   }
