@@ -163,7 +163,7 @@ class inplace_vector : public nop::details::inplace_vector_base<T, N>
       return *this;
     }
 
-    [[nodiscard]] iterator operator+(difference_type offset) noexcept
+    [[nodiscard]] iterator operator+(difference_type offset) const noexcept
     {
       return {m_element + offset};
     }
@@ -174,12 +174,12 @@ class inplace_vector : public nop::details::inplace_vector_base<T, N>
       return {iter.m_element + offset};
     }
 
-    [[nodiscard]] iterator operator-(difference_type offset) noexcept
+    [[nodiscard]] iterator operator-(difference_type offset) const noexcept
     {
       return {m_element - offset};
     }
 
-    [[nodiscard]] difference_type operator-(const iterator& other) noexcept
+    [[nodiscard]] difference_type operator-(const iterator& other) const noexcept
     {
       return m_element - other.m_element;
     }
@@ -225,7 +225,7 @@ class inplace_vector : public nop::details::inplace_vector_base<T, N>
     friend inplace_vector;
 
    public:
-    using value_type        = const inplace_vector::value_type;
+    using value_type        = inplace_vector::value_type;
     using size_type         = inplace_vector::size_type;
     using difference_type   = inplace_vector::difference_type;
     using reference         = inplace_vector::reference;
@@ -235,7 +235,7 @@ class inplace_vector : public nop::details::inplace_vector_base<T, N>
     using iterator_category = std::contiguous_iterator_tag;
 
    private:
-    const_pointer m_element;
+    pointer m_element;
 
    public:
     const_iterator() noexcept
@@ -245,7 +245,7 @@ class inplace_vector : public nop::details::inplace_vector_base<T, N>
     }
 
     const_iterator(const_pointer ptr) noexcept
-      : m_element{ptr}
+      : m_element{const_cast<pointer>(ptr)}
     {
       /* Empty */
     }
@@ -297,7 +297,7 @@ class inplace_vector : public nop::details::inplace_vector_base<T, N>
       return *this;
     }
 
-    [[nodiscard]] const_iterator operator+(difference_type offset) noexcept
+    [[nodiscard]] const_iterator operator+(difference_type offset) const noexcept
     {
       return {m_element + offset};
     }
@@ -314,7 +314,7 @@ class inplace_vector : public nop::details::inplace_vector_base<T, N>
       return *this;
     }
 
-    [[nodiscard]] const_iterator operator-(difference_type offset) noexcept
+    [[nodiscard]] const_iterator operator-(difference_type offset) const noexcept
     {
       return {m_element - offset};
     }
@@ -559,7 +559,7 @@ class inplace_vector : public nop::details::inplace_vector_base<T, N>
   {
     if constexpr (!std::is_fundamental_v<value_type>)
     {
-      return {static_cast<const_pointer>(static_cast<void*>(m_storage))};
+      return {static_cast<const_pointer>(static_cast<const void*>(m_storage))};
     }
     else
     {
@@ -607,7 +607,7 @@ class inplace_vector : public nop::details::inplace_vector_base<T, N>
   {
     if constexpr (!std::is_fundamental_v<value_type>)
     {
-      return std::make_reverse_iterator<const_iterator>(static_cast<pointer>(static_cast<void*>(m_storage)) + m_size);
+      return std::make_reverse_iterator<const_iterator>(static_cast<const_pointer>(static_cast<const void*>(m_storage)) + m_size);
     }
     else
     {
@@ -619,7 +619,7 @@ class inplace_vector : public nop::details::inplace_vector_base<T, N>
   {
     if constexpr (!std::is_fundamental_v<value_type>)
     {
-      return std::make_reverse_iterator<const_iterator>(static_cast<pointer>(static_cast<void*>(m_storage)));
+      return std::make_reverse_iterator<const_iterator>(static_cast<const_pointer>(static_cast<const void*>(m_storage)));
     }
     else
     {
@@ -1165,7 +1165,7 @@ class inplace_vector : public nop::details::inplace_vector_base<T, N>
           (void) ::new (begin + 1UL) value_type(*begin);
         }
 
-        pointer end{const_cast<pointer>(position.m_element)};
+        pointer end{position.m_element};
 
         while (begin >= end)
         {
@@ -1191,7 +1191,7 @@ class inplace_vector : public nop::details::inplace_vector_base<T, N>
 
         (void) ::new (begin + 1UL) value_type(*begin);
 
-        pointer end{const_cast<pointer>(position.m_element)};
+        pointer end{position.m_element};
 
         while (begin >= end)
         {
@@ -1235,7 +1235,7 @@ class inplace_vector : public nop::details::inplace_vector_base<T, N>
 
         (void) ::new (begin + 1UL) value_type(std::move(*begin));
 
-        pointer end{const_cast<pointer>(position.m_element)};
+        pointer end{position.m_element};
 
         while (begin >= end)
         {
@@ -1253,7 +1253,7 @@ class inplace_vector : public nop::details::inplace_vector_base<T, N>
 
         (void) ::new (begin + 1UL) value_type(*begin);
 
-        pointer end{const_cast<pointer>(position.m_element)};
+        pointer end{position.m_element};
 
         while (begin >= end)
         {
@@ -1366,20 +1366,31 @@ class inplace_vector : public nop::details::inplace_vector_base<T, N>
   {
     if (m_size)
     {
-      for (size_type i{static_cast<size_type>(position.m_element - static_cast<pointer>(static_cast<void*>(m_storage)))}; i < m_size - 1UL; ++i)
+      if (!std::is_fundamental_v<value_type>)
       {
-        if constexpr (std::is_move_assignable_v<value_type> &&
-                      !std::is_fundamental_v<value_type>)
+        pointer end{static_cast<pointer>(static_cast<void*>(m_storage)) + m_size - 1UL};
+
+        [[likely]]
+        for (pointer begin{position.m_element}; begin < end; ++begin)
         {
-          static_cast<pointer>(static_cast<void*>(m_storage))[i] = std::move(static_cast<pointer>(static_cast<void*>(m_storage))[i + 1UL]);
+          if constexpr (std::is_move_assignable_v<value_type>)
+          {
+            *begin = std::move(begin[1UL]);
+          }
+          else
+          {
+            *begin = begin[1UL];
+          }
         }
-        else if constexpr (!std::is_fundamental_v<value_type>)
+      }
+      else
+      {
+        pointer end{m_storage + m_size - 1UL};
+
+        [[likely]]
+        for (pointer begin{position.m_element}; begin < end; ++begin)
         {
-          static_cast<pointer>(static_cast<void*>(m_storage))[i] = static_cast<pointer>(static_cast<void*>(m_storage))[i + 1UL];
-        }
-        else
-        {
-          m_storage[i] = m_storage[i + 1UL];
+          *begin = begin[1UL];
         }
       }
 
@@ -1393,7 +1404,59 @@ class inplace_vector : public nop::details::inplace_vector_base<T, N>
       }
     }
 
-    return {const_cast<pointer>(position.m_element)};
+    return {position.m_element};
+  }
+
+  iterator erase(const_iterator first, const_iterator last)
+  requires (std::is_move_assignable_v<value_type> ||
+            std::is_copy_assignable_v<value_type>)
+  {
+    pointer new_last{first.m_element};
+
+    if (first != last)
+    {
+      if constexpr (!std::is_fundamental_v<value_type>)
+      {
+        pointer end_position{static_cast<pointer>(static_cast<void*>(m_storage)) + m_size};
+        m_size -= static_cast<size_type>(last.m_element - first.m_element);
+
+        [[likely]]
+        while (last.m_element < end_position)
+        {
+          if constexpr (std::is_move_assignable_v<value_type>)
+          {
+            const_cast<reference>(*first++) = std::move(const_cast<reference>(*last++));
+          }
+          else
+          {
+            const_cast<reference>(*first++) = const_cast<reference>(*last++);
+          }
+        }
+
+        if constexpr (!std::is_trivially_destructible_v<value_type>)
+        {
+          [[likely]]
+          while (++first != last)
+          {
+            const_cast<pointer>(first.m_element)->~value_type();
+          }
+        }
+      }
+      else
+      {
+        pointer end_position{m_storage + m_size};
+        m_size -= static_cast<size_type>(last.m_element - first.m_element);
+
+        [[likely]]
+        while (last.m_element < end_position)
+        {
+          (void) ::new (first.m_element) value_type(*last++);
+          ++first;
+        }
+      }
+    }
+
+    return {new_last};
   }
 
   inplace_vector& operator=(std::initializer_list<value_type> ilist)

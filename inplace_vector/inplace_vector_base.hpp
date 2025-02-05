@@ -39,7 +39,7 @@ class inplace_vector_base
     /* Empty */
   }
 
-  static void reserve() noexcept
+  static void reserve([[maybe_unused]] size_type size) noexcept
   {
     /* Empty */
   }
