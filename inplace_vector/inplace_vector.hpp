@@ -49,13 +49,19 @@ class inplace_vector : public nop::details::inplace_vector_base<T, N>
   using base = nop::details::inplace_vector_base<T, N>;
 
  public:
-  using value_type      = base::value_type;
-  using size_type       = base::size_type;
-  using difference_type = base::difference_type;
-  using reference       = base::reference;
-  using const_reference = base::const_reference;
-  using pointer         = base::pointer;
-  using const_pointer   = base::const_pointer;
+  class iterator;
+  class const_iterator;
+
+ public:
+  using value_type             = base::value_type;
+  using size_type              = base::size_type;
+  using difference_type        = base::difference_type;
+  using reference              = base::reference;
+  using const_reference        = base::const_reference;
+  using pointer                = base::pointer;
+  using const_pointer          = base::const_pointer;
+  using reverse_iterator       = std::reverse_iterator<iterator>;
+  using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
  public:
   class iterator
@@ -208,6 +214,9 @@ class inplace_vector : public nop::details::inplace_vector_base<T, N>
       return m_element >= other.m_element;
     }
 
+    iterator& operator=(const iterator&) noexcept = default;
+    iterator& operator=(iterator&&) noexcept = default;
+
   };
 
   class const_iterator
@@ -350,6 +359,9 @@ class inplace_vector : public nop::details::inplace_vector_base<T, N>
     {
       return m_element <= other.m_element;
     }
+
+    const_iterator& operator=(const const_iterator&) noexcept = default;
+    const_iterator& operator=(const_iterator&&) noexcept = default;
 
   };
 
@@ -1153,17 +1165,17 @@ class inplace_vector : public nop::details::inplace_vector_base<T, N>
           (void) ::new (begin + 1UL) value_type(*begin);
         }
 
-        pointer end{const_cast<pointer>(position.m_element) - 1UL};
+        pointer end{const_cast<pointer>(position.m_element)};
 
-        while (begin > end)
+        while (begin >= end)
         {
           if constexpr (std::is_move_assignable_v<value_type>)
           {
-            *begin = std::move(*(begin - 1UL));
+            *begin = std::move(begin[-1UL]);
           }
           else
           {
-            *begin = *(begin - 1UL);
+            *begin = begin[-1UL];
           }
 
           --begin;
@@ -1179,17 +1191,15 @@ class inplace_vector : public nop::details::inplace_vector_base<T, N>
 
         (void) ::new (begin + 1UL) value_type(*begin);
 
-        pointer end{const_cast<pointer>(position.m_element - 1UL)};
+        pointer end{const_cast<pointer>(position.m_element)};
 
-        while (begin > end)
+        while (begin >= end)
         {
-          *begin = *(begin - 1UL);
+          (void) ::new (begin) value_type(begin[-1UL]);
           --begin;
         }
 
-        *begin = value;
-
-        return {begin};
+        return {::new (begin) value_type(value)};
       }
     }
     else
@@ -1206,7 +1216,7 @@ class inplace_vector : public nop::details::inplace_vector_base<T, N>
   }
 
   iterator insert(const_iterator position, value_type&& value)
-  requires (std::is_copy_constructible_v<value_type> &&
+  requires (std::is_move_constructible_v<value_type> &&
             std::is_move_assignable_v<value_type>)
   {
     if constexpr (std::is_base_of_v<nop::strategy::inplace_vector_throw, Policy>)
@@ -1225,11 +1235,11 @@ class inplace_vector : public nop::details::inplace_vector_base<T, N>
 
         (void) ::new (begin + 1UL) value_type(std::move(*begin));
 
-        pointer end{const_cast<pointer>(position.m_element) - 1UL};
+        pointer end{const_cast<pointer>(position.m_element)};
 
-        while (begin > end)
+        while (begin >= end)
         {
-          *begin = std::move(*(begin - 1UL));
+          *begin = std::move(begin[-1UL]);
           --begin;
         }
 
@@ -1243,17 +1253,15 @@ class inplace_vector : public nop::details::inplace_vector_base<T, N>
 
         (void) ::new (begin + 1UL) value_type(*begin);
 
-        pointer end{const_cast<pointer>(position.m_element) - 1UL};
+        pointer end{const_cast<pointer>(position.m_element)};
 
-        while (begin > end)
+        while (begin >= end)
         {
-          *begin = *(begin - 1UL);
+          (void) ::new (begin) value_type(begin[-1UL]);
           --begin;
         }
 
-        *begin = value;
-
-        return {begin};
+        return {::new (begin) value_type(value)};
       }
     }
     else
