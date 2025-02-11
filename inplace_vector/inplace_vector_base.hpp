@@ -39,9 +39,12 @@ class inplace_vector_base
     /* Empty */
   }
 
-  static void reserve([[maybe_unused]] size_type size) noexcept
+  static void reserve(size_type size)
   {
-    /* Empty */
+    if (size > N)
+    {
+      throw std::bad_alloc{};
+    }
   }
 
 };

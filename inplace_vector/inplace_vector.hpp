@@ -59,6 +59,14 @@ template<typename T>
 concept copy_or_move_constructible = std::is_copy_constructible_v<T> ||
                                      std::is_move_constructible_v<T>;
 
+template<typename T>
+constexpr bool is_nothrow_copy_or_move_constructible{std::is_nothrow_copy_constructible_v<T> ||
+                                                     std::is_nothrow_move_constructible_v<T>};
+
+template<typename T>
+constexpr bool is_nothrow_copy_or_move_assignable{std::is_nothrow_copy_assignable_v<T> ||
+                                                  std::is_nothrow_move_assignable_v<T>};
+
 } /* End namespace details */
 
 template<
@@ -691,7 +699,7 @@ class inplace_vector : public nop::details::inplace_vector_base<T, N>
     return !this->m_size;
   }
 
-  void clear() noexcept(std::is_nothrow_destructible_v<value_type>)
+  void clear() noexcept
   {
     if constexpr (!std::is_trivially_destructible_v<value_type>)
     {
@@ -1089,7 +1097,6 @@ class inplace_vector : public nop::details::inplace_vector_base<T, N>
 
   void assign(std::initializer_list<value_type> ilist) noexcept(std::is_nothrow_copy_assignable_v<value_type>    &&
                                                                 std::is_nothrow_copy_constructible_v<value_type> &&
-                                                                std::is_nothrow_destructible_v<value_type>       &&
                                                                 std::is_base_of_v<nop::strategy::inplace_vector_nothrow, Policy>)
   requires nop::details::copy_support<value_type>
   {
@@ -1141,8 +1148,7 @@ class inplace_vector : public nop::details::inplace_vector_base<T, N>
   requires nop::details::copy_support<value_type>
   void assign(InIterator begin, InIterator end) noexcept(!std::is_base_of_v<nop::strategy::inplace_vector_throw, Policy> &&
                                                          std::is_nothrow_copy_constructible_v<value_type>                &&
-                                                         std::is_nothrow_copy_assignable_v<value_type>                   &&
-                                                         std::is_nothrow_destructible_v<value_type>)
+                                                         std::is_nothrow_copy_assignable_v<value_type>)
   {
     if constexpr (!std::is_base_of_v<nop::strategy::inplace_vector_throw, Policy>)
     {
@@ -1189,7 +1195,6 @@ class inplace_vector : public nop::details::inplace_vector_base<T, N>
 
   void assign(size_type n, const value_type& value) noexcept(std::is_nothrow_copy_constructible_v<value_type> &&
                                                              std::is_nothrow_copy_assignable_v<value_type>    &&
-                                                             std::is_nothrow_destructible_v<value_type>       &&
                                                              !std::is_base_of_v<nop::strategy::inplace_vector_throw, Policy>)
   requires nop::details::copy_support<value_type>
   {
@@ -1373,11 +1378,9 @@ class inplace_vector : public nop::details::inplace_vector_base<T, N>
     }
   }
 
-  void swap(inplace_vector& other) noexcept(std::is_nothrow_destructible_v<value_type>         &&
-                                            (std::is_nothrow_copy_constructible_v<value_type>  ||
-                                             std::is_nothrow_move_constructible_v<value_type>) &&
+  void swap(inplace_vector& other) noexcept(nop::details::is_nothrow_copy_or_move_constructible<value_type> &&
                                             std::is_nothrow_copy_assignable_v<value_type>)
-  requires nop::details::copy_or_move_constructible<value_type>
+  requires nop::details::copy_or_move_support<value_type>
   {
     if (this != std::addressof(other))
     {
@@ -1458,33 +1461,22 @@ class inplace_vector : public nop::details::inplace_vector_base<T, N>
     }
   }
 
-  iterator erase(const_iterator position) noexcept((std::is_nothrow_copy_assignable_v<value_type>  ||
-                                                    std::is_nothrow_move_assignable_v<value_type>) &&
-                                                    std::is_nothrow_destructible_v<value_type>)
+  iterator erase(const_iterator position) noexcept(nop::details::is_nothrow_copy_or_move_assignable<value_type>)
   requires nop::details::copy_or_move_assignable<value_type>
   {
     if (this->m_size)
     {
-      if (!std::is_fundamental_v<value_type>)
+      if constexpr (std::is_move_assignable_v<value_type>)
       {
-        if constexpr (std::is_move_assignable_v<value_type>)
-        {
-          std::move(static_cast<pointer>(static_cast<void*>(this->m_storage)),
-                    static_cast<pointer>(static_cast<void*>(this->m_storage)) + --this->m_size,
-                    static_cast<pointer>(static_cast<void*>(this->m_storage)) + 1UL);
-        }
-        else
-        {
-          std::copy(static_cast<pointer>(static_cast<void*>(this->m_storage)),
-                    static_cast<pointer>(static_cast<void*>(this->m_storage)) + --this->m_size,
-                    static_cast<pointer>(static_cast<void*>(this->m_storage)) + 1UL);
-        }
+        std::move(position.m_element + 1UL,
+                  position.m_element + --this->m_size,
+                  position.m_element);
       }
       else
       {
-        std::copy(this->m_storage,
-                  this->m_storage + --this->m_size,
-                  this->m_storage + 1UL);
+        std::copy(position.m_element + 1UL,
+                  position.m_element + --this->m_size,
+                  position.m_element);
       }
 
       if constexpr (!std::is_trivially_destructible_v<value_type>)
@@ -1548,7 +1540,6 @@ class inplace_vector : public nop::details::inplace_vector_base<T, N>
   }
 
   void resize(size_type size) noexcept(std::is_nothrow_default_constructible_v<value_type> &&
-                                       std::is_nothrow_destructible_v<value_type>          &&
                                        !std::is_base_of_v<nop::strategy::inplace_vector_throw, Policy>)
   requires std::is_default_constructible_v<value_type>
   {
@@ -1582,7 +1573,6 @@ class inplace_vector : public nop::details::inplace_vector_base<T, N>
   }
 
   void resize(size_type size, const value_type& value) noexcept(std::is_nothrow_copy_constructible_v<value_type> &&
-                                                                std::is_nothrow_destructible_v<value_type>       &&
                                                                 !std::is_base_of_v<nop::strategy::inplace_vector_throw, Policy>)
   requires std::is_copy_constructible_v<value_type>
   {
@@ -1729,7 +1719,7 @@ namespace std /* Begin namespace std */
 {
 
 template<typename T, std::size_t N, class Policy>
-constexpr void swap(nop::inplace_vector<T, N, Policy>& lhs, nop::inplace_vector<T, N, Policy>& rhs)
+void swap(nop::inplace_vector<T, N, Policy>& lhs, nop::inplace_vector<T, N, Policy>& rhs)
 {
   lhs.swap(rhs);
 }
