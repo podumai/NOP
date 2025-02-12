@@ -86,6 +86,12 @@ class inplace_stack_impl : public nop::details::inplace_stack_base<T, N>
     }
   }
 
+ protected:
+  [[nodiscard]] const_pointer internal_storage() const noexcept
+  {
+    return static_cast<const_pointer>(static_cast<const void*>(this->m_storage));
+  }
+
  public:
   inplace_stack_impl() noexcept
   {

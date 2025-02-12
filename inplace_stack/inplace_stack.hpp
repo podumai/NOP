@@ -227,7 +227,9 @@ class inplace_stack : public nop::details::inplace_stack_impl<T, N>
 
   [[nodiscard]] bool operator==(const inplace_stack& other) const noexcept
   {
-    return std::equal(base::cbegin(), base::cend(), other.cbegin());
+    return std::equal(base::internal_storage(),
+                      base::internal_storage() + base::size(),
+                      other.internal_storage());
   }
 
   [[nodiscard]] bool operator!=(const inplace_stack& other) const noexcept
