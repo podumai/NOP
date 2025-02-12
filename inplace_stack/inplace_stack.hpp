@@ -12,7 +12,7 @@ template<
          nop::details::valid_inplace_stack_t T,
          std::size_t N
         >
-class inplace_stack : protected nop::details::inplace_stack_impl<T, N>
+class inplace_stack : public nop::details::inplace_stack_impl<T, N>
 {
  private:
   using base = nop::details::inplace_stack_impl<T, N>;
@@ -47,43 +47,31 @@ class inplace_stack : protected nop::details::inplace_stack_impl<T, N>
     /* Empty */
   }
 
-  inplace_stack(std::initializer_list<value_type> ilist)
+  template<typename InIterator>
+  inplace_stack(InIterator begin, InIterator end)
   requires nop::details::valid_storage_size<N>
-    : base(ilist)
+    : base(begin, end)
   {
     /* Empty */
   }
 
-  inplace_stack(const inplace_stack& other) noexcept(std::is_nothrow_copy_constructible_v<value_type>)
+  inplace_stack(std::initializer_list<value_type> ilist)
+  requires nop::details::valid_storage_size<N>
+    : base(ilist.begin(), ilist.end())
+  {
+    /* Empty */
+  }
+
+  inplace_stack(const inplace_stack& other) noexcept(noexcept(base(static_cast<base&>(other))))
     : base(static_cast<base&>(other))
   {
     /* Empty */
   }
 
-  inplace_stack(inplace_stack&& other) noexcept(std::is_nothrow_move_constructible_v<value_type>)
+  inplace_stack(inplace_stack&& other) noexcept(noexcept(base(static_cast<base&&>(other))))
     : base(static_cast<base&&>(other))
   {
     /* Empty */
-  }
-
-  [[nodiscard]] base::iterator begin() noexcept
-  {
-    return base::begin();
-  }
-
-  [[nodiscard]] base::const_iterator cbegin() const noexcept
-  {
-    return base::cbegin();
-  }
-
-  [[nodiscard]] base::iterator end() noexcept
-  {
-    return base::end();
-  }
-
-  [[nodiscard]] base::const_iterator cend() const noexcept
-  {
-    return base::cend();
   }
 
   reference push(const value_type& value)
@@ -111,13 +99,13 @@ class inplace_stack : protected nop::details::inplace_stack_impl<T, N>
     return base::push(ilist.begin(), ilist.end());
   }
 
-  pointer try_push(const value_type& value) noexcept(std::is_nothrow_copy_constructible_v<value_type>)
+  pointer try_push(const value_type& value) noexcept(noexcept(base::try_push(value)))
   requires nop::details::valid_storage_size<N>
   {
     return base::try_push(value);
   }
 
-  pointer try_push(value_type&& value) noexcept(std::is_nothrow_move_constructible_v<value_type>)
+  pointer try_push(value_type&& value) noexcept(noexcept(base::try_push(std::move(value))))
   requires nop::details::valid_storage_size<N>
   {
     return base::try_push(std::move(value));
@@ -136,13 +124,13 @@ class inplace_stack : protected nop::details::inplace_stack_impl<T, N>
     return base::try_push(ilist.begin(), ilist.end());
   }
 
-  reference unchecked_push(const value_type& value) noexcept(std::is_nothrow_copy_constructible_v<value_type>)
+  reference unchecked_push(const value_type& value) noexcept(noexcept(base::unchecked_push(value)))
   requires nop::details::valid_storage_size<N>
   {
     return base::unchecked_push(value);
   }
 
-  reference unchecked_push(value_type&& value) noexcept(std::is_nothrow_move_constructible_v<value_type>)
+  reference unchecked_push(value_type&& value) noexcept(noexcept(base::unchecked_push(std::move(value))))
   requires nop::details::valid_storage_size<N>
   {
     return base::unchecked_push(std::move(value));
@@ -159,6 +147,27 @@ class inplace_stack : protected nop::details::inplace_stack_impl<T, N>
   requires nop::details::valid_storage_size<N>
   {
     return base::unchecked_push(ilist.begin(), ilist.end());
+  }
+
+  template<typename... Args>
+  reference emplace(Args&&... args)
+  requires nop::details::valid_storage_size<N>
+  {
+    return base::emplace(std::forward<Args>(args)...);
+  }
+
+  template<typename... Args>
+  pointer try_emplace(Args&&... args)
+  requires nop::details::valid_storage_size<N>
+  {
+    return base::try_emplace(std::forward<Args>(args)...);
+  }
+
+  template<typename... Args>
+  reference unchecked_emplace(Args&&... args)
+  requires nop::details::valid_storage_size<N>
+  {
+    return base::unchecked_emplace(std::forward<Args>(args)...);
   }
 
   void pop()
@@ -200,6 +209,22 @@ class inplace_stack : protected nop::details::inplace_stack_impl<T, N>
     return base::max_size();
   }
 
+  void swap(inplace_stack& other) noexcept(noexcept(base::swap(static_cast<base&>(other))))
+  requires nop::details::valid_storage_size<N>
+  {
+    base::swap(static_cast<base&>(other));
+  }
+
+  inplace_stack& operator=(const inplace_stack& other) noexcept(noexcept(static_cast<inplace_stack&>(static_cast<base&>(*this) = static_cast<const base&>(other))))
+  {
+    return static_cast<inplace_stack&>(static_cast<base&>(*this) = static_cast<const base&>(other));
+  }
+
+  inplace_stack& operator=(inplace_stack&& other) noexcept(noexcept(static_cast<inplace_stack&>(static_cast<base&>(*this) = static_cast<base&&>(other))))
+  {
+    return static_cast<inplace_stack&>(static_cast<base&>(*this) = static_cast<base&&>(other));
+  }
+
   [[nodiscard]] bool operator==(const inplace_stack& other) const noexcept
   {
     return std::equal(base::cbegin(), base::cend(), other.cbegin());
@@ -213,5 +238,16 @@ class inplace_stack : protected nop::details::inplace_stack_impl<T, N>
 };
 
 } /* End namespace nop */
+
+namespace std /* Begin namespace std */
+{
+
+template<typename T, std::size_t N>
+constexpr void swap(nop::inplace_stack<T, N>& lhs, nop::inplace_stack<T, N>& rhs) noexcept(noexcept(lhs.swap(rhs)))
+{
+  lhs.swap(rhs);
+}
+
+} /* End namespace std */
 
 #endif /* End inplace stack header file */

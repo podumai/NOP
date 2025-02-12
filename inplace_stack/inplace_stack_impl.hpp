@@ -51,137 +51,6 @@ class inplace_stack_impl : public nop::details::inplace_stack_base<T, N>
   using pointer         = typename base::pointer;
   using const_pointer   = typename base::const_pointer;
 
- public:
-  class iterator
-  {
-   public:
-    using value_type        = typename inplace_stack_impl::value_type;
-    using difference_type   = typename inplace_stack_impl::difference_type;
-    using reference         = typename inplace_stack_impl::reference;
-    using const_reference   = typename inplace_stack_impl::const_reference;
-    using pointer           = typename inplace_stack_impl::pointer;
-    using const_pointer     = typename inplace_stack_impl::const_pointer;
-    using iterator_category = typename std::forward_iterator_tag;
-
-   private:
-    pointer m_element{nullptr};
-
-   public:
-    iterator() noexcept = default;
-
-    iterator(pointer p_element) noexcept
-      : m_element{p_element}
-    {
-      /* Empty */
-    }
-
-    iterator(const iterator&) noexcept = default;
-    iterator(iterator&&)      noexcept = default;
-
-    [[nodiscard]] reference operator*() noexcept
-    {
-      return *this->m_element;
-    }
-
-    [[nodiscard]] const_reference operator*() const noexcept
-    {
-      return *this->m_element;
-    }
-
-    [[nodiscard]] pointer operator->() noexcept
-    {
-      return this->m_element;
-    }
-
-    [[nodiscard]] const_pointer operator->() const noexcept
-    {
-      return this->m_element;
-    }
-
-    iterator& operator++() noexcept
-    {
-      ++this->m_element;
-      return *this;
-    }
-
-    iterator operator++(std::int32_t) noexcept
-    {
-      return {this->m_element++};
-    }
-
-    [[nodiscard]] bool operator==(const iterator& other) const noexcept
-    {
-      return this->m_element == other.m_element;
-    }
-
-    [[nodiscard]] bool operator!=(const iterator& other) const noexcept
-    {
-      return !(*this == other);
-    }
-
-    iterator& operator=(const iterator&) noexcept = default;
-    iterator& operator=(iterator&&)      noexcept = default;
-
-  };
-
-  class const_iterator
-  {
-   public:
-    using value_type        = typename inplace_stack_impl::value_type;
-    using difference_type   = typename inplace_stack_impl::difference_type;
-    using reference         = typename inplace_stack_impl::reference;
-    using const_reference   = typename inplace_stack_impl::const_reference;
-    using pointer           = typename inplace_stack_impl::pointer;
-    using const_pointer     = typename inplace_stack_impl::const_pointer;
-    using iterator_category = typename std::forward_iterator_tag;
-
-   private:
-    pointer m_element{nullptr};
-
-   public:
-    const_iterator() noexcept = default;
-
-    const_iterator(const_pointer p_element) noexcept
-      : m_element{const_cast<pointer>(p_element)}
-    {
-      /* Empty */
-    }
-
-    [[nodiscard]] const_reference operator*() const noexcept
-    {
-      return *this->m_element;
-    }
-
-    [[nodiscard]] const_pointer operator->() const noexcept
-    {
-      return this->m_element;
-    }
-
-    const_iterator& operator++() noexcept
-    {
-      ++this->m_element;
-      return *this;
-    }
-
-    const_iterator operator++(std::int32_t) noexcept
-    {
-      return {this->m_element++};
-    }
-
-    [[nodiscard]] bool operator==(const const_iterator& other) const noexcept
-    {
-      return this->m_element == other.m_element;
-    }
-
-    [[nodiscard]] bool operator!=(const const_iterator& other) const noexcept
-    {
-      return !(*this == other);
-    }
-
-    const_iterator(const const_iterator&) noexcept = default;
-    const_iterator(const_iterator&&)      noexcept = default;
-  };
-
  private:
   alignas(value_type) std::conditional_t<!std::is_fundamental_v<value_type>, std::uint8_t, value_type> m_storage[!std::is_fundamental_v<value_type> ? sizeof(value_type) * N : N];
   size_type m_size{};
@@ -199,6 +68,12 @@ class inplace_stack_impl : public nop::details::inplace_stack_base<T, N>
     return ::new (static_cast<pointer>(static_cast<void*>(this->m_storage)) + this->m_size++) value_type(std::move(value));
   }
 
+  template<typename... Args>
+  pointer emplace_construct(Args&&... args)
+  {
+    return ::new (static_cast<pointer>(static_cast<void*>(this->m_storage)) + this->m_size++) value_type(std::forward<Args>(args)...);
+  }
+
   void destroy() noexcept
   {
     if constexpr (!std::is_trivially_destructible_v<value_type>)
@@ -211,7 +86,7 @@ class inplace_stack_impl : public nop::details::inplace_stack_base<T, N>
     }
   }
 
- protected:
+ public:
   inplace_stack_impl() noexcept
   {
     /* Empty */
@@ -246,19 +121,22 @@ class inplace_stack_impl : public nop::details::inplace_stack_base<T, N>
     this->m_size = n;
   }
 
-  inplace_stack_impl(std::initializer_list<value_type> ilist)
+  template<std::input_iterator InIterator>
+  inplace_stack_impl(InIterator begin, InIterator end) noexcept(std::is_nothrow_copy_assignable_v<value_type>)
   requires std::is_copy_constructible_v<value_type>
   {
-    if (ilist.size() > N)
+    size_type dist{static_cast<size_type>(std::distance(begin, end))};
+
+    if (this->m_size + dist > N)
     {
       throw std::bad_alloc{};
     }
 
-    std::uninitialized_copy(ilist.begin(),
-                            ilist.end(),
+    std::uninitialized_copy(begin,
+                            end,
                             static_cast<pointer>(static_cast<void*>(this->m_storage)));
 
-    this->m_size = ilist.size();
+    this->m_size = dist;
   }
 
   inplace_stack_impl(const inplace_stack_impl& other) noexcept(std::is_nothrow_copy_constructible_v<value_type>)
@@ -294,27 +172,6 @@ class inplace_stack_impl : public nop::details::inplace_stack_base<T, N>
   {
     this->clear();
   }
-
-  [[nodiscard]] iterator begin() noexcept
-  {
-    return {static_cast<pointer>(static_cast<void*>(this->m_storage))};
-  }
-
-  [[nodiscard]] const_iterator cbegin() const noexcept
-  {
-    return {static_cast<const_pointer>(static_cast<const void*>(this->m_storage))};
-  }
-
-  [[nodiscard]] iterator end() noexcept
-  {
-    return {static_cast<pointer>(static_cast<void*>(this->m_storage)) + this->m_size};
-  }
-
-  [[nodiscard]] const_iterator cend() const noexcept
-  {
-    return {static_cast<const_pointer>(static_cast<const void*>(this->m_storage)) + this->m_size};
-  }
-
   reference push(const value_type& value) noexcept(std::is_nothrow_copy_constructible_v<value_type>)
   requires std::is_copy_constructible_v<value_type>
   {
@@ -341,17 +198,19 @@ class inplace_stack_impl : public nop::details::inplace_stack_base<T, N>
   reference push(InIterator begin, InIterator end)
   requires std::is_copy_constructible_v<value_type>
   {
-    if (static_cast<size_type>(std::distance(begin, end)) + this->m_size > N)
+    size_type dist{static_cast<size_type>(std::distance(begin, end))};
+
+    if (dist + this->m_size > N)
     {
       throw std::bad_alloc{};
     }
 
-    while (begin != end)
-    {
-      this->construct(*begin++);
-    }
+    auto return_value{std::uninitialized_copy(begin,
+                                              end,
+                                              static_cast<pointer>(static_cast<void*>(this->m_storage)) + this->m_size)};
+    this->m_size += dist;
 
-    return this->top();
+    return *return_value;
   }
 
   pointer try_push(const value_type& value) noexcept(std::is_nothrow_copy_constructible_v<value_type>)
@@ -414,6 +273,34 @@ class inplace_stack_impl : public nop::details::inplace_stack_base<T, N>
     return *this->try_push(begin, end);
   }
 
+  template<typename... Args>
+  reference emplace(Args&&... args)
+  {
+    if (this->m_size == N)
+    {
+      throw std::bad_alloc{};
+    }
+
+    return *this->emplace_construct(std::forward<Args>(args)...);
+  }
+
+  template<typename... Args>
+  pointer try_emplace(Args&&... args)
+  {
+    if (this->m_size < N)
+    {
+      return this->emplace_construct(std::forward<Args>(args)...);
+    }
+
+    return nullptr;
+  }
+
+  template<typename... Args>
+  reference unchecked_emplace(Args&&... args)
+  {
+    return *this->try_emplace(std::forward<Args>(args)...);
+  }
+
   void pop()
   {
     this->destroy();
@@ -450,6 +337,115 @@ class inplace_stack_impl : public nop::details::inplace_stack_base<T, N>
     this->m_size = 0UL;
   }
 
+  void swap(inplace_stack_impl& other) noexcept((std::is_nothrow_copy_constructible_v<value_type>  ||
+                                                 std::is_nothrow_move_constructible_v<value_type>) &&
+                                                (std::is_nothrow_copy_assignable_v<value_type>     ||
+                                                 std::is_nothrow_move_assignable_v<value_type>))
+  {
+    size_type min_size{std::min(this->m_size, other.m_size)};
+    auto current_position{std::swap_ranges(static_cast<pointer>(static_cast<void*>(this->m_storage)),
+                                           static_cast<pointer>(static_cast<void*>(this->m_storage)) + min_size,
+                                           static_cast<pointer>(static_cast<void*>(other.m_storage)))};
+
+    if (this->m_size < other.m_size)
+    {
+      if constexpr (!std::is_move_constructible_v<value_type>)
+      {
+        std::uninitialized_move(current_position,
+                                static_cast<pointer>(static_cast<void*>(other.m_storage)) + other.m_size,
+                                static_cast<pointer>(static_cast<void*>(this->m_storage)) + this->m_size);
+      }
+      else
+      {
+        std::uninitialized_copy(current_position,
+                                static_cast<pointer>(static_cast<void*>(other.m_storage)) + other.m_size,
+                                static_cast<pointer>(static_cast<void*>(this->m_storage)) + this->m_size);
+      }
+
+      if constexpr (!std::is_trivially_destructible_v<value_type>)
+      {
+        std::destroy(static_cast<pointer>(static_cast<void*>(other.m_storage)) + this->m_size,
+                     static_cast<pointer>(static_cast<void*>(other.m_storage)) + other.m_size);
+      }
+    }
+    else
+    {
+      if constexpr (!std::is_move_constructible_v<value_type>)
+      {
+        std::uninitialized_move(static_cast<pointer>(static_cast<void*>(this->m_storage)) + min_size,
+                                static_cast<pointer>(static_cast<void*>(this->m_storage)) + this->m_size,
+                                current_position);
+      }
+      else
+      {
+        std::uninitialized_copy(static_cast<pointer>(static_cast<void*>(this->m_storage)) + min_size,
+                                static_cast<pointer>(static_cast<void*>(this->m_storage)) + this->m_size,
+                                current_position);
+      }
+
+      if constexpr (!std::is_trivially_destructible_v<value_type>)
+      {
+        std::destroy(static_cast<pointer>(static_cast<void*>(this->m_storage)) + min_size,
+                     static_cast<pointer>(static_cast<void*>(this->m_storage)) + this->m_size);
+      }
+    }
+
+    std::swap(this->m_size, other.m_size);
+  }
+
+  inplace_stack_impl& operator=(const inplace_stack_impl& other) noexcept(std::is_nothrow_copy_constructible_v<value_type> &&
+                                                                          std::is_nothrow_copy_assignable_v<value_type>)
+  requires nop::details::copy_support<value_type>
+  {
+    if (this != std::addressof(other))
+    {
+      size_type min_size{std::min(this->m_size, other.m_size)};
+      auto current_position{std::copy(static_cast<const_pointer>(static_cast<const void*>(other.m_storage)),
+                                      static_cast<const_pointer>(static_cast<const void*>(other.m_storage)) + min_size,
+                                      static_cast<pointer>(static_cast<void*>(this->m_storage)))};
+      current_position = std::uninitialized_copy(static_cast<const_pointer>(static_cast<const void*>(other.m_storage)) + min_size,
+                                                 static_cast<const_pointer>(static_cast<const void*>(other.m_storage)) + other.m_size,
+                                                 current_position);
+
+      if constexpr (!std::is_trivially_destructible_v<value_type>)
+      {
+        std::destroy(static_cast<pointer>(static_cast<void*>(this->m_storage)) + other.m_size,
+                     current_position);
+      }
+
+      this->m_size = other.m_size;
+    }
+
+    return *this;
+  }
+
+  inplace_stack_impl& operator=(inplace_stack_impl&& other) noexcept(std::is_nothrow_move_constructible_v<value_type> &&
+                                                                     std::is_nothrow_move_assignable_v<value_type>)
+  requires nop::details::move_support<value_type>
+  {
+    if (this != std::addressof(other))
+    {
+      size_type min_size{std::min(this->m_size, other.m_size)};
+      auto current_position{std::move(static_cast<pointer>(static_cast<void*>(other.m_storage)),
+                                      static_cast<pointer>(static_cast<void*>(other.m_storage)) + min_size,
+                                      static_cast<pointer>(static_cast<void*>(this->m_storage)))};
+      current_position = std::uninitialized_move(static_cast<pointer>(static_cast<void*>(other.m_storage)) + min_size,
+                                                 static_cast<pointer>(static_cast<void*>(other.m_storage)) + other.m_size,
+                                                 current_position);
+
+      if constexpr (!std::is_trivially_destructible_v<value_type>)
+      {
+        std::destroy(static_cast<pointer>(static_cast<void*>(this->m_storage)) + min_size,
+                     current_position);
+      }
+
+      this->m_size = other.m_size;
+      other.clear();
+    }
+
+    return *this;
+  }
+
 };
 
 template<typename T>
@@ -466,34 +462,12 @@ class inplace_stack_impl<T, 0UL> : public nop::details::inplace_stack_base<T, 0U
   using const_reference = typename base::const_reference;
   using pointer         = typename base::pointer;
   using const_pointer   = typename base::const_pointer;
-  using iterator        = typename base::pointer;
-  using const_iterator  = typename base::const_pointer;
 
  public:
   constexpr inplace_stack_impl()                          noexcept = default;
   constexpr inplace_stack_impl(const inplace_stack_impl&) noexcept = default;
   constexpr inplace_stack_impl(inplace_stack_impl&&)      noexcept = default;
   constexpr ~inplace_stack_impl()                                  = default;
-
-  [[nodiscard]] constexpr iterator begin() noexcept
-  {
-    return nullptr;
-  }
-
-  [[nodiscard]] constexpr const_iterator cbegin() const noexcept
-  {
-    return nullptr;
-  }
-
-  [[nodiscard]] constexpr iterator end() noexcept
-  {
-    return nullptr;
-  }
-
-  [[nodiscard]] constexpr const_iterator cend() const noexcept
-  {
-    return nullptr;
-  }
 
   [[nodiscard]] constexpr size_type size() const noexcept
   {
