@@ -17,7 +17,7 @@ template<
         >
 constexpr void fill(FwdIterator begin,
                     FwdIterator end,
-                    const T& value) noexcept(noexcept(*begin++ = value))
+                    const T&    value) noexcept(noexcept(*begin++ = value))
 {
   [[likely]]
   while (!(begin == end))

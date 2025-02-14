@@ -15,10 +15,10 @@ template<
          std::forward_iterator FwdIterator1,
          std::forward_iterator FwdIterator2
         >
-[[nodiscard]] FwdIterator1 search(FwdIterator1 begin1,
-                                  FwdIterator1 end1,
-                                  FwdIterator2 s_begin2,
-                                  FwdIterator2 s_end2) noexcept
+[[nodiscard]] constexpr FwdIterator1 search(FwdIterator1 begin1,
+                                            FwdIterator1 end1,
+                                            FwdIterator2 s_begin2,
+                                            FwdIterator2 s_end2) noexcept
 {
   [[likely]]
   while (true)
@@ -48,11 +48,11 @@ template<
                         const typename std::iterator_traits<FwdIterator2>::reference
                        > BinaryPredicate
         >
-[[nodiscard]] FwdIterator1 search(FwdIterator1 begin1,
-                                  FwdIterator1 end1,
-                                  FwdIterator2 s_begin2,
-                                  FwdIterator2 s_end2,
-                                  BinaryPredicate binary_p) noexcept(noexcept(binary_p(*begin1++, *s_begin2++)))
+[[nodiscard]] constexpr FwdIterator1 search(FwdIterator1 begin1,
+                                            FwdIterator1 end1,
+                                            FwdIterator2 s_begin2,
+                                            FwdIterator2 s_end2,
+                                            BinaryPredicate binary_p) noexcept(noexcept(binary_p(*begin1++, *s_begin2++)))
 {
   [[likely]]
   while (true)

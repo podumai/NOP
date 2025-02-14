@@ -15,9 +15,9 @@ template<
          std::input_iterator InIterator,
          typename T = typename std::iterator_traits<InIterator>::value_type
         >
-[[nodiscard]] typename std::iterator_traits<InIterator>::difference_type count(InIterator begin,
-                                                                               InIterator end,
-                                                                               const T&   value) noexcept
+[[nodiscard]] constexpr typename std::iterator_traits<InIterator>::difference_type count(InIterator begin,
+                                                                                         InIterator end,
+                                                                                         const T&   value) noexcept
 {
   typename std::iterator_traits<InIterator>::difference_type c{};
 

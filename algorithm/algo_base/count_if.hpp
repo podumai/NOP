@@ -16,9 +16,9 @@ template<
          std::input_iterator                                                        InIterator,
          std::predicate<const typename std::iterator_traits<InIterator>::reference> UnaryPredicate
         >
-[[nodiscard]] typename std::iterator_traits<InIterator>::difference_type count_if(InIterator     begin,
-                                                                                  InIterator     end,
-                                                                                  UnaryPredicate unary_p) noexcept(noexcept(unary_p(*begin++)))
+[[nodiscard]] constexpr typename std::iterator_traits<InIterator>::difference_type count_if(InIterator     begin,
+                                                                                            InIterator     end,
+                                                                                            UnaryPredicate unary_p) noexcept(noexcept(unary_p(*begin++)))
 {
   typename std::iterator_traits<InIterator>::difference_type c{};
 

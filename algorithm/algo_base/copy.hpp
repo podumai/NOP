@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <iterator>
+#include <iterator> /* std::input_iterator<T>, std::output_iterator<T, U> */
 
 namespace nop /* Begin namespace nop */
 {
@@ -12,11 +12,11 @@ namespace algorithm /* Begin namespace algorithm */
 {
 
 template<
-         std::input_iterator InIterator,
+         std::input_iterator                                                         InIterator,
          std::output_iterator<typename std::iterator_traits<InIterator>::value_type> OutIterator
         >
-constexpr OutIterator copy(InIterator src_begin,
-                           InIterator src_end,
+constexpr OutIterator copy(InIterator  src_begin,
+                           InIterator  src_end,
                            OutIterator dst_begin) noexcept(noexcept(*dst_begin++ = *src_begin++))
 {
   [[likely]]

@@ -13,16 +13,18 @@ namespace algorithm /* Begin namespace algorithm */
 {
 
 template<
-         std::input_iterator InIterator,
-         std::integral Size,
+         std::input_iterator                                                         InIterator,
+         std::integral                                                               Size,
          std::output_iterator<typename std::iterator_traits<InIterator>::value_type> OutIterator
         >
-constexpr OutIterator copy_n(InIterator src, Size n, OutIterator dst) noexcept(noexcept(*dst++ = *src++))
+constexpr OutIterator copy_n(InIterator  src_begin,
+                             Size        n,
+                             OutIterator dst_begin) noexcept(noexcept(*dst_begin++ = *src_begin++))
 {
   [[likely]]
   while (n--)
   {
-    *dst++ = *src++;
+    *dst_begin++ = *src_begin++;
   }
 
   return dst;

@@ -15,10 +15,15 @@ template<
          std::input_iterator InIterator1,
          std::input_iterator InIterator2
         >
-[[nodiscard]] constexpr bool equal(InIterator1 begin1, InIterator1 end1, InIterator2 begin2) noexcept
+[[nodiscard]] constexpr bool equal(InIterator1 begin1,
+                                   InIterator1 end1,
+                                   InIterator2 begin2) noexcept
 {
   [[likely]]
-  while (!(begin1 == end1) && *begin1++ == *begin2++) {}
+  while (!(begin1 == end1) && *begin1++ == *begin2++)
+  {
+    /* Empty */
+  }
 
   return begin1 == end1;
 }

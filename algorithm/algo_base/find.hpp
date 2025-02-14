@@ -15,7 +15,9 @@ template<
          std::input_iterator InIterator,
          typename T = std::iterator_traits<InIterator>::value_type
         >
-[[nodiscard]] constexpr InIterator find(InIterator begin, InIterator end, const T& value) noexcept
+[[nodiscard]] constexpr InIterator find(InIterator begin,
+                                        InIterator end,
+                                        const T& value) noexcept
 {
   [[likely]]
   while (!(begin == end) && *begin != value)

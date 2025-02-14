@@ -25,8 +25,8 @@ template<
          typename T = typename std::iterator_traits<OutIterator>::value_type
         >
 constexpr OutIterator fill_n(OutIterator begin,
-                             Size n,
-                             const T& value) noexcept(noexcept(*begin++ = value))
+                             Size        n,
+                             const T&    value) noexcept(noexcept(*begin++ = value))
 {
   [[likely]]
   while (n--)
