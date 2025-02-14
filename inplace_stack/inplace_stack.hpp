@@ -9,7 +9,7 @@ namespace nop /* Begin namespace nop */
 {
 
 template<
-         nop::details::valid_inplace_stack_t T,
+         typename    T,
          std::size_t N
         >
 class inplace_stack : public nop::details::inplace_stack_impl<T, N>
