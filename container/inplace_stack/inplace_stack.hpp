@@ -223,6 +223,12 @@ class inplace_stack : public nop::details::inplace_stack_impl<T, N>
     return static_cast<inplace_stack&>(static_cast<base&>(*this) = static_cast<const base&>(other));
   }
 
+  inplace_stack& operator=(std::initializer_list<value_type> ilist) noexcept(noexcept(static_cast<inplace_stack&>(static_cast<base&>(*this) = ilist)))
+  requires nop::details::valid_storage_size<N>
+  {
+    return static_cast<inplace_stack&>(static_cast<base&>(*this) = ilist);
+  }
+
   inplace_stack& operator=(inplace_stack&& other) noexcept(noexcept(static_cast<inplace_stack&>(static_cast<base&>(*this) = static_cast<base&&>(other))))
   {
     return static_cast<inplace_stack&>(static_cast<base&>(*this) = static_cast<base&&>(other));

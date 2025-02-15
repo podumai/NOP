@@ -8,7 +8,10 @@
 #include <iterator>         /* std::input_iterator */
 #include <initializer_list> /* std::initializer_list */
 
-#include "inplace_stack_base.hpp"
+#include "NOP/algorithm/algo_base/copy.hpp" /* nop::algorithm::copy */
+#include "NOP/algorithm/algo_base/move.hpp" /* nop::algorithm::move */
+
+#include "inplace_stack_base.hpp" /* nop::details::inplace_stack_base<T, N> */
 
 namespace nop /* Begin namespace nop */
 {
@@ -158,18 +161,9 @@ class inplace_stack_impl : public nop::details::inplace_stack_base<T, N>
   requires std::is_move_constructible_v<value_type>
     : m_size{other.m_size}
   {
-    if constexpr (!std::is_fundamental_v<value_type>)
-    {
-      std::uninitialized_move(static_cast<pointer>(static_cast<void*>(other.m_storage)),
-                              static_cast<pointer>(static_cast<void*>(other.m_storage)) + other.m_size,
-                              static_cast<pointer>(static_cast<void*>(this->m_storage)));
-    }
-    else
-    {
-      std::uninitialized_copy(other.m_storage,
-                              other.m_storage + other.m_size,
-                              this->m_storage);
-    }
+    std::uninitialized_move(static_cast<pointer>(static_cast<void*>(other.m_storage)),
+                            static_cast<pointer>(static_cast<void*>(other.m_storage)) + other.m_size,
+                            static_cast<pointer>(static_cast<void*>(this->m_storage)));
 
     other.clear();
   }
@@ -406,9 +400,9 @@ class inplace_stack_impl : public nop::details::inplace_stack_base<T, N>
     if (this != std::addressof(other))
     {
       size_type min_size{std::min(this->m_size, other.m_size)};
-      auto current_position{std::copy(static_cast<const_pointer>(static_cast<const void*>(other.m_storage)),
-                                      static_cast<const_pointer>(static_cast<const void*>(other.m_storage)) + min_size,
-                                      static_cast<pointer>(static_cast<void*>(this->m_storage)))};
+      auto current_position{nop::algorithm::copy(static_cast<const_pointer>(static_cast<const void*>(other.m_storage)),
+                                                 static_cast<const_pointer>(static_cast<const void*>(other.m_storage)) + min_size,
+                                                 static_cast<pointer>(static_cast<void*>(this->m_storage)))};
       current_position = std::uninitialized_copy(static_cast<const_pointer>(static_cast<const void*>(other.m_storage)) + min_size,
                                                  static_cast<const_pointer>(static_cast<const void*>(other.m_storage)) + other.m_size,
                                                  current_position);
@@ -425,6 +419,33 @@ class inplace_stack_impl : public nop::details::inplace_stack_base<T, N>
     return *this;
   }
 
+  inplace_stack_impl& operator=(std::initializer_list<value_type> ilist)
+  requires nop::details::copy_support<value_type>
+  {
+    if (ilist.size() > N)
+    {
+      throw std::bad_alloc{};
+    }
+
+    auto current_position_list{ilist.begin() + std::min(this->m_size, ilist.size())};
+    auto current_position_self{nop::algorithm::copy(ilist.begin(),
+                                                    current_position_list,
+                                                    static_cast<pointer>(static_cast<void*>(this->m_storage)))};
+    auto current_position_self_end{std::uninitialized_copy(current_position_list,
+                                                           ilist.end(),
+                                                           current_position_self)};
+
+    if constexpr (!std::is_trivially_destructible_v<value_type>)
+    {
+      std::destroy(current_position_self,
+                   current_position_self_end);
+    }
+
+    this->m_size = ilist.size();
+
+    return *this;
+  }
+
   inplace_stack_impl& operator=(inplace_stack_impl&& other) noexcept(std::is_nothrow_move_constructible_v<value_type> &&
                                                                      std::is_nothrow_move_assignable_v<value_type>)
   requires nop::details::move_support<value_type>
@@ -432,9 +453,9 @@ class inplace_stack_impl : public nop::details::inplace_stack_base<T, N>
     if (this != std::addressof(other))
     {
       size_type min_size{std::min(this->m_size, other.m_size)};
-      auto current_position{std::move(static_cast<pointer>(static_cast<void*>(other.m_storage)),
-                                      static_cast<pointer>(static_cast<void*>(other.m_storage)) + min_size,
-                                      static_cast<pointer>(static_cast<void*>(this->m_storage)))};
+      auto current_position{nop::algorithm::move(static_cast<pointer>(static_cast<void*>(other.m_storage)),
+                                                 static_cast<pointer>(static_cast<void*>(other.m_storage)) + min_size,
+                                                 static_cast<pointer>(static_cast<void*>(this->m_storage)))};
       current_position = std::uninitialized_move(static_cast<pointer>(static_cast<void*>(other.m_storage)) + min_size,
                                                  static_cast<pointer>(static_cast<void*>(other.m_storage)) + other.m_size,
                                                  current_position);
