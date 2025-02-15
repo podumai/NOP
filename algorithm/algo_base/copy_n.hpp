@@ -27,7 +27,7 @@ constexpr OutIterator copy_n(InIterator  src_begin,
     *dst_begin++ = *src_begin++;
   }
 
-  return dst;
+  return dst_begin;
 }
 
 } /* End namespace algorithm */
