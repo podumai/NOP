@@ -3,8 +3,7 @@
 
 #pragma once
 
-#include <compare> /* for operator spaceship overload support */
-#include <algorithm> /* std::copy, std::move, std::mismatch */
+#include <algorithm> /* std::copy, std::move, std::lexicographical_compare_three_way */
 
 #include "inplace_vector_impl.hpp"
 
@@ -311,32 +310,6 @@ class inplace_vector : public nop::details::inplace_vector_impl<T, N>
     return static_cast<inplace_vector&>(static_cast<base&>(*this) = static_cast<base&&>(other));
   }
 
-  [[nodiscard]] bool operator==(const inplace_vector& other) const noexcept
-  {
-    if (base::size() != other.size())
-    {
-      return false;
-    }
-
-    return std::equal(base::begin(),
-                      base::end(),
-                      other.begin());
-  }
-
-  [[nodiscard]] auto operator<=>(const inplace_vector& other) const noexcept
-  {
-    if (base::size() != other.size())
-    {
-      return base::size() <=> other.size();
-    }
-
-    auto result{std::mismatch(base::cbegin(),
-                              base::cend(),
-                              other.cbegin())};
-
-    return *(result.first) <=> *(result.second);
-  }
-
 };
 
 } /* End namespace container */
@@ -357,5 +330,32 @@ constexpr void swap(nop::container::inplace_vector<T, N>& lhs,
 }
 
 } /* End namespace std */
+
+template<
+         typename    T,
+         std::size_t N
+        >
+[[nodiscard]] bool operator==(const nop::container::inplace_vector<T, N>& lhs,
+                              const nop::container::inplace_vector<T, N>& rhs) noexcept
+{
+  return std::equal(lhs.cbegin(),
+                    lhs.cend(),
+                    rhs.cbegin(),
+                    rhs.cend());
+}
+
+template<
+         typename    T,
+         std::size_t N
+        >
+[[nodiscard]] auto operator<=>(const nop::container::inplace_vector<T, N>& lhs,
+                               const nop::container::inplace_vector<T, N>& rhs) noexcept
+{
+  return std::lexicographical_compare_three_way(lhs.cbegin(),
+                                                lhs.cend(),
+                                                rhs.cbegin(),
+                                                rhs.cend());
+}
+
 
 #endif /* End container inplace_vector header file */
