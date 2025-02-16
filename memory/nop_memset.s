@@ -1,17 +1,15 @@
-.globl nop_memcpy
+.globl nop_memset
 
-.equ NULLPTR_CONSTANT, 0
-.equ AVX512_STEP,      64
+.equ NULLPTR_CONST, 0
+.equ AVX512_STEP,   64
 
 .section .text
-nop_memcpy:
+nop_memset:
   pushq %rbp
   movq %rsp, %rbp
   movq %rdi, %r8
 
-  cmpq $NULLPTR_CONSTANT, %rdi
-  jz .L0
-  cmpq $NULLPTR_CONSTANT, %rsi
+  cmpq $NULLPTR_CONST, %rdi
   jz .L0
 
   movq %rdx, %rcx
@@ -20,23 +18,26 @@ nop_memcpy:
   shlq $6, %rax
   subq %rax, %rdx
 
+  subq $2, %rsp
+  movw %si, -2(%rbp)
+  vpbroadcastb -2(%rbp), %zmm0
+  addq $2, %rsp
+
 .L1:
   cmpq $0, %rcx
   jz .L2
-  vmovups (%rsi), %zmm0
   vmovups %zmm0, (%rdi)
-  addq $AVX512_STEP, %rsi
   addq $AVX512_STEP, %rdi
   decq %rcx
   jmp .L1
 .L2:
 
+  movq %rsi, %rax
+
 .L3:
   cmpq $0, %rdx
   jz .L0
-  movb (%rsi), %al
   movb %al, (%rdi)
-  incq %rsi
   incq %rdi
   decq %rdx
   jmp .L3
