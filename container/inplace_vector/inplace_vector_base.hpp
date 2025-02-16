@@ -1,6 +1,10 @@
 #ifndef NOP_INPLACE_VECTOR_BASE_HPP /* Begin inplace vector base header file */
 #define NOP_INPLACE_VECTOR_BASE_HPP 1UL
 
+#ifndef NOP_INPLACE_VECTOR_IMPL_HPP
+  #error "This header file cannot be included explicitly. Use inplace_vector instead."
+#endif
+
 #pragma once
 
 #include <cstdint>
