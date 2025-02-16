@@ -25,32 +25,16 @@ namespace details /* Begin namespace details */
 template<typename T>
 concept valid_inplace_vector_type = std::is_nothrow_destructible_v<T>;
 
-template<typename T>
-concept copy_support = std::is_copy_constructible_v<T> &&
-                       std::is_copy_assignable_v<T>;
+template<std::size_t N>
+concept valid_inplace_vector_size = N > 0UL;
 
 template<typename T>
-concept move_support = std::is_move_constructible_v<T> &&
-                       std::is_move_assignable_v<T>;
+concept is_nothrow_copy_or_move_constructible = std::is_nothrow_copy_constructible_v<T> ||
+                                                std::is_nothrow_move_constructible_v<T>;
 
 template<typename T>
-concept copy_or_move_support = copy_support<T> || move_support<T>;
-
-template<typename T>
-concept copy_or_move_assignable = std::is_copy_assignable_v<T> ||
-                                  std::is_move_assignable_v<T>;
-
-template<typename T>
-concept copy_or_move_constructible = std::is_copy_constructible_v<T> ||
-                                     std::is_move_constructible_v<T>;
-
-template<typename T>
-constexpr bool is_nothrow_copy_or_move_constructible{std::is_nothrow_copy_constructible_v<T> ||
-                                                     std::is_nothrow_move_constructible_v<T>};
-
-template<typename T>
-constexpr bool is_nothrow_copy_or_move_assignable{std::is_nothrow_copy_assignable_v<T> ||
-                                                  std::is_nothrow_move_assignable_v<T>};
+concept is_nothrow_copy_or_move_assignable = std::is_nothrow_copy_assignable_v<T> ||
+                                             std::is_nothrow_move_assignable_v<T>;
 
 template<
          nop::details::valid_inplace_vector_type T,
@@ -386,24 +370,26 @@ class inplace_vector_impl : public nop::details::inplace_vector_base<T, N>
   }
 
   pointer construct(const value_type& value) noexcept(std::is_nothrow_copy_constructible_v<value_type>)
-  requires std::is_copy_constructible_v<value_type>
+  requires std::copy_constructible<value_type>
   {
     return ::new (static_cast<pointer>(static_cast<void*>(this->m_storage)) + this->m_size++) value_type(value);
   }
 
   pointer construct(value_type&& value) noexcept(std::is_nothrow_move_constructible_v<value_type>)
-  requires std::is_move_constructible_v<value_type>
+  requires std::move_constructible<value_type>
   {
     return ::new (static_cast<pointer>(static_cast<void*>(this->m_storage)) + this->m_size++) value_type(std::move(value));
   }
 
   template<typename... Args>
   pointer emplace_construct(Args&&... args)
+  requires std::constructible_from<value_type, Args...>
   {
     return ::new (static_cast<pointer>(static_cast<void*>(this->m_storage)) + this->m_size++) value_type(std::forward<Args>(args)...);
   }
 
   void destroy() noexcept
+  requires std::destructible<value_type>
   {
     if constexpr (!std::is_trivially_destructible_v<value_type>)
     {
@@ -419,7 +405,7 @@ class inplace_vector_impl : public nop::details::inplace_vector_base<T, N>
   inplace_vector_impl() noexcept = default;
 
   inplace_vector_impl(const inplace_vector_impl& other) noexcept(std::is_nothrow_copy_constructible_v<value_type>)
-  requires std::is_copy_constructible_v<value_type>
+  requires std::copy_constructible<value_type>
     : m_size{other.m_size}
   {
     std::uninitialized_copy(static_cast<const_pointer>(static_cast<const void*>(other.m_storage)),
@@ -428,7 +414,7 @@ class inplace_vector_impl : public nop::details::inplace_vector_base<T, N>
   }
 
   inplace_vector_impl(inplace_vector_impl&& other) noexcept(std::is_nothrow_move_constructible_v<value_type>)
-  requires std::is_move_constructible_v<value_type>
+  requires std::move_constructible<value_type>
     : m_size{other.m_size}
   {
     std::uninitialized_move(static_cast<pointer>(static_cast<void*>(other.m_storage)),
@@ -437,7 +423,7 @@ class inplace_vector_impl : public nop::details::inplace_vector_base<T, N>
   }
 
   inplace_vector_impl(size_type n)
-  requires std::is_default_constructible_v<value_type>
+  requires std::default_initializable<value_type>
   {
     if (n > N)
     {
@@ -451,7 +437,7 @@ class inplace_vector_impl : public nop::details::inplace_vector_base<T, N>
   }
 
   inplace_vector_impl(size_type n, const value_type& value)
-  requires std::is_copy_constructible_v<value_type>
+  requires std::copy_constructible<value_type>
     : m_size{}
   {
     if (n > N)
@@ -468,7 +454,7 @@ class inplace_vector_impl : public nop::details::inplace_vector_base<T, N>
 
   template<std::input_iterator InIterator>
   inplace_vector_impl(InIterator begin, InIterator end)
-  requires std::is_copy_constructible_v<value_type>
+  requires std::copy_constructible<value_type>
   {
     size_type range_size{static_cast<size_type>(std::distance(begin, end))};
 
@@ -546,7 +532,7 @@ class inplace_vector_impl : public nop::details::inplace_vector_base<T, N>
 
   [[nodiscard]] bool empty() const noexcept
   {
-    return !this->m_size;
+    return !this->size();
   }
 
   void clear() noexcept
@@ -561,7 +547,7 @@ class inplace_vector_impl : public nop::details::inplace_vector_base<T, N>
   }
 
   reference push_back(const value_type& value)
-  requires std::is_copy_constructible_v<value_type>
+  requires std::copy_constructible<value_type>
   {
     if (this->m_size == N)
     {
@@ -572,7 +558,7 @@ class inplace_vector_impl : public nop::details::inplace_vector_base<T, N>
   }
 
   reference push_back(value_type&& value)
-  requires std::is_move_constructible_v<value_type>
+  requires std::move_constructible<value_type>
   {
     if (this->m_size == N)
     {
@@ -583,7 +569,7 @@ class inplace_vector_impl : public nop::details::inplace_vector_base<T, N>
   }
 
   pointer try_push_back(const value_type& value) noexcept(std::is_nothrow_copy_constructible_v<value_type>)
-  requires std::is_copy_constructible_v<value_type>
+  requires std::copy_constructible<value_type>
   {
     if (this->m_size < N)
     {
@@ -594,7 +580,7 @@ class inplace_vector_impl : public nop::details::inplace_vector_base<T, N>
   }
 
   pointer try_push_back(value_type&& value) noexcept(std::is_nothrow_move_constructible_v<value_type>)
-  requires std::is_move_constructible_v<value_type>
+  requires std::move_constructible<value_type>
   {
     if (this->m_size < N)
     {
@@ -605,20 +591,21 @@ class inplace_vector_impl : public nop::details::inplace_vector_base<T, N>
   }
 
   reference unchecked_push_back(const value_type& value) noexcept(std::is_nothrow_copy_constructible_v<value_type>)
-  requires std::is_copy_constructible_v<value_type>
+  requires std::copy_constructible<value_type>
   {
     return *this->try_push_back(value);
   }
 
   reference unchecked_push_back(value_type&& value) noexcept(std::is_nothrow_move_constructible_v<value_type>)
-  requires std::is_move_constructible_v<value_type>
+  requires std::move_constructible<value_type>
   {
     return *this->try_push_back(std::move(value));
   }
 
   template<typename... Args>
   iterator emplace(const_iterator position, Args&&... args)
-  requires nop::details::copy_or_move_support<value_type>
+  requires (std::copyable<value_type> ||
+            std::movable<value_type>)
   {
     if (this->m_size == N)
     {
@@ -743,9 +730,8 @@ class inplace_vector_impl : public nop::details::inplace_vector_base<T, N>
   }
 
   template<std::input_iterator InIterator>
-  requires nop::details::copy_support<value_type>
   void assign(InIterator begin, InIterator end)
-  requires nop::details::copy_support<value_type>
+  requires std::copyable<value_type>
   {
     size_type range_size{static_cast<size_type>(std::distance(begin, end))};
 
@@ -775,7 +761,7 @@ class inplace_vector_impl : public nop::details::inplace_vector_base<T, N>
   }
 
   void assign(size_type n, const value_type& value)
-  requires nop::details::copy_support<value_type>
+  requires std::copyable<value_type>
   {
     if (n > N)
     {
@@ -800,7 +786,8 @@ class inplace_vector_impl : public nop::details::inplace_vector_base<T, N>
   }
 
   iterator insert(const_iterator position, const value_type& value)
-  requires nop::details::copy_or_move_support<value_type>
+  requires (std::copyable<value_type> ||
+            std::movable<value_type>)
   {
     if (this->m_size == N)
     {
@@ -847,7 +834,7 @@ class inplace_vector_impl : public nop::details::inplace_vector_base<T, N>
   }
 
   iterator insert(const_iterator position, value_type&& value)
-  requires nop::details::move_support<value_type>
+  requires std::movable<value_type>
   {
     if (this->m_size == N)
     {
@@ -880,7 +867,8 @@ class inplace_vector_impl : public nop::details::inplace_vector_base<T, N>
 
   void swap(inplace_vector_impl& other) noexcept(nop::details::is_nothrow_copy_or_move_constructible<value_type> &&
                                                  std::is_nothrow_copy_assignable_v<value_type>)
-  requires nop::details::copy_or_move_support<value_type>
+  requires (std::copyable<value_type> ||
+            std::movable<value_type>)
   {
     if (this != std::addressof(other))
     {
@@ -889,32 +877,20 @@ class inplace_vector_impl : public nop::details::inplace_vector_base<T, N>
 
       for (size_type i{}; i < this->m_size && i < other.m_size; ++i)
       {
-        if constexpr (!std::is_fundamental_v<value_type>)
-        {
-          std::swap(static_cast<pointer>(static_cast<void*>(this->m_storage))[i], static_cast<pointer>(static_cast<void*>(other.m_storage))[i]);
-        }
-        else
-        {
-          std::swap(this->m_storage[i], other.m_storage[i]);
-        }
+        std::swap(static_cast<pointer>(static_cast<void*>(this->m_storage))[i], static_cast<pointer>(static_cast<void*>(other.m_storage))[i]);
       }
 
       if (this->m_size < other.m_size)
       {
         while (this->m_size < other.m_size)
         {
-          if constexpr (std::is_move_constructible_v<value_type> &&
-                        !std::is_fundamental_v<value_type>)
+          if constexpr (std::is_move_constructible_v<value_type>)
           {
             (void) ::new (static_cast<pointer>(static_cast<void*>(this->m_storage)) + this->m_size) value_type(std::move(static_cast<pointer>(static_cast<void*>(other.m_storage))[this->m_size]));
           }
-          else if constexpr (!std::is_fundamental_v<value_type>)
-          {
-            (void) ::new (static_cast<pointer>(static_cast<void*>(this->m_storage)) + this->m_size) value_type(static_cast<pointer>(static_cast<void*>(other.m_storage))[this->m_size]);
-          }
           else
           {
-            (void) ::new (this->m_storage + this->m_size) value_type(other.m_storage[this->m_size]);
+            (void) ::new (static_cast<pointer>(static_cast<void*>(this->m_storage)) + this->m_size) value_type(static_cast<pointer>(static_cast<void*>(other.m_storage))[this->m_size]);
           }
 
           if constexpr (!std::is_trivially_destructible_v<value_type>)
@@ -931,18 +907,13 @@ class inplace_vector_impl : public nop::details::inplace_vector_base<T, N>
       {
         while (other.m_size < this->m_size)
         {
-          if constexpr (std::is_move_constructible_v<value_type> &&
-                        !std::is_fundamental_v<value_type>)
+          if constexpr (std::is_move_constructible_v<value_type>)
           {
             (void) ::new (static_cast<pointer>(static_cast<void*>(other.m_storage)) + other.m_size) value_type(std::move(static_cast<pointer>(static_cast<void*>(this->m_storage))[other.m_size]));
           }
-          else if constexpr (!std::is_fundamental_v<value_type>)
-          {
-            (void) ::new (static_cast<pointer>(static_cast<void*>(other.m_storage)) + other.m_size) value_type(static_cast<pointer>(static_cast<void*>(this->m_storage))[other.m_size]);
-          }
           else
           {
-            (void) ::new (other.m_storage + other.m_size) value_type(this->m_storage[other.m_size]);
+            (void) ::new (static_cast<pointer>(static_cast<void*>(other.m_storage)) + other.m_size) value_type(static_cast<pointer>(static_cast<void*>(this->m_storage))[other.m_size]);
           }
 
           if constexpr (!std::is_trivially_destructible_v<value_type>)
@@ -962,7 +933,8 @@ class inplace_vector_impl : public nop::details::inplace_vector_base<T, N>
   }
 
   iterator erase(const_iterator position) noexcept(nop::details::is_nothrow_copy_or_move_assignable<value_type>)
-  requires nop::details::copy_or_move_assignable<value_type>
+  requires (std::copyable<value_type> ||
+            std::movable<value_type>)
   {
     if (this->m_size)
     {
@@ -989,7 +961,8 @@ class inplace_vector_impl : public nop::details::inplace_vector_base<T, N>
   }
 
   iterator erase(const_iterator first, const_iterator last)
-  requires nop::details::copy_or_move_assignable<value_type>
+  requires (std::copyable<value_type> ||
+            std::movable<value_type>)
   {
     pointer new_last{first.m_element};
 
@@ -1040,7 +1013,7 @@ class inplace_vector_impl : public nop::details::inplace_vector_base<T, N>
   }
 
   void resize(size_type size)
-  requires std::is_default_constructible_v<value_type>
+  requires std::default_initializable<value_type>
   {
     if (this->m_size > size)
     {
@@ -1064,7 +1037,7 @@ class inplace_vector_impl : public nop::details::inplace_vector_base<T, N>
   }
 
   void resize(size_type size, const value_type& value)
-  requires std::is_copy_constructible_v<value_type>
+  requires std::copy_constructible<value_type>
   {
     if (this->m_size > size)
     {
@@ -1089,7 +1062,8 @@ class inplace_vector_impl : public nop::details::inplace_vector_base<T, N>
   }
 
   inplace_vector_impl& operator=(const inplace_vector_impl& other)
-  requires nop::details::copy_or_move_support<value_type>
+  requires (std::copyable<value_type> ||
+            std::movable<value_type>)
   {
     if (this != std::addressof(other))
     {
@@ -1101,7 +1075,7 @@ class inplace_vector_impl : public nop::details::inplace_vector_base<T, N>
 
   inplace_vector_impl& operator=(inplace_vector_impl&& other) noexcept(std::is_nothrow_move_constructible_v<value_type> &&
                                                                        std::is_nothrow_move_assignable_v<value_type>)
-  requires nop::details::move_support<value_type>
+  requires std::movable<value_type>
   {
     if (this != std::addressof(other))
     {
