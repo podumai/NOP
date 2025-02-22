@@ -506,7 +506,7 @@ class inplace_vector_impl : public __nop_details::container::inplace_vector_base
         (void) ::new (begin + 1UL) value_type(*begin);
       }
 
-      pointer end{position.m_element};
+      pointer end{const_cast<pointer>(position)};
 
       while (begin >= end)
       {
@@ -524,7 +524,7 @@ class inplace_vector_impl : public __nop_details::container::inplace_vector_base
 
       *begin = value;
 
-      return {begin};
+      return begin;
     }
     else
     {
@@ -546,7 +546,7 @@ class inplace_vector_impl : public __nop_details::container::inplace_vector_base
 
       (void) ::new (begin + 1UL) value_type(std::move(*begin));
 
-      pointer end{position.m_element};
+      pointer end{const_cast<pointer>(position)};
 
       while (begin >= end)
       {
@@ -556,7 +556,7 @@ class inplace_vector_impl : public __nop_details::container::inplace_vector_base
 
       *begin = std::move(value);
 
-      return {begin};
+      return begin;
     }
     else
     {
@@ -637,15 +637,15 @@ class inplace_vector_impl : public __nop_details::container::inplace_vector_base
     {
       if constexpr (std::is_move_assignable_v<value_type>)
       {
-        std::move(position.m_element + 1UL,
-                  position.m_element + --this->m_size,
-                  position.m_element);
+        std::move(position + 1UL,
+                  position + --this->m_size,
+                  position);
       }
       else
       {
-        std::copy(position.m_element + 1UL,
-                  position.m_element + --this->m_size,
-                  position.m_element);
+        std::copy(position + 1UL,
+                  position + --this->m_size,
+                  position);
       }
 
       if constexpr (!std::is_trivially_destructible_v<value_type>)
@@ -654,23 +654,23 @@ class inplace_vector_impl : public __nop_details::container::inplace_vector_base
       }
     }
 
-    return {position.m_element};
+    return const_cast<pointer>(position);
   }
 
   func erase(const_iterator first, const_iterator last) -> iterator
   requires (std::copyable<value_type> || std::movable<value_type>)
   {
-    pointer new_last{first.m_element};
+    pointer new_last{const_cast<pointer>(first)};
 
     if (first != last)
     {
       if constexpr (!std::is_fundamental_v<value_type>)
       {
         pointer end_position{static_cast<pointer>(static_cast<void*>(this->m_storage)) + this->m_size};
-        this->m_size -= static_cast<size_type>(last.m_element - first.m_element);
+        this->m_size -= static_cast<size_type>(last - first);
 
         [[likely]]
-        while (last.m_element < end_position)
+        while (last < end_position)
         {
           if constexpr (std::is_move_assignable_v<value_type>)
           {
@@ -687,25 +687,24 @@ class inplace_vector_impl : public __nop_details::container::inplace_vector_base
           [[likely]]
           while (++first != last)
           {
-            const_cast<pointer>(first.m_element)->~value_type();
+            const_cast<pointer>(first)->~value_type();
           }
         }
       }
       else
       {
         pointer end_position{this->m_storage + this->m_size};
-        this->m_size -= static_cast<size_type>(last.m_element - first.m_element);
+        this->m_size -= static_cast<size_type>(last - first);
 
         [[likely]]
-        while (last.m_element < end_position)
+        while (last < end_position)
         {
-          (void) ::new (first.m_element) value_type(*last++);
-          ++first;
+          (void) ::new (first++) value_type(*last++);
         }
       }
     }
 
-    return {new_last};
+    return new_last;
   }
 
   func resize(size_type size) -> void
