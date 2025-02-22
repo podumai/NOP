@@ -1,5 +1,5 @@
-#ifndef NOP_INPLACE_VECTOR_IMPL_HPP /* Begin inplace_vector_impl header file */
-#define NOP_INPLACE_VECTOR_IMPL_HPP 1UL
+#ifndef NOP_DETAILS_CONTAINER_INPLACE_VECTOR_IMPL_HPP /* Begin __nop_details::container::inplace_vector_impl header file */
+#define NOP_DETAILS_CONTAINER_INPLACE_VECTOR_IMPL_HPP 1UL
 
 #ifndef NOP_CONTAINER_INPLACE_VECTOR_HPP
   #error "This header file cannot be included explicitly. Use inplace_vector.hpp instead."
@@ -8,18 +8,18 @@
 #pragma once
 
 #include <initializer_list> /* std::initializer_list<T> */
-#include <iterator>         /* std::reverse_iterator<Iterator> */
 #include <memory>
 #include <new>              /* std::bad_alloc */
 #include <stdexcept>        /* std::out_of_range, std::invalid_argument */
+#include <exception>        /* std::exception */
 #include <type_traits>
 
 #include "inplace_vector_base.hpp"
 
-namespace nop /* Begin namespace nop */
+namespace __nop_details /* Begin namespace __nop_details */
 {
 
-namespace details /* Begin namespace details */
+namespace container /* Begin namespace container */
 {
 
 template<typename T>
@@ -37,17 +37,13 @@ concept is_nothrow_copy_or_move_assignable = std::is_nothrow_copy_assignable_v<T
                                              std::is_nothrow_move_assignable_v<T>;
 
 template<
-         nop::details::valid_inplace_vector_type T,
-         std::size_t                             N
+         __nop_details::container::valid_inplace_vector_type T,
+         std::size_t                                         N
         >
-class inplace_vector_impl : public nop::details::inplace_vector_base<T, N>
+class inplace_vector_impl : public __nop_details::container::inplace_vector_base<T, N>
 {
  private:
-  using base = typename nop::details::inplace_vector_base<T, N>;
-
- public:
-  class iterator;
-  class const_iterator;
+  using base = typename __nop_details::container::inplace_vector_base<T, N>;
 
  public:
   using value_type             = typename base::value_type;
@@ -57,311 +53,17 @@ class inplace_vector_impl : public nop::details::inplace_vector_base<T, N>
   using const_reference        = typename base::const_reference;
   using pointer                = typename base::pointer;
   using const_pointer          = typename base::const_pointer;
-  using reverse_iterator       = typename std::reverse_iterator<iterator>;
-  using const_reverse_iterator = typename std::reverse_iterator<const_iterator>;
-
- public:
-  class iterator
-  {
-   private:
-    friend inplace_vector_impl;
-
-   public:
-    using value_type        = typename inplace_vector_impl::value_type;
-    using size_type         = typename inplace_vector_impl::size_type;
-    using difference_type   = typename inplace_vector_impl::difference_type;
-    using reference         = typename inplace_vector_impl::reference;
-    using const_reference   = typename inplace_vector_impl::const_reference;
-    using pointer           = typename inplace_vector_impl::pointer;
-    using const_pointer     = typename inplace_vector_impl::const_pointer;
-    using iterator_category = typename std::contiguous_iterator_tag;
-
-   private:
-    pointer m_element;
-
-   public:
-    iterator() noexcept
-      : m_element{nullptr}
-    {
-      /* Empty */
-    }
-
-    iterator(pointer ptr) noexcept
-      : m_element{ptr}
-    {
-      /* Empty */
-    }
-
-    iterator(const iterator&) noexcept = default;
-    iterator(iterator&&)      noexcept = default;
-    ~iterator()                        = default;
-
-    [[nodiscard]] reference operator*() noexcept
-    {
-      return *this->m_element;
-    }
-
-    [[nodiscard]] const_reference operator*() const noexcept
-    {
-      return *this->m_element;
-    }
-
-    [[nodiscard]] pointer operator->() noexcept
-    {
-      return this->m_element;
-    }
-
-    [[nodiscard]] const_pointer operator->() const noexcept
-    {
-      return this->m_element;
-    }
-
-    [[nodiscard]] reference operator[](difference_type index) noexcept
-    {
-      return this->m_element[index];
-    }
-
-    [[nodiscard]] const_reference operator[](difference_type index) const noexcept
-    {
-      return this->m_element[index];
-    }
-
-    iterator& operator++() noexcept
-    {
-      ++this->m_element;
-      return *this;
-    }
-
-    iterator operator++(std::int32_t) noexcept
-    {
-      return {this->m_element++};
-    }
-
-    iterator& operator--() noexcept
-    {
-      --this->m_element;
-      return *this;
-    }
-
-    iterator operator--(std::int32_t) noexcept
-    {
-      return {this->m_element--};
-    }
-
-    iterator& operator+=(difference_type offset) noexcept
-    {
-      this->m_element += offset;
-      return *this;
-    }
-
-    iterator& operator-=(difference_type offset) noexcept
-    {
-      this->m_element -= offset;
-      return *this;
-    }
-
-    [[nodiscard]] iterator operator+(difference_type offset) const noexcept
-    {
-      return {this->m_element + offset};
-    }
-
-    [[nodiscard]] friend iterator operator+(difference_type offset,
-                                            const iterator& iter) noexcept
-    {
-      return {iter.m_element + offset};
-    }
-
-    [[nodiscard]] iterator operator-(difference_type offset) const noexcept
-    {
-      return {this->m_element - offset};
-    }
-
-    [[nodiscard]] difference_type operator-(const iterator& other) const noexcept
-    {
-      return this->m_element - other.m_element;
-    }
-
-    [[nodiscard]] bool operator==(const iterator& other) const noexcept
-    {
-      return this->m_element == other.m_element;
-    }
-
-    [[nodiscard]] bool operator!=(const iterator& other) const noexcept
-    {
-      return this->m_element != other.m_element;
-    }
-
-    [[nodiscard]] bool operator<(const iterator& other) const noexcept
-    {
-      return this->m_element < other.m_element;
-    }
-
-    [[nodiscard]] bool operator<=(const iterator& other) const noexcept
-    {
-      return this->m_element <= other.m_element;
-    }
-
-    [[nodiscard]] bool operator>(const iterator& other) const noexcept
-    {
-      return this->m_element > other.m_element;
-    }
-
-    [[nodiscard]] bool operator>=(const iterator& other) const noexcept
-    {
-      return this->m_element >= other.m_element;
-    }
-
-    iterator& operator=(const iterator&) noexcept = default;
-    iterator& operator=(iterator&&)      noexcept = default;
-
-  };
-
-  class const_iterator
-  {
-   private:
-    friend inplace_vector_impl;
-
-   public:
-    using value_type        = typename inplace_vector_impl::value_type;
-    using size_type         = typename inplace_vector_impl::size_type;
-    using difference_type   = typename inplace_vector_impl::difference_type;
-    using reference         = typename inplace_vector_impl::reference;
-    using const_reference   = typename inplace_vector_impl::const_reference;
-    using pointer           = typename inplace_vector_impl::pointer;
-    using const_pointer     = typename inplace_vector_impl::const_pointer;
-    using iterator_category = typename std::contiguous_iterator_tag;
-
-   private:
-    pointer m_element;
-
-   public:
-    const_iterator() noexcept
-      : m_element{nullptr}
-    {
-      /* Empty */
-    }
-
-    const_iterator(const_pointer ptr) noexcept
-      : m_element{const_cast<pointer>(ptr)}
-    {
-      /* Empty */
-    }
-
-    const_iterator(const const_iterator& other) noexcept = default;
-    const_iterator(const_iterator&& other)      noexcept = default;
-    ~const_iterator()                                    = default;
-
-    [[nodiscard]] const_reference operator*() const noexcept
-    {
-      return *this->m_element;
-    }
-
-    [[nodiscard]] const_pointer operator->() const noexcept
-    {
-      return this->m_element;
-    }
-
-    [[nodiscard]] const_reference operator[](difference_type index) const noexcept
-    {
-      return this->m_element[index];
-    }
-
-    const_iterator& operator++() noexcept
-    {
-      ++this->m_element;
-      return *this;
-    }
-
-    const_iterator operator++(std::int32_t) noexcept
-    {
-      return {this->m_element++};
-    }
-
-    const_iterator& operator--() noexcept
-    {
-      --this->m_element;
-      return *this;
-    }
-
-    const_iterator operator--(std::int32_t) noexcept
-    {
-      return {this->m_element--};
-    }
-
-    const_iterator& operator+=(difference_type offset) noexcept
-    {
-      this->m_element += offset;
-      return *this;
-    }
-
-    [[nodiscard]] const_iterator operator+(difference_type offset) const noexcept
-    {
-      return {this->m_element + offset};
-    }
-
-    [[nodiscard]] friend const_iterator operator+(difference_type offset,
-                                                  const const_iterator& iter) noexcept
-    {
-      return {offset + iter.m_element};
-    }
-
-    const_iterator& operator-=(difference_type offset) noexcept
-    {
-      this->m_element -= offset;
-      return *this;
-    }
-
-    [[nodiscard]] const_iterator operator-(difference_type offset) const noexcept
-    {
-      return {this->m_element - offset};
-    }
-
-    [[nodiscard]] difference_type operator-(const const_iterator& other) const noexcept
-    {
-      return this->m_element - other.m_element;
-    }
-
-    [[nodiscard]] bool operator==(const const_iterator& other) const noexcept
-    {
-      return this->m_element == other.m_element;
-    }
-
-    [[nodiscard]] bool operator!=(const const_iterator& other) const noexcept
-    {
-      return this->m_element != other.m_element;
-    }
-
-    [[nodiscard]] bool operator>(const const_iterator& other) const noexcept
-    {
-      return this->m_element > other.m_element;
-    }
-
-    [[nodiscard]] bool operator>=(const const_iterator& other) const noexcept
-    {
-      return this->m_element >= other.m_element;
-    }
-
-    [[nodiscard]] bool operator<(const const_iterator& other) const noexcept
-    {
-      return this->m_element < other.m_element;
-    }
-
-    [[nodiscard]] bool operator<=(const const_iterator& other) const noexcept
-    {
-      return this->m_element <= other.m_element;
-    }
-
-    const_iterator& operator=(const const_iterator&) noexcept = default;
-    const_iterator& operator=(const_iterator&&)      noexcept = default;
-
-  };
+  using iterator               = typename base::iterator;
+  using const_iterator         = typename base::const_iterator;
+  using reverse_iterator       = typename base::reverse_iterator;
+  using const_reverse_iterator = typename base::const_reverse_iterator;
 
  private:
   alignas (value_type) std::conditional_t<!std::is_fundamental_v<value_type>, std::uint8_t, value_type> m_storage[!std::is_fundamental_v<value_type> ? sizeof(value_type) * N : N];
   size_type m_size{};
 
  private:
-  constexpr void range_check(size_type index) const
+  constexpr func range_check(size_type index) const -> void
   {
     if (this->m_size <= index)
     {
@@ -369,26 +71,26 @@ class inplace_vector_impl : public nop::details::inplace_vector_base<T, N>
     }
   }
 
-  pointer construct(const value_type& value) noexcept(std::is_nothrow_copy_constructible_v<value_type>)
+  func construct(const value_type& value) noexcept(std::is_nothrow_copy_constructible_v<value_type>) -> pointer
   requires std::copy_constructible<value_type>
   {
     return ::new (static_cast<pointer>(static_cast<void*>(this->m_storage)) + this->m_size++) value_type(value);
   }
 
-  pointer construct(value_type&& value) noexcept(std::is_nothrow_move_constructible_v<value_type>)
+  func construct(value_type&& value) noexcept(std::is_nothrow_move_constructible_v<value_type>) -> pointer
   requires std::move_constructible<value_type>
   {
     return ::new (static_cast<pointer>(static_cast<void*>(this->m_storage)) + this->m_size++) value_type(std::move(value));
   }
 
   template<typename... Args>
-  pointer emplace_construct(Args&&... args)
+  func emplace_construct(Args&&... args) -> pointer
   requires std::constructible_from<value_type, Args...>
   {
     return ::new (static_cast<pointer>(static_cast<void*>(this->m_storage)) + this->m_size++) value_type(std::forward<Args>(args)...);
   }
 
-  void destroy() noexcept
+  func destroy() noexcept -> void
   requires std::destructible<value_type>
   {
     if constexpr (!std::is_trivially_destructible_v<value_type>)
@@ -401,7 +103,7 @@ class inplace_vector_impl : public nop::details::inplace_vector_base<T, N>
     }
   }
 
- protected:
+ public:
   inplace_vector_impl() noexcept = default;
 
   inplace_vector_impl(const inplace_vector_impl& other) noexcept(std::is_nothrow_copy_constructible_v<value_type>)
@@ -438,7 +140,6 @@ class inplace_vector_impl : public nop::details::inplace_vector_base<T, N>
 
   inplace_vector_impl(size_type n, const value_type& value)
   requires std::copy_constructible<value_type>
-    : m_size{}
   {
     if (n > N)
     {
@@ -475,67 +176,67 @@ class inplace_vector_impl : public nop::details::inplace_vector_base<T, N>
     this->clear();
   }
 
-  [[nodiscard]] iterator begin() noexcept
-  {
-    return {static_cast<pointer>(static_cast<void*>(this->m_storage))};
-  }
-
-  [[nodiscard]] iterator end() noexcept
-  {
-    return {static_cast<pointer>(static_cast<void*>(this->m_storage)) + this->m_size};
-  }
-
-  [[nodiscard]] const_iterator cbegin() const noexcept
-  {
-    return {static_cast<const_pointer>(static_cast<const void*>(this->m_storage))};
-  }
-
-  [[nodiscard]] const_iterator cend() const noexcept
-  {
-    return {static_cast<const_pointer>(static_cast<const void*>(this->m_storage)) + this->m_size};
-  }
-
-  [[nodiscard]] std::reverse_iterator<iterator> rbegin() noexcept
-  {
-    return std::make_reverse_iterator<iterator>(static_cast<pointer>(static_cast<void*>(this->m_storage)) + this->m_size);
-  }
-
-  [[nodiscard]] std::reverse_iterator<iterator> rend() noexcept
-  {
-    return std::make_reverse_iterator<iterator>(static_cast<pointer>(static_cast<void*>(this->m_storage)));
-  }
-
-  [[nodiscard]] std::reverse_iterator<const_iterator> crbegin() const noexcept
-  {
-    return std::make_reverse_iterator<const_iterator>(static_cast<const_pointer>(static_cast<const void*>(this->m_storage)) + this->m_size);
-  }
-
-  [[nodiscard]] std::reverse_iterator<const_iterator> crend() const noexcept
-  {
-    return std::make_reverse_iterator<const_iterator>(static_cast<const_pointer>(static_cast<const void*>(this->m_storage)));
-  }
-
-  [[nodiscard]] pointer data() noexcept
+  [[nodiscard]] func begin() noexcept -> iterator
   {
     return static_cast<pointer>(static_cast<void*>(this->m_storage));
   }
 
-  [[nodiscard]] const_pointer data() const noexcept
+  [[nodiscard]] func end() noexcept -> iterator
+  {
+    return static_cast<pointer>(static_cast<void*>(this->m_storage)) + this->m_size;
+  }
+
+  [[nodiscard]] func cbegin() const noexcept -> const_iterator
   {
     return static_cast<const_pointer>(static_cast<const void*>(this->m_storage));
   }
 
-  [[nodiscard]] size_type size() const noexcept
+  [[nodiscard]] func cend() const noexcept -> const_iterator
+  {
+    return static_cast<const_pointer>(static_cast<const void*>(this->m_storage)) + this->m_size;
+  }
+
+  [[nodiscard]] func rbegin() noexcept -> reverse_iterator
+  {
+    return static_cast<pointer>(static_cast<void*>(this->m_storage)) + this->m_size;
+  }
+
+  [[nodiscard]] func rend() noexcept -> reverse_iterator
+  {
+    return static_cast<pointer>(static_cast<void*>(this->m_storage));
+  }
+
+  [[nodiscard]] func crbegin() const noexcept -> const_reverse_iterator
+  {
+    return static_cast<const_pointer>(static_cast<const void*>(this->m_storage)) + this->m_size;
+  }
+
+  [[nodiscard]] func crend() const noexcept -> const_reverse_iterator
+  {
+    return static_cast<const_pointer>(static_cast<const void*>(this->m_storage));
+  }
+
+  [[nodiscard]] func data() noexcept -> pointer
+  {
+    return static_cast<void*>(this->m_storage);
+  }
+
+  [[nodiscard]] func data() const noexcept -> const_pointer
+  {
+    return static_cast<const void*>(this->m_storage);
+  }
+
+  [[nodiscard]] func size() const noexcept -> size_type
   {
     return this->m_size;
   }
 
-  [[nodiscard]] bool empty() const noexcept
+  [[nodiscard]] func empty() const noexcept -> bool
   {
     return !this->size();
   }
 
-  void clear() noexcept
+  func clear() noexcept -> void
   {
     if constexpr (!std::is_trivially_destructible_v<value_type>)
     {
@@ -546,7 +247,7 @@ class inplace_vector_impl : public nop::details::inplace_vector_base<T, N>
     this->m_size = 0UL;
   }
 
-  reference push_back(const value_type& value)
+  func push_back(const value_type& value) -> reference
   requires std::copy_constructible<value_type>
   {
     if (this->m_size == N)
@@ -557,7 +258,7 @@ class inplace_vector_impl : public nop::details::inplace_vector_base<T, N>
     return *this->construct(value);
   }
 
-  reference push_back(value_type&& value)
+  func push_back(value_type&& value) -> reference
   requires std::move_constructible<value_type>
   {
     if (this->m_size == N)
@@ -568,7 +269,7 @@ class inplace_vector_impl : public nop::details::inplace_vector_base<T, N>
     return *this->construct(std::move(value));
   }
 
-  pointer try_push_back(const value_type& value) noexcept(std::is_nothrow_copy_constructible_v<value_type>)
+  func try_push_back(const value_type& value) noexcept(std::is_nothrow_copy_constructible_v<value_type>) -> pointer
   requires std::copy_constructible<value_type>
   {
     if (this->m_size < N)
@@ -579,7 +280,7 @@ class inplace_vector_impl : public nop::details::inplace_vector_base<T, N>
     return nullptr;
   }
 
-  pointer try_push_back(value_type&& value) noexcept(std::is_nothrow_move_constructible_v<value_type>)
+  func try_push_back(value_type&& value) noexcept(std::is_nothrow_move_constructible_v<value_type>) -> pointer
   requires std::move_constructible<value_type>
   {
     if (this->m_size < N)
@@ -590,22 +291,21 @@ class inplace_vector_impl : public nop::details::inplace_vector_base<T, N>
     return nullptr;
   }
 
-  reference unchecked_push_back(const value_type& value) noexcept(std::is_nothrow_copy_constructible_v<value_type>)
+  func unchecked_push_back(const value_type& value) noexcept(std::is_nothrow_copy_constructible_v<value_type>) -> reference
   requires std::copy_constructible<value_type>
   {
     return *this->try_push_back(value);
   }
 
-  reference unchecked_push_back(value_type&& value) noexcept(std::is_nothrow_move_constructible_v<value_type>)
+  func unchecked_push_back(value_type&& value) noexcept(std::is_nothrow_move_constructible_v<value_type>) -> reference
   requires std::move_constructible<value_type>
   {
     return *this->try_push_back(std::move(value));
   }
 
   template<typename... Args>
-  iterator emplace(const_iterator position, Args&&... args)
-  requires (std::copyable<value_type> ||
-            std::movable<value_type>)
+  func emplace(const_iterator position, Args&&... args) -> iterator
+  requires (std::copyable<value_type> || std::movable<value_type>)
   {
     if (this->m_size == N)
     {
@@ -653,7 +353,7 @@ class inplace_vector_impl : public nop::details::inplace_vector_base<T, N>
   }
 
   template<typename... Args>
-  reference emplace_back(Args&&... args)
+  func emplace_back(Args&&... args)
   {
     if (this->m_size == N)
     {
@@ -664,7 +364,7 @@ class inplace_vector_impl : public nop::details::inplace_vector_base<T, N>
   }
 
   template<typename... Args>
-  pointer try_emplace_back(Args&&... args)
+  func try_emplace_back(Args&&... args) -> pointer
   {
     if (this->m_size < N)
     {
@@ -675,54 +375,54 @@ class inplace_vector_impl : public nop::details::inplace_vector_base<T, N>
   }
 
   template<typename... Args>
-  reference unchecked_emplace_back(Args&&... args)
+  func unchecked_emplace_back(Args&&... args) -> reference
   {
     return *this->try_emplace_back(std::forward<Args>(args)...);
   }
 
-  void pop_back() noexcept
+  func pop_back() noexcept -> void
   {
     this->destroy();
   }
 
-  [[nodiscard]] reference operator[](size_type index) noexcept
+  [[nodiscard]] func operator[](size_type index) noexcept -> reference
   {
     return static_cast<pointer>(static_cast<void*>(this->m_storage))[index];
   }
 
-  [[nodiscard]] const_reference operator[](size_type index) const noexcept
+  [[nodiscard]] func operator[](size_type index) const noexcept -> const_reference
   {
     return static_cast<const_pointer>(static_cast<const void*>(this->m_storage))[index];
   }
 
-  [[nodiscard]] reference front() noexcept
+  [[nodiscard]] func front() noexcept -> reference
   {
-    return static_cast<pointer>(static_cast<void*>(this->m_storage))[0UL];
+    return *static_cast<pointer>(static_cast<void*>(this->m_storage));
   }
 
-  [[nodiscard]] const_reference front() const noexcept
+  [[nodiscard]] func front() const noexcept -> const_reference
   {
-    return static_cast<const_pointer>(static_cast<const void*>(this->m_storage))[0UL];
+    return *static_cast<const_pointer>(static_cast<const void*>(this->m_storage));
   }
 
-  [[nodiscard]] reference back()
+  [[nodiscard]] func back() -> reference
   {
     return static_cast<pointer>(static_cast<void*>(this->m_storage))[this->m_size - 1UL];
   }
 
-  [[nodiscard]] const_reference back() const noexcept
+  [[nodiscard]] func back() const noexcept -> const_reference
   {
     return static_cast<const_pointer>(static_cast<const void*>(this->m_storage))[this->m_size - 1UL];
   }
 
-  [[nodiscard]] reference at(size_type index)
+  [[nodiscard]] func at(size_type index) -> reference
   {
     this->range_check(index);
 
     return static_cast<pointer>(static_cast<void*>(this->m_storage))[index];
   }
 
-  [[nodiscard]] const_reference at(size_type index) const
+  [[nodiscard]] func at(size_type index) const -> const_reference
   {
     this->range_check(index);
 
@@ -730,7 +430,7 @@ class inplace_vector_impl : public nop::details::inplace_vector_base<T, N>
   }
 
   template<std::input_iterator InIterator>
-  void assign(InIterator begin, InIterator end)
+  func assign(InIterator begin, InIterator end) -> void
   requires std::copyable<value_type>
   {
     size_type range_size{static_cast<size_type>(std::distance(begin, end))};
@@ -760,7 +460,7 @@ class inplace_vector_impl : public nop::details::inplace_vector_base<T, N>
     this->m_size = range_size;
   }
 
-  void assign(size_type n, const value_type& value)
+  func assign(size_type n, const value_type& value) -> void
   requires std::copyable<value_type>
   {
     if (n > N)
@@ -785,9 +485,8 @@ class inplace_vector_impl : public nop::details::inplace_vector_base<T, N>
     this->m_size = n;
   }
 
-  iterator insert(const_iterator position, const value_type& value)
-  requires (std::copyable<value_type> ||
-            std::movable<value_type>)
+  func insert(const_iterator position, const value_type& value) -> iterator
+  requires (std::copyable<value_type> || std::movable<value_type>)
   {
     if (this->m_size == N)
     {
@@ -833,7 +532,7 @@ class inplace_vector_impl : public nop::details::inplace_vector_base<T, N>
     }
   }
 
-  iterator insert(const_iterator position, value_type&& value)
+  func insert(const_iterator position, value_type&& value) -> iterator
   requires std::movable<value_type>
   {
     if (this->m_size == N)
@@ -865,10 +564,9 @@ class inplace_vector_impl : public nop::details::inplace_vector_base<T, N>
     }
   }
 
-  void swap(inplace_vector_impl& other) noexcept(nop::details::is_nothrow_copy_or_move_constructible<value_type> &&
-                                                 std::is_nothrow_copy_assignable_v<value_type>)
-  requires (std::copyable<value_type> ||
-            std::movable<value_type>)
+  func swap(inplace_vector_impl& other) noexcept(__nop_details::container::is_nothrow_copy_or_move_constructible<value_type> &&
+                                                 std::is_nothrow_copy_assignable_v<value_type>) -> void
+  requires (std::copyable<value_type> || std::movable<value_type>)
   {
     if (this != std::addressof(other))
     {
@@ -932,9 +630,8 @@ class inplace_vector_impl : public nop::details::inplace_vector_base<T, N>
     }
   }
 
-  iterator erase(const_iterator position) noexcept(nop::details::is_nothrow_copy_or_move_assignable<value_type>)
-  requires (std::copyable<value_type> ||
-            std::movable<value_type>)
+  func erase(const_iterator position) noexcept(__nop_details::container::is_nothrow_copy_or_move_assignable<value_type>) -> iterator
+  requires (std::copyable<value_type> || std::movable<value_type>)
   {
     if (this->m_size)
     {
@@ -960,9 +657,8 @@ class inplace_vector_impl : public nop::details::inplace_vector_base<T, N>
     return {position.m_element};
   }
 
-  iterator erase(const_iterator first, const_iterator last)
-  requires (std::copyable<value_type> ||
-            std::movable<value_type>)
+  func erase(const_iterator first, const_iterator last) -> iterator
+  requires (std::copyable<value_type> || std::movable<value_type>)
   {
     pointer new_last{first.m_element};
 
@@ -1012,7 +708,7 @@ class inplace_vector_impl : public nop::details::inplace_vector_base<T, N>
     return {new_last};
   }
 
-  void resize(size_type size)
+  func resize(size_type size) -> void
   requires std::default_initializable<value_type>
   {
     if (this->m_size > size)
@@ -1036,7 +732,7 @@ class inplace_vector_impl : public nop::details::inplace_vector_base<T, N>
     this->m_size = size;
   }
 
-  void resize(size_type size, const value_type& value)
+  func resize(size_type size, const value_type& value) -> void
   requires std::copy_constructible<value_type>
   {
     if (this->m_size > size)
@@ -1061,9 +757,8 @@ class inplace_vector_impl : public nop::details::inplace_vector_base<T, N>
     this->m_size = size;
   }
 
-  inplace_vector_impl& operator=(const inplace_vector_impl& other)
-  requires (std::copyable<value_type> ||
-            std::movable<value_type>)
+  func operator=(const inplace_vector_impl& other) -> inplace_vector_impl&
+  requires (std::copyable<value_type> || std::movable<value_type>)
   {
     if (this != std::addressof(other))
     {
@@ -1073,8 +768,8 @@ class inplace_vector_impl : public nop::details::inplace_vector_base<T, N>
     return *this;
   }
 
-  inplace_vector_impl& operator=(inplace_vector_impl&& other) noexcept(std::is_nothrow_move_constructible_v<value_type> &&
-                                                                       std::is_nothrow_move_assignable_v<value_type>)
+  func operator=(inplace_vector_impl&& other) noexcept(std::is_nothrow_move_constructible_v<value_type> &&
+                                                       std::is_nothrow_move_assignable_v<value_type>) -> inplace_vector_impl&
   requires std::movable<value_type>
   {
     if (this != std::addressof(other))
@@ -1103,8 +798,48 @@ class inplace_vector_impl : public nop::details::inplace_vector_base<T, N>
 
 };
 
-} /* End namespace details */
+template<typename T>
+class inplace_vector_impl<T, 0UL> : public __nop_details::container::inplace_vector_base<T, 0UL>
+{
+ private:
+  using base = typename __nop_details::container::inplace_vector_base<T, 0UL>;
 
-} /* End namespace nop */
+ public:
+  using value_type             = typename base::value_type;
+  using size_type              = typename base::size_type;
+  using difference_type        = typename base::difference_type;
+  using reference              = typename base::reference;
+  using const_reference        = typename base::const_reference;
+  using pointer                = typename base::pointer;
+  using const_pointer          = typename base::const_pointer;
+  using iterator               = typename base::iterator;
+  using const_iterator         = typename base::const_iterator;
+  using reverse_iterator       = typename base::reverse_iterator;
+  using const_reverse_iterator = typename base::const_reverse_iterator;
 
-#endif /* End inplace vector header file */
+ protected:
+  constexpr inplace_vector_impl()                           noexcept = default;
+  constexpr inplace_vector_impl(const inplace_vector_impl&) noexcept = default;
+  constexpr inplace_vector_impl(inplace_vector_impl&&)      noexcept = default;
+  constexpr ~inplace_vector_impl()                                   = default;
+
+  [[nodiscard]] constexpr func size() const noexcept -> size_type
+  {
+    return 0UL;
+  }
+
+  [[nodiscard]] constexpr func empty() const noexcept -> size_type
+  {
+    return !this->size();
+  }
+
+  constexpr func operator=(const inplace_vector_impl&) noexcept -> inplace_vector_impl& = default;
+  constexpr func operator=(inplace_vector_impl&&)      noexcept -> inplace_vector_impl& = default;
+
+};
+
+} /* End namespace container */
+
+} /* End namespace __nop_details */
+
+#endif /* End __nop_details::container::inplace_vector_impl header file */

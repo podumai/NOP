@@ -1,4 +1,4 @@
-#ifndef NOP_CONTAINER_INPLACE_VECTOR_HPP /* Begin container inplace_vector header file */
+#ifndef NOP_CONTAINER_INPLACE_VECTOR_HPP /* Begin nop::container::inplace_vector header file */
 #define NOP_CONTAINER_INPLACE_VECTOR_HPP 1UL
 
 #pragma once
@@ -17,10 +17,10 @@ template<
          typename T,
          std::size_t N
         >
-class inplace_vector : public nop::details::inplace_vector_impl<T, N>
+class inplace_vector : public __nop_details::container::inplace_vector_impl<T, N>
 {
  private:
-  using base = typename nop::details::inplace_vector_impl<T, N>;
+  using base = typename __nop_details::container::inplace_vector_impl<T, N>;
 
  public:
   using value_type             = typename base::value_type;
@@ -79,233 +79,18 @@ class inplace_vector : public nop::details::inplace_vector_impl<T, N>
     /* Empty */
   }
 
-  [[nodiscard]] iterator begin() noexcept
-  {
-    return base::begin();
-  }
-
-  [[nodiscard]] const_iterator cbegin() const noexcept
-  {
-    return base::cbegin();
-  }
-
-  [[nodiscard]] reverse_iterator rbegin() noexcept
-  {
-    return base::rbegin();
-  }
-
-  [[nodiscard]] const_reverse_iterator crbegin() const noexcept
-  {
-    return base::crbegin();
-  }
-
-  [[nodiscard]] iterator end() noexcept
-  {
-    return base::end();
-  }
-
-  [[nodiscard]] const_iterator cend() const noexcept
-  {
-    return base::cend();
-  }
-
-  [[nodiscard]] reverse_iterator rend() noexcept
-  {
-    return base::rend();
-  }
-
-  [[nodiscard]] const_reverse_iterator crend() const noexcept
-  {
-    return base::crend();
-  }
-
-  [[nodiscard]] pointer data() noexcept
-  {
-    return base::data();
-  }
-
-  [[nodiscard]] const_pointer data() const noexcept
-  {
-    return base::data();
-  }
-
-  [[nodiscard]] size_type size() const noexcept
-  {
-    return base::size();
-  }
-
-  [[nodiscard]] bool empty() const noexcept
-  {
-    return base::empty();
-  }
-
-  void clear() noexcept
-  {
-    base::clear();
-  }
-
-  reference push_back(const value_type& value)
-  {
-    return base::push_back(value);
-  }
-
-  reference push_back(value_type&& value)
-  {
-    return base::push_back(std::move(value));
-  }
-
-  pointer try_push_back(const value_type& value) noexcept(noexcept(base::try_push_back(value)))
-  {
-    return base::try_push_back(value);
-  }
-
-  pointer try_push_back(value_type&& value) noexcept(noexcept(base::try_push_back(std::move(value))))
-  {
-    return base::try_push_back(std::move(value));
-  }
-
-  reference unchecked_push_back(const value_type& value) noexcept(noexcept(base::unchecked_push_back(value)))
-  {
-    return base::unchecked_push_back(value);
-  }
-
-  reference unchecked_push_back(value_type&& value) noexcept(noexcept(base::unchecked_push_back(std::move(value))))
-  {
-    return base::unchecked_push_back(std::move(value));
-  }
-
-  template<typename... Args>
-  iterator emplace(const_iterator position, Args&&... args)
-  {
-    return base::emplace(position, std::forward<Args>(args)...);
-  }
-
-  template<typename... Args>
-  reference emplace_back(Args&&... args)
-  {
-    return base::emplace_back(std::forward<Args>(args)...);
-  }
-
-  template<typename... Args>
-  pointer try_emplace_back(Args&&... args)
-  {
-    return base::try_emplace_back(std::forward<Args>(args)...);
-  }
-
-  template<typename... Args>
-  reference unchecked_emplace_back(Args&&... args)
-  {
-    return base::unchecked_emplace_back(std::forward<Args>(args)...);
-  }
-
-  void pop_back() noexcept
-  {
-    base::pop_back();
-  }
-
-  [[nodiscard]] reference operator[](size_type index) noexcept
-  {
-    return base::operator[](index);
-  }
-
-  [[nodiscard]] const_reference operator[](size_type index) const noexcept
-  {
-    return base::operator[](index);
-  }
-
-  [[nodiscard]] reference at(size_type index)
-  {
-    return base::at(index);
-  }
-
-  [[nodiscard]] const_reference at(size_type index) const
-  {
-    return base::at(index);
-  }
-
-  [[nodiscard]] reference front() noexcept
-  {
-    return base::front();
-  }
-
-  [[nodiscard]] const_reference front() const noexcept
-  {
-    return base::front();
-  }
-
-  [[nodiscard]] reference back() noexcept
-  {
-    return base::back();
-  }
-
-  [[nodiscard]] const_reference back() const noexcept
-  {
-    return base::back();
-  }
-
-  template<typename InIterator>
-  void assign(InIterator begin, InIterator end)
-  {
-    base::assign(begin, end);
-  }
-
-  void assign(std::initializer_list<value_type> ilist)
-  {
-    base::assign(ilist.begin(), ilist.end());
-  }
-
-  void assign(size_type n, const value_type& value)
-  {
-    base::assign(n, value);
-  }
-
-  iterator insert(const_iterator position, const value_type& value)
-  {
-    return base::insert(position, value);
-  }
-
-  iterator insert(const_iterator position, value_type&& value)
-  {
-    return base::insert(position, std::move(value));
-  }
-
-  void swap(inplace_vector& other) noexcept(noexcept(base::swap(static_cast<base&>(other))))
-  {
-    base::swap(static_cast<base&>(other));
-  }
-
-  iterator erase(const_iterator position) noexcept(noexcept(base::erase(position)))
-  {
-    return base::erase(position);
-  }
-
-  iterator erase(const_iterator begin, const_iterator end) noexcept(noexcept(base::erase(begin, end)))
-  {
-    return base::erase(begin, end);
-  }
-
-  void resize(size_type n)
-  {
-    base::resize(n);
-  }
-
-  void resize(size_type n, const value_type& value)
-  {
-    base::resize(n, value);
-  }
-
-  inplace_vector& operator=(std::initializer_list<value_type> ilist)
+  func operator=(std::initializer_list<value_type> ilist) -> inplace_vector&
   {
     base::assign(ilist.begin(), ilist.end());
     return *this;
   }
 
-  inplace_vector& operator=(const inplace_vector& other) noexcept(noexcept(static_cast<inplace_vector&>(static_cast<base&>(*this) = static_cast<const base&>(other))))
+  func operator=(const inplace_vector& other) noexcept(noexcept(static_cast<inplace_vector&>(static_cast<base&>(*this) = static_cast<const base&>(other)))) -> inplace_vector&
   {
     return static_cast<inplace_vector&>(static_cast<base&>(*this) = static_cast<const base&>(other));
   }
 
-  inplace_vector& operator=(inplace_vector&& other) noexcept(noexcept(static_cast<inplace_vector&>(static_cast<base&>(*this) = static_cast<base&&>(other))))
+  func operator=(inplace_vector&& other) noexcept(noexcept(static_cast<inplace_vector&>(static_cast<base&>(*this) = static_cast<base&&>(other)))) -> inplace_vector&
   {
     return static_cast<inplace_vector&>(static_cast<base&>(*this) = static_cast<base&&>(other));
   }
@@ -323,8 +108,8 @@ template<
          typename    T,
          std::size_t N
         >
-constexpr void swap(nop::container::inplace_vector<T, N>& lhs,
-                    nop::container::inplace_vector<T, N>& rhs) noexcept(noexcept(lhs.swap(rhs)))
+constexpr func swap(nop::container::inplace_vector<T, N>& lhs,
+                    nop::container::inplace_vector<T, N>& rhs) noexcept(noexcept(lhs.swap(rhs))) -> void
 {
   lhs.swap(rhs);
 }
@@ -335,8 +120,8 @@ template<
          typename    T,
          std::size_t N
         >
-[[nodiscard]] bool operator==(const nop::container::inplace_vector<T, N>& lhs,
-                              const nop::container::inplace_vector<T, N>& rhs) noexcept
+[[nodiscard]] constexpr func operator==(const nop::container::inplace_vector<T, N>& lhs,
+                                        const nop::container::inplace_vector<T, N>& rhs) noexcept -> bool
 {
   return std::equal(lhs.cbegin(),
                     lhs.cend(),
@@ -348,8 +133,8 @@ template<
          typename    T,
          std::size_t N
         >
-[[nodiscard]] auto operator<=>(const nop::container::inplace_vector<T, N>& lhs,
-                               const nop::container::inplace_vector<T, N>& rhs) noexcept
+[[nodiscard]] func operator<=>(const nop::container::inplace_vector<T, N>& lhs,
+                               const nop::container::inplace_vector<T, N>& rhs) noexcept -> decltype(*lhs.cbegin() <=> *rhs.cbegin())
 {
   return std::lexicographical_compare_three_way(lhs.cbegin(),
                                                 lhs.cend(),
@@ -358,4 +143,4 @@ template<
 }
 
 
-#endif /* End container inplace_vector header file */
+#endif /* End nop::container::inplace_vector header file */
