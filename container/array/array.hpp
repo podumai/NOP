@@ -15,10 +15,10 @@ template<
          typename    T,
          std::size_t N
         >
-class array : public nop_details::container::array_impl<T, N>
+class array : public __nop_details::container::array_impl<T, N>
 {
  private:
-  using base = typename nop_details::container::array_impl<T, N>;
+  using base = typename __nop_details::container::array_impl<T, N>;
 
  public:
   using value_type             = typename base::value_type;
@@ -30,8 +30,8 @@ class array : public nop_details::container::array_impl<T, N>
   using const_pointer          = typename base::const_pointer;
   using iterator               = typename base::iterator;
   using const_iterator         = typename base::const_iterator;
-  using reverse_iterator       = typename std::reverse_iterator<iterator>;
-  using const_reverse_iterator = typename std::reverse_iterator<const_iterator>;
+  using reverse_iterator       = typename base::reverse_iterator;
+  using const_reverse_iterator = typename base::const_reverse_iterator;
 
  public:
   constexpr array() noexcept(noexcept(base()))
@@ -78,137 +78,42 @@ class array : public nop_details::container::array_impl<T, N>
     /* Empty */
   }
 
-  [[nodiscard]] iterator begin() noexcept
+  template<size_type Size>
+  constexpr array(value_type (&&arr)[Size])
+    : base(std::move(arr))
   {
-    return base::begin();
+    /* Empty */
   }
 
-  [[nodiscard]] const_iterator cbegin() const noexcept
-  {
-    return base::cbegin();
-  }
-
-  [[nodiscard]] reverse_iterator rbegin() noexcept
-  {
-    return base::rbegin();
-  }
-
-  [[nodiscard]] const_reverse_iterator crbegin() const noexcept
-  {
-    return base::crbegin();
-  }
-
-  [[nodiscard]] iterator end() noexcept
-  {
-    return base::end();
-  }
-
-  [[nodiscard]] const_iterator cend() const noexcept
-  {
-    return base::cend();
-  }
-
-  [[nodiscard]] reverse_iterator rend() noexcept
-  {
-    return base::rend();
-  }
-
-  [[nodiscard]] const_reverse_iterator crend() const noexcept
-  {
-    return base::crend();
-  }
-
-  [[nodiscard]] constexpr reference operator[](size_type index) noexcept
-  {
-    return base::operator[](index);
-  }
-
-  [[nodiscard]] constexpr const_reference operator[](size_type index) const noexcept
-  {
-    return base::operator[](index);
-  }
-
-  [[nodiscard]] constexpr reference at(size_type index) noexcept
-  {
-    return base::at(index);
-  }
-
-  [[nodiscard]] constexpr const_reference at(size_type index) const noexcept
-  {
-    return base::at(index);
-  }
-
-  [[nodiscard]] constexpr reference front() noexcept
-  {
-    return base::front();
-  }
-
-  [[nodiscard]] constexpr const_reference front() const noexcept
-  {
-    return base::front();
-  }
-
-  [[nodiscard]] constexpr reference back() noexcept
-  {
-    return base::back();
-  }
-
-  [[nodiscard]] constexpr const_reference back() const noexcept
-  {
-    return base::back();
-  }
-
-  [[nodiscard]] constexpr pointer data() noexcept
-  {
-    return base::data();
-  }
-
-  [[nodiscard]] constexpr const_pointer data() const noexcept
-  {
-    return base::data();
-  }
-
-  [[nodiscard]] constexpr size_type size() const noexcept
-  {
-    return base::size();
-  }
-
-  [[nodiscard]] constexpr bool empty() const noexcept
-  {
-    return base::empty();
-  }
-
-  [[nodiscard]] constexpr size_type max_size() const noexcept
-  {
-    return base::max_size();
-  }
-
-  constexpr void swap(array& other) noexcept(noexcept(base::swap(static_cast<base&>(other))))
-  {
-    base::swap(static_cast<base&>(other));
-  }
-
-  constexpr void fill(const value_type& value) noexcept(noexcept(base::fill(value)))
-  {
-    base::fill(value);
-  }
-
-  constexpr array& operator=(const array& other) noexcept(noexcept(static_cast<array&>(static_cast<base&>(*this) = static_cast<const base&>(other))))
+  constexpr func operator=(const array& other) noexcept(noexcept(static_cast<array&>(static_cast<base&>(*this) = static_cast<const base&>(other)))) -> array&
   {
     return static_cast<array&>(static_cast<base&>(*this) = static_cast<const base&>(other));
   }
 
-  constexpr array& operator=(array&& other) noexcept(noexcept(static_cast<array&>(static_cast<base&>(*this) = static_cast<base&&>(other))))
+  constexpr func operator=(array&& other) noexcept(noexcept(static_cast<array&>(static_cast<base&>(*this) = static_cast<base&&>(other)))) -> array&
   {
     return static_cast<array&>(static_cast<base&>(*this) = static_cast<base&&>(other));
   }
 
-  constexpr array& operator=(std::initializer_list<value_type> ilist)
-  {
-    return static_cast<array&>(static_cast<base&>(*this) = ilist);
-  }
-
 };
+
+template<
+         typename    T,
+         std::size_t N
+        >
+[[nodiscard]] constexpr func to_array(T (&arr)[N]) noexcept(std::is_nothrow_copy_assignable_v<T>) -> nop::container::array<std::remove_cv_t<T>, N>
+{
+  return {arr};
+}
+
+template<
+         typename    T,
+         std::size_t N
+        >
+[[nodiscard]] constexpr func to_array(T (&&arr)[N]) noexcept(std::is_nothrow_move_assignable_v<T>) -> nop::container::array<std::remove_cv_t<T>, N>
+{
+  return {std::move(arr)};
+}
 
 } /* End namespace container */
 
@@ -218,8 +123,8 @@ template<
          typename    T,
          std::size_t N
         >
-[[nodiscard]] constexpr bool operator==(const nop::container::array<T, N>& lhs,
-                                        const nop::container::array<T, N>& rhs) noexcept
+[[nodiscard]] constexpr func operator==(const nop::container::array<T, N>& lhs,
+                                        const nop::container::array<T, N>& rhs) noexcept -> bool
 {
   return std::equal(lhs.cbegin(),
                     lhs.cend(),
@@ -230,8 +135,8 @@ template<
          typename    T,
          std::size_t N
         >
-[[nodiscard]] constexpr auto operator<=>(const nop::container::array<T, N>& lhs,
-                                         const nop::container::array<T, N>& rhs) noexcept
+[[nodiscard]] constexpr func operator<=>(const nop::container::array<T, N>& lhs,
+                                         const nop::container::array<T, N>& rhs) noexcept -> decltype(*lhs.cbegin() <=> *rhs.cbegin())
 {
   return std::lexicographical_compare_three_way(lhs.cbegin(),
                                                 lhs.cend(),
@@ -246,8 +151,8 @@ template<
          typename    T,
          std::size_t N
         >
-constexpr void swap(nop::container::array<T, N>& lhs,
-                    nop::container::array<T, N>& rhs) noexcept(noexcept(lhs.swap(rhs)))
+constexpr func swap(nop::container::array<T, N>& lhs,
+                    nop::container::array<T, N>& rhs) noexcept(noexcept(lhs.swap(rhs))) -> void
 {
   lhs.swap(rhs);
 }
