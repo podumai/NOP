@@ -31,8 +31,12 @@ concept valid_default_deleter_t = !std::is_array_v<T>   &&
 template<typename F, typename T>
 concept valid_unique_ptr_d = std::invocable<F, T*>;
 
+template<typename T, typename... Args>
+concept valid_make_unique_t = !std::is_array_v<T>;
+
 template<typename T>
-concept valid_make_unique_ptr_t = !std::is_array_v<T>;
+concept valid_make_unique_for_overwrite_t = !std::is_array_v<T> &&
+                                             std::default_initializable<T>;
 
 template<
          __nop_details::memory::valid_unique_ptr_t T,

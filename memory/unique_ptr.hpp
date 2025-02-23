@@ -72,16 +72,17 @@ class unique_ptr : public __nop_details::memory::unique_ptr_impl<T, Deleter>
 };
 
 template<
-         __nop_details::memory::valid_make_unique_ptr_t T,
+         __nop_details::memory::valid_make_unique_t T,
          typename... Args
         >
-[[nodiscard]] func make_unique(Args&&... args) -> nop::memory::unique_ptr<T>
+[[nodiscard]] constexpr func make_unique(Args&&... args) -> nop::memory::unique_ptr<T>
 {
+  static_assert(std::is_constructible_v<T, Args...>);
   return {new T(std::forward<Args>(args)...)};
 }
 
-template<__nop_details::memory::valid_make_unique_ptr_t T>
-[[nodiscard]] func make_unique_for_overwrite() -> nop::memory::unique_ptr<T>
+template<__nop_details::memory::valid_make_unique_for_overwrite_t T>
+[[nodiscard]] constexpr func make_unique_for_overwrite() -> nop::memory::unique_ptr<T>
 {
   return {new T};
 }
