@@ -3,7 +3,7 @@
 
 #pragma once
 
-#ifndef NOP_MEMORY_UNIQUE_PTR_HPP
+#ifndef NOP_DETAILS_MEMORY_UNIQUE_PTR_IMPL_HPP
   #error "This header file cannot be included explicitly. Use unique_ptr.hpp instead"
 #endif
 

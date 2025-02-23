@@ -11,29 +11,12 @@ namespace nop /* Begin namespace nop */
 namespace memory /* Begin namespace memory */
 {
 
-template<typename T>
+template<__nop_details::memory::valid_default_deleter_t T>
 struct default_deleter
 {
- private:
-  static_assert(sizeof(T) > 0UL, "T must be complete type");
-
- public:
   constexpr func operator()(T* ptr) noexcept -> void
   {
     delete ptr;
-  }
-};
-
-template<typename T>
-struct default_deleter<T[]>
-{
- private:
-  static_assert(sizeof(T) > 0UL, "T must be complete type");
-
- public:
-  constexpr func operator()(T* ptr) noexcept -> void
-  {
-    delete[] ptr;
   }
 };
 
@@ -87,6 +70,21 @@ class unique_ptr : public __nop_details::memory::unique_ptr_impl<T, Deleter>
     return static_cast<unique_ptr&>(static_cast<base&>(*this) = static_cast<base&&>(other));
   }
 };
+
+template<
+         __nop_details::memory::valid_make_unique_ptr_t T,
+         typename... Args
+        >
+[[nodiscard]] func make_unique(Args&&... args) -> nop::memory::unique_ptr<T>
+{
+  return {new T(std::forward<Args>(args)...)};
+}
+
+template<__nop_details::memory::valid_make_unique_ptr_t T>
+[[nodiscard]] func make_unique_for_overwrite() -> nop::memory::unique_ptr<T>
+{
+  return {new T};
+}
 
 } /* End namespace memory */
 
