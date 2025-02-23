@@ -19,9 +19,9 @@ namespace memory /* Begin namespace memory */
 {
 
 template<typename T>
-concept valid_unique_ptr_t = !std::is_array_v<T>                         &&
-                              std::destructible<std::remove_extent_t<T>> &&
-                              std::movable<std::remove_extent_t<T>>      &&
+concept valid_unique_ptr_t = !std::is_array_v<T>   &&
+                              std::destructible<T> &&
+                              std::movable<T>      &&
                               (sizeof(T) > 0UL);
 
 template<typename T>
