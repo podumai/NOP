@@ -24,11 +24,6 @@ concept valid_unique_ptr_t = !std::is_array_v<T>   &&
                               std::movable<T>      &&
                               (sizeof(T) > 0UL);
 
-template<typename T>
-concept valid_default_deleter_t = !std::is_array_v<T>   &&
-                                   std::destructible<T> &&
-                                   (sizeof(T) > 0UL);
-
 template<typename F, typename T>
 concept valid_unique_ptr_d = std::invocable<F, T*>;
 

@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include "default_deleter.hpp"
 #include "unique_ptr_impl.hpp"
 
 namespace nop /* Begin namespace nop */
@@ -10,15 +11,6 @@ namespace nop /* Begin namespace nop */
 
 namespace memory /* Begin namespace memory */
 {
-
-template<__nop_details::memory::valid_default_deleter_t T>
-struct default_deleter
-{
-  constexpr func operator()(T* ptr) noexcept -> void
-  {
-    delete ptr;
-  }
-};
 
 template<
          typename T,
