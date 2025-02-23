@@ -61,7 +61,7 @@ class auto_ptr : public __nop_details::memory::auto_ptr_impl<T, Deleter>
     /* Empty */
   }
 
-  constexpr auto_ptr(auto_ptr&& other) noexcept(noexcept(base(other)))
+  constexpr auto_ptr(auto_ptr&& other) noexcept(noexcept(base(static_cast<base&&>(other))))
     : base(static_cast<base&&>(other))
   {
     /* Empty */
@@ -116,5 +116,20 @@ template<
 {
   return lhs.get() <=> rhs.get();
 }
+
+namespace std /* Begin namespace std */
+{
+
+template<
+         typename T,
+         class Deleter
+        >
+constexpr func swap(nop::memory::auto_ptr<T, Deleter>& lhs,
+                    nop::memory::auto_ptr<T, Deleter>& rhs) noexcept(noexcept(lhs.swap(rhs))) -> void
+{
+  lhs.swap(rhs);
+}
+
+} /* End namespace std */
 
 #endif /* End nop::memory::auto_ptr header file */

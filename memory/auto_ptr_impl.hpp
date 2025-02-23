@@ -129,7 +129,7 @@ class auto_ptr_impl : public __nop_details::memory::auto_ptr_base<T>
     this->m_element = ptr;
   }
 
-  constexpr func swap(auto_ptr_impl& other) noexcept -> void
+  constexpr func swap(auto_ptr_impl& other) noexcept(noexcept(std::swap(this->m_deleter, other.m_deleter))) -> void
   {
     std::swap(this->m_element, other.m_element);
     std::swap(this->m_deleter, other.m_deleter);
