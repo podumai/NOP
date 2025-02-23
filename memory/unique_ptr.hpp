@@ -77,14 +77,13 @@ template<
         >
 [[nodiscard]] constexpr func make_unique(Args&&... args) -> nop::memory::unique_ptr<T>
 {
-  static_assert(std::is_constructible_v<T, Args...>);
-  return {new T(std::forward<Args>(args)...)};
+  return new T(std::forward<Args>(args)...);
 }
 
 template<__nop_details::memory::valid_make_unique_for_overwrite_t T>
 [[nodiscard]] constexpr func make_unique_for_overwrite() -> nop::memory::unique_ptr<T>
 {
-  return {new T};
+  return new T;
 }
 
 } /* End namespace memory */
