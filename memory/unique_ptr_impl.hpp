@@ -19,20 +19,15 @@ namespace memory /* Begin namespace memory */
 {
 
 template<typename T>
-concept valid_unique_ptr_t = !std::is_array_v<T>   &&
-                              std::destructible<T> &&
-                              std::movable<T>      &&
-                              (sizeof(T) > 0UL);
+concept valid_unique_ptr_t =  std::destructible<std::remove_extent_t<T>> &&
+                              std::movable<std::remove_extent_t<T>>      &&
+                              (sizeof(std::remove_extent_t<T>) > 0UL);
 
 template<typename F, typename T>
-concept valid_unique_ptr_d = std::invocable<F, T*>;
-
-template<typename T, typename... Args>
-concept valid_make_unique_t = !std::is_array_v<T>;
+concept valid_unique_ptr_d = std::invocable<F, std::remove_extent_t<T>*>;
 
 template<typename T>
-concept valid_make_unique_for_overwrite_t = !std::is_array_v<T> &&
-                                             std::default_initializable<T>;
+concept valid_make_unique_for_overwrite_t = std::default_initializable<std::remove_extent_t<T>>;
 
 template<
          __nop_details::memory::valid_unique_ptr_t T,
@@ -44,7 +39,9 @@ class unique_ptr_impl : public __nop_details::memory::unique_ptr_base<T>
   using base = typename __nop_details::memory::unique_ptr_base<T>;
 
  public:
+  using element_type    = typename base::element_type;
   using value_type      = typename base::value_type;
+  using size_type       = typename base::size_type;
   using difference_type = typename base::difference_type;
   using reference       = typename base::reference;
   using const_reference = typename base::const_reference;
@@ -158,6 +155,18 @@ class unique_ptr_impl : public __nop_details::memory::unique_ptr_base<T>
     return this->m_element;
   }
 
+  [[nodiscard]] constexpr func operator[](size_type index) noexcept -> reference
+  requires std::is_unbounded_array_v<element_type>
+  {
+    return this->m_element[index];
+  }
+
+  [[nodiscard]] constexpr func operator[](size_type index) const noexcept -> const_reference
+  requires std::is_unbounded_array_v<element_type>
+  {
+    return this->m_element[index];
+  }
+
   [[nodiscard]] constexpr func operator!() const noexcept -> bool
   {
     return !this->m_element;
@@ -173,11 +182,12 @@ class unique_ptr_impl : public __nop_details::memory::unique_ptr_base<T>
     return this->m_element - other.m_element;
   }
 
-  constexpr func operator=(unique_ptr_impl&& other) noexcept -> unique_ptr_impl&
+  constexpr func operator=(unique_ptr_impl&& other) noexcept(std::is_nothrow_move_assignable_v<deleter_type>) -> unique_ptr_impl&
   {
     if (this != &other)
     {
       this->swap(other.release());
+      this->m_deleter = std::move(other.m_deleter);
     }
 
     return *this;

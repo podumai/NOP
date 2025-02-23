@@ -22,7 +22,9 @@ class unique_ptr : public __nop_details::memory::unique_ptr_impl<T, Deleter>
   using base = typename __nop_details::memory::unique_ptr_impl<T, Deleter>;
 
  public:
+  using element_type    = typename base::element_type;
   using value_type      = typename base::value_type;
+  using size_type       = typename base::size_type;
   using difference_type = typename base::difference_type;
   using reference       = typename base::reference;
   using const_reference = typename base::const_reference;
@@ -64,18 +66,34 @@ class unique_ptr : public __nop_details::memory::unique_ptr_impl<T, Deleter>
 };
 
 template<
-         __nop_details::memory::valid_make_unique_t T,
+         typename T,
          typename... Args
         >
 [[nodiscard]] constexpr func make_unique(Args&&... args) -> nop::memory::unique_ptr<T>
+requires (!std::is_array_v<T>)
 {
   return new T(std::forward<Args>(args)...);
 }
 
+template<typename T>
+[[nodiscard]] constexpr func make_unique(std::size_t n) -> nop::memory::unique_ptr<T>
+requires std::is_unbounded_array_v<T>
+{
+  return new std::remove_extent_t<T>[n]();
+}
+
 template<__nop_details::memory::valid_make_unique_for_overwrite_t T>
 [[nodiscard]] constexpr func make_unique_for_overwrite() -> nop::memory::unique_ptr<T>
+requires (!std::is_array_v<T>)
 {
   return new T;
+}
+
+template<__nop_details::memory::valid_make_unique_for_overwrite_t T>
+[[nodiscard]] constexpr func make_unique_for_overwrite(std::size_t n) -> nop::memory::unique_ptr<T>
+requires std::is_unbounded_array_v<T>
+{
+  return new std::remove_extent_t<T>[n];
 }
 
 } /* End namespace memory */
