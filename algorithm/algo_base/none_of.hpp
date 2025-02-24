@@ -18,12 +18,12 @@ template<
         >
 [[nodiscard]] constexpr bool none_of(InIterator     begin,
                                      InIterator     end,
-                                     UnaryPredicate unary_p) noexcept(noexcept(unary_p(*begin++)))
+                                     UnaryPredicate unary_p) noexcept(noexcept(unary_p(*begin)))
 {
   [[likely]]
-  while (!(begin == end) && unary_p(*begin++))
+  while (!(begin == end) && unary_p(*begin))
   {
-    /* Empty */
+    ++begin;
   }
 
   return begin == end;

@@ -3,9 +3,9 @@
 
 #pragma once
 
-#include <iterator>
+#include <iterator> /* std::forward_iterator<T> */
 
-#include "iter_swap.hpp"
+#include "swap.hpp"
 
 namespace nop /* Begin namespace nop */
 {
@@ -19,12 +19,12 @@ template<
         >
 constexpr FwdIterator2 swap_ranges(FwdIterator1 begin1,
                                    FwdIterator1 end1,
-                                   FwdIterator2 begin2) noexcept(noexcept(nop::algorithm::iter_swap(begin1++, begin2++)))
+                                   FwdIterator2 begin2) noexcept(noexcept(nop::algorithm::swap(*begin1++, *begin2++)))
 {
   [[likely]]
   while (!(begin1 == end1))
   {
-    nop::algorithm::iter_swap(begin1++, begin2++);
+    nop::algorithm::swap(*begin1++, *begin2++);
   }
 
   return begin2;
