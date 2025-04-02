@@ -1,11 +1,12 @@
-#ifndef NOP_ALGORITHM_SWAP_RANGES_HPP /* Begin algorithm swap_ranges header file */
-#define NOP_ALGORITHM_SWAP_RANGES_HPP 1UL
+#ifndef NOP_ALGORITHM_BASE_SWAP_RANGES_HPP /* Begin nop::algorithm::swap_ranges header file */
+#define NOP_ALGORITHM_BASE_SWAP_RANGES_HPP 1UL
 
 #pragma once
 
 #include <iterator> /* std::forward_iterator<T> */
 
 #include "swap.hpp"
+#include "base/func_keyword.hpp"
 
 namespace nop /* Begin namespace nop */
 {
@@ -17,9 +18,9 @@ template<
          std::forward_iterator FwdIterator1,
          std::forward_iterator FwdIterator2
         >
-constexpr FwdIterator2 swap_ranges(FwdIterator1 begin1,
-                                   FwdIterator1 end1,
-                                   FwdIterator2 begin2) noexcept(noexcept(nop::algorithm::swap(*begin1++, *begin2++)))
+constexpr func swap_ranges(FwdIterator1 begin1,
+                           FwdIterator1 end1,
+                           FwdIterator2 begin2) noexcept(noexcept(nop::algorithm::swap(*begin1++, *begin2++))) -> FwdIterator2
 {
   [[likely]]
   while (!(begin1 == end1))
@@ -34,4 +35,4 @@ constexpr FwdIterator2 swap_ranges(FwdIterator1 begin1,
 
 } /* End namespace nop */
 
-#endif /* End algorithm swap_ranges header file */
+#endif /* End nop::algorithm::swap_ranges header file */

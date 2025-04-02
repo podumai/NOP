@@ -1,5 +1,5 @@
-#ifndef NOP_ALGORITHM_LEXICOGRAPHICAL_COMPARE_THREE_WAY_HPP /* Begin nop::algorithm::lexicographical_compare_three_way header file */
-#define NOP_ALGORITHM_LEXICOGRAPHICAL_COMPARE_THREE_WAY_HPP 1UL
+#ifndef NOP_ALGORITHM_BASE_LEXICOGRAPHICAL_COMPARE_THREE_WAY_HPP /* Begin nop::algorithm::lexicographical_compare_three_way header file */
+#define NOP_ALGORITHM_BASE_LEXICOGRAPHICAL_COMPARE_THREE_WAY_HPP 1UL
 
 #pragma once
 
@@ -8,7 +8,7 @@
 #include <concepts>    /* std::same_as<T1, T2> */
 #include <type_traits> /* std::invoke_result_t<F, Args...> */
 
-#include "NOP/base/func_keyword.hpp"
+#include "base/func_keyword.hpp"
 
 namespace __nop_details /* Begin namespace __nop_details */
 {
@@ -39,14 +39,14 @@ template<
                                  InIterator1 begin1,
                                  InIterator1 end1,
                                  InIterator2 begin2,
-                                 InIterator2 end2) noexcept(noexcept(*begin1++ <=> *begin2++)) -> decltype(*begin1++ <=> *begin2++)
+                                 InIterator2 end2) noexcept(noexcept(*begin1 <=> *begin2)) -> decltype(*begin1 <=> *begin2)
 {
   [[likely]]
   while (!(begin1 == end1) && !(begin2 == end2))
   {
     if (auto result{*begin1++ <=> *begin2++}; !(result == 0))
     {
-      return result;
+      break;
     }
   }
 
@@ -75,7 +75,7 @@ template<
                                  InIterator1 end1,
                                  InIterator2 begin2,
                                  InIterator2 end2,
-                                 Cmp_func    cmp) noexcept(noexcept(cmp(*begin1++, *begin2++))) -> decltype(cmp(*begin1++, *begin2++))
+                                 Cmp_func cmp) noexcept(noexcept(cmp(*begin1++, *begin2++))) -> decltype(cmp(*begin1, *begin2))
 {
   [[likely]]
   while (!(begin1 == end1) && !(begin2 == end2))

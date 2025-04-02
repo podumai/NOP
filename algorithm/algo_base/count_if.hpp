@@ -1,10 +1,12 @@
-#ifndef NOP_ALGORITHM_COUNT_IF_HPP /* Begin algorithm count_if header file */
-#define NOP_ALGORITHM_COUNT_IF_HPP 1UL
+#ifndef NOP_ALGORITHM_BASE_COUNT_IF_HPP /* Begin nop::algorithm::count_if header file */
+#define NOP_ALGORITHM_BASE_COUNT_IF_HPP 1UL
 
 #pragma once
 
 #include <concepts> /* std::predicate<F, Args&&...> */
 #include <iterator> /* std::input_iterator<T> */
+
+#include "base/func_keyword.hpp"
 
 namespace nop /* Begin namespace nop */
 {
@@ -13,12 +15,12 @@ namespace algorithm /* Begin namespace algorithm */
 {
 
 template<
-         std::input_iterator                                                        InIterator,
+         std::input_iterator InIterator,
          std::predicate<const typename std::iterator_traits<InIterator>::reference> UnaryPredicate
         >
-[[nodiscard]] constexpr typename std::iterator_traits<InIterator>::difference_type count_if(InIterator     begin,
-                                                                                            InIterator     end,
-                                                                                            UnaryPredicate unary_p) noexcept(noexcept(unary_p(*begin++)))
+[[nodiscard]] constexpr func count_if(InIterator begin,
+                                      InIterator end,
+                                      UnaryPredicate unary_p) noexcept(noexcept(unary_p(*begin++))) -> typename std::iterator_traits<InIterator>::difference_type
 {
   typename std::iterator_traits<InIterator>::difference_type c{};
 
@@ -38,4 +40,4 @@ template<
 
 } /* End namespace nop */
 
-#endif /* End algorithm count_if header file */
+#endif /* End nop::algorithm::count_if header file */

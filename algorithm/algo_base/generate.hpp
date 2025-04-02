@@ -1,10 +1,12 @@
-#ifndef NOP_ALGORITHM_GENERATE_HPP /* Begin algorithm generate header file */
-#define NOP_ALGORITHM_GENERATE_HPP 1UL
+#ifndef NOP_ALGORITHM_BASE_GENERATE_HPP /* Begin nop::algorithm::generate header file */
+#define NOP_ALGORITHM_BASE_GENERATE_HPP 1UL
 
 #pragma once
 
 #include <concepts> /* std::invocable<F, Args&&...> */
 #include <iterator> /* std::forward_iterator<T> */
+
+#include "base/func_keyword.hpp"
 
 namespace nop /* Begin namespace nop */
 {
@@ -16,9 +18,9 @@ template<
          std::forward_iterator FwdIterator,
          std::invocable<> Generator
         >
-constexpr FwdIterator generate(FwdIterator begin,
-                               FwdIterator end,
-                               Generator g) noexcept(noexcept(*begin++ = g()))
+constexpr func generate(FwdIterator begin,
+                        FwdIterator end,
+                        Generator g) noexcept(noexcept(*begin++ = g())) -> FwdIterator
 {
   [[likely]]
   while (!(begin == end))
@@ -33,4 +35,4 @@ constexpr FwdIterator generate(FwdIterator begin,
 
 } /* End namespace nop */
 
-#endif /* End algorithm generate header file */
+#endif /* End nop::algorithm::generate header file */

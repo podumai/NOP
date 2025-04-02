@@ -1,10 +1,12 @@
-#ifndef NOP_ALGORITHM_NONE_OF_HPP /* Begin algorithm none_of header file */
-#define NOP_ALGORITHM_NONE_OF_HPP 1UL
+#ifndef NOP_ALGORITHM_BASE_NONE_OF_HPP /* Begin nop::algorithm::none_of header file */
+#define NOP_ALGORITHM_BASE_NONE_OF_HPP 1UL
 
 #pragma once
 
 #include <concepts> /* std::predicate<F, Args&&...> */
 #include <iterator> /* std::input_iterator<T> */
+
+#include "base/func_keyword.hpp"
 
 namespace nop /* Begin namespace nop */
 {
@@ -13,12 +15,12 @@ namespace algorithm /* Begin namespace algorithm */
 {
 
 template<
-         std::input_iterator                                                        InIterator,
+         std::input_iterator InIterator,
          std::predicate<const typename std::iterator_traits<InIterator>::reference> UnaryPredicate
         >
-[[nodiscard]] constexpr bool none_of(InIterator     begin,
-                                     InIterator     end,
-                                     UnaryPredicate unary_p) noexcept(noexcept(unary_p(*begin)))
+[[nodiscard]] constexpr func none_of(InIterator begin,
+                                     InIterator end,
+                                     UnaryPredicate unary_p) noexcept(noexcept(unary_p(*begin))) -> bool
 {
   [[likely]]
   while (!(begin == end) && unary_p(*begin))
@@ -33,4 +35,4 @@ template<
 
 } /* End namespace nop */
 
-#endif /* End algorithm none_of header file */
+#endif /* End nop::algorithm::none_of header file */

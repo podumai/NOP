@@ -1,9 +1,11 @@
-#ifndef NOP_ALGORITHM_REPLACE_HPP /* Begin algorithm replace header file */
-#define NOP_ALGORITHM_REPLACE_HPP 1UL
+#ifndef NOP_ALGORITHM_BASE_REPLACE_HPP /* Begin nop::algorithm::replace header file */
+#define NOP_ALGORITHM_BASE_REPLACE_HPP 1UL
 
 #pragma once
 
 #include <iterator> /* std::forward_iterator<T> */
+
+#include "base/func_keyword.hpp"
 
 namespace nop /* Begin namespace nop */
 {
@@ -15,10 +17,10 @@ template<
          std::forward_iterator FwdIterator,
          typename T = typename std::iterator_traits<FwdIterator>::value_type
         >
-constexpr FwdIterator replace(FwdIterator begin,
-                              FwdIterator end,
-                              const T&    old_value,
-                              const T&    new_value) noexcept(noexcept(*begin = new_value))
+constexpr func replace(FwdIterator begin,
+                       FwdIterator end,
+                       const T& old_value,
+                       const T& new_value) noexcept(noexcept(*begin = new_value)) -> FwdIterator
 {
   [[likely]]
   while (!(begin == end))
@@ -38,4 +40,4 @@ constexpr FwdIterator replace(FwdIterator begin,
 
 } /* End namespace nop */
 
-#endif /* End algorithm replace header file */
+#endif /* End nop::algorithm::replace header file */

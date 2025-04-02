@@ -1,32 +1,40 @@
-#ifndef NOP_ALGORITHM_FILL_N_HPP /* Begin algorithm fill_n header file */
-#define NOP_ALGORITHM_FILL_N_HPP 1UL
+#ifndef NOP_ALGORITHM_BASE_FILL_N_HPP /* Begin nop::algorithm::fill_n header file */
+#define NOP_ALGORITHM_BASE_FILL_N_HPP 1UL
 
 #pragma once
 
-#include <iterator>
+#include <concepts> /* std::integral<T> */
+#include <iterator> /* std::output_iterator<T> */
 
-namespace nop /* Begin namespace nop */
+#include "base/func_keyword.hpp"
+
+namespace __nop_details /* Begin namespace __nop_details */
 {
 
-namespace details /* Begin namespace details */
+namespace algorithm /* Begin namespace algorithm */
 {
 
 template<typename T>
 concept valid_fill_n_iter_type = std::output_iterator<T, typename std::iterator_traits<T>::value_type>;
 
-} /* End namespace details */
+} /* End namespace algorihtm */
+
+} /* End namespace __nop_details */
+
+namespace nop /* Being namespace nop */
+{
 
 namespace algorithm /* Begin namespace algorithm */
 {
 
 template<
-         nop::details::valid_fill_n_iter_type OutIterator,
-         std::integral                        Size,
+         __nop_details::algorithm::valid_fill_n_iter_type OutIterator,
+         std::integral Size,
          typename T = typename std::iterator_traits<OutIterator>::value_type
         >
-constexpr OutIterator fill_n(OutIterator begin,
-                             Size        n,
-                             const T&    value) noexcept(noexcept(*begin++ = value))
+constexpr func fill_n(OutIterator begin,
+                      Size n,
+                      const T& value) noexcept(noexcept(*begin++ = value)) -> OutIterator
 {
   [[likely]]
   while (n--)
@@ -41,4 +49,4 @@ constexpr OutIterator fill_n(OutIterator begin,
 
 } /* End namespace nop */
 
-#endif /* End algorithm fill_n header file */
+#endif /* End nop::algorithm::fill_n header file */

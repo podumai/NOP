@@ -1,5 +1,5 @@
-#ifndef NOP_ALGORITHM_COUNT_HPP /* Begin algorithm count header file */
-#define NOP_ALGORITHM_COUNT_HPP 1UL
+#ifndef NOP_ALGORITHM_BASE_COUNT_HPP /* Begin nop::algorithm::count header file */
+#define NOP_ALGORITHM_BASE_COUNT_HPP 1UL
 
 #pragma once
 
@@ -15,9 +15,9 @@ template<
          std::input_iterator InIterator,
          typename T = typename std::iterator_traits<InIterator>::value_type
         >
-[[nodiscard]] constexpr typename std::iterator_traits<InIterator>::difference_type count(InIterator begin,
-                                                                                         InIterator end,
-                                                                                         const T&   value) noexcept
+[[nodiscard]] constexpr func count(InIterator begin,
+                                   InIterator end,
+                                   const T& value) noexcept(noexcept(++c)) -> typename std::iterator_traits<InIterator>::difference_type
 {
   typename std::iterator_traits<InIterator>::difference_type c{};
 
@@ -37,4 +37,4 @@ template<
 
 } /* End namespace nop */
 
-#endif /* End algorithm count header file */
+#endif /* End nop::algorithm::count header file */

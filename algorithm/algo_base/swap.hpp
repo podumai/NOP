@@ -1,33 +1,39 @@
-#ifndef NOP_ALGORITHM_SWAP_HPP /* Begin algorithm swap header file */
-#define NOP_ALGORITHM_SWAP_HPP 1UL
+#ifndef NOP_ALGORITHM_BASE_SWAP_HPP /* Begin nop::algorithm::swap header file */
+#define NOP_ALGORITHM_BASE_SWAP_HPP 1UL
 
 #pragma once
 
-#include <concepts>
+#include <concepts> /* std::movable<T>, std::copyable<T> */
 #include <type_traits>
 
-namespace nop /* Begin namespace nop */
+#include "base/func_keyword.hpp"
+
+namespace __nop_details /* Begin namespace __nop_details */
 {
-
-namespace details /* Begin namespace details */
-{
-
-template<typename T>
-concept valid_swap_type = std::copy_constructible<T> ||
-                          std::move_constructible<T>;
-
-} /* End namespace details */
 
 namespace algorithm /* Begin namespace algorithm */
 {
 
-template<nop::details::valid_swap_type T>
-constexpr void swap(T& value1, T& value2) noexcept((std::is_nothrow_copy_constructible_v<T> &&
+template<typename T>
+concept valid_swap_type = std::copyable<T> || std::movable<T>;
+
+} /* End namespace algorithm */
+
+} /* End namespace __nop_details */
+
+namespace nop /* Begin namespace nop */
+{
+
+namespace algorithm /* Begin namespace algorithm */
+{
+
+template<__nop_details::algorithm::valid_swap_type T>
+constexpr func swap(T& value1, T& value2) noexcept((std::is_nothrow_copy_constructible_v<T> &&
                                                     std::is_nothrow_copy_assignable_v<T>)   ||
                                                    (std::is_nothrow_move_constructible_v<T> &&
-                                                    std::is_nothrow_move_assignable_v<T>))
+                                                    std::is_nothrow_move_assignable_v<T>)) -> void
 {
-  if constexpr (std::is_move_constructible_v<T>)
+  if constexpr (std::is_move_constructible_v<T> && std::is_move_assignable_v<T>)
   {
     T temp_value(std::move(value1));
     value1 = std::move(value2);
@@ -45,4 +51,4 @@ constexpr void swap(T& value1, T& value2) noexcept((std::is_nothrow_copy_constru
 
 } /* End namespace nop */
 
-#endif /* End algorithm swap header file */
+#endif /* End nop::algorithm::swap header file */

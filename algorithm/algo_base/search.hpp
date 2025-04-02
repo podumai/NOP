@@ -1,9 +1,11 @@
-#ifndef NOP_ALGORITHM_SEARCH_HPP /* Begin algorithm search header file */
-#define NOP_ALGORITHM_SEARCH_HPP 1UL
+#ifndef NOP_ALGORITHM_BASE_SEARCH_HPP /* Begin nop::algorithm::search header file */
+#define NOP_ALGORITHM_BASE_SEARCH_HPP 1UL
 
 #pragma once
 
 #include <iterator> /* std::forward_iterator<T> */
+
+#include "base/func_keyword.hpp"
 
 namespace nop /* Begin namespace nop */
 {
@@ -15,10 +17,10 @@ template<
          std::forward_iterator FwdIterator1,
          std::forward_iterator FwdIterator2
         >
-[[nodiscard]] constexpr FwdIterator1 search(FwdIterator1 begin1,
-                                            FwdIterator1 end1,
-                                            FwdIterator2 s_begin2,
-                                            FwdIterator2 s_end2) noexcept
+[[nodiscard]] constexpr func search(FwdIterator1 begin1,
+                                    FwdIterator1 end1,
+                                    FwdIterator2 s_begin2,
+                                    FwdIterator2 s_end2) noexcept(noexcept(*begin1++ == *s_begin2++)) -> FwdIterator1
 {
   [[likely]]
   while (true)
@@ -48,11 +50,11 @@ template<
                         const typename std::iterator_traits<FwdIterator2>::reference
                        > BinaryPredicate
         >
-[[nodiscard]] constexpr FwdIterator1 search(FwdIterator1 begin1,
-                                            FwdIterator1 end1,
-                                            FwdIterator2 s_begin2,
-                                            FwdIterator2 s_end2,
-                                            BinaryPredicate binary_p) noexcept(noexcept(binary_p(*begin1++, *s_begin2++)))
+[[nodiscard]] constexpr func search(FwdIterator1 begin1,
+                                    FwdIterator1 end1,
+                                    FwdIterator2 s_begin2,
+                                    FwdIterator2 s_end2,
+                                    BinaryPredicate binary_p) noexcept(noexcept(binary_p(*begin1++, *s_begin2++))) -> FwdIterator1
 {
   [[likely]]
   while (true)
@@ -79,4 +81,4 @@ template<
 
 } /* End namespace nop */
 
-#endif /* End algorithm search header file */
+#endif /* End nop::algorithm::search header file */

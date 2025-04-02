@@ -1,9 +1,11 @@
-#ifndef NOP_ALGORITHM_COPY_BACKWARD_HPP /* Begin algorithm copy_backward header file */
-#define NOP_ALGORITHM_COPY_BACKWARD_HPP 1UL
+#ifndef NOP_ALGORITHM_BASE_COPY_BACKWARD_HPP /* Begin nop::algorithm::copy_backward header file */
+#define NOP_ALGORITHM_BASE_COPY_BACKWARD_HPP 1UL
 
 #pragma once
 
 #include <iterator> /* std::bidirectional_iterator<T> */
+
+#include "base/func_keyword.hpp"
 
 namespace nop /* Begin namespace nop */
 {
@@ -15,9 +17,9 @@ template<
          std::bidirectional_iterator BidirIterator1,
          std::bidirectional_iterator BidirIterator2
         >
-constexpr BidirIterator2 copy_backward(BidirIterator1 src_begin,
+constexpr func copy_backward(BidirIterator1 src_begin,
                                        BidirIterator1 src_end,
-                                       BidirIterator2 dst_end) noexcept(noexcept(*--dst_end = *--src_end))
+                                       BidirIterator2 dst_end) noexcept(noexcept(*--dst_end = *--src_end)) -> BidirIterator2
 {
   [[likely]]
   while (!(src_end == src_begin))
@@ -32,4 +34,4 @@ constexpr BidirIterator2 copy_backward(BidirIterator1 src_begin,
 
 } /* End namespace nop */
 
-#endif /* End algorithm copy_backward header file */
+#endif /* End nop::algorithm::copy_backward header file */
