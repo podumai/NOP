@@ -1,4 +1,4 @@
-#ifndef NOP_ALGORITHM_HPP /* Begin algorithm header file */
+#ifndef NOP_ALGORITHM_HPP /* Begin nop::algorithm header file */
 #define NOP_ALGORITHM_HPP 1UL
 
 #pragma once
@@ -35,4 +35,4 @@
 #include "algo_base/swap.hpp"
 #include "algo_base/transform.hpp"
 
-#endif /* End algorithm header file */
+#endif /* End nop::algorithm header file */
