@@ -1,11 +1,11 @@
-#ifndef NOP_TYPES_HPP /* Begin Types header file */
+#ifndef NOP_TYPES_HPP /* Begin types header file */
 #define NOP_TYPES_HPP 1
 
 namespace nop /* Begin namespace nop */
 {
 
 #if __cplusplus >= 201103L
-  using i8 = char;
+  using i8 = signed char;
   using u8 = unsigned char;
   using i16 = short;
   using u16 = unsigned short;
@@ -31,7 +31,7 @@ namespace nop /* Begin namespace nop */
   using f128 = long double;
 #endif
 #else
-  typedef char i8;
+  typedef signed char i8;
   typedef unsigned char u8;
   typedef short i16;
   typedef unsigned short u16;
@@ -60,4 +60,4 @@ namespace nop /* Begin namespace nop */
 
 } /* End namespace nop */
 
-#endif /* End Types header file */
+#endif /* End types header file */
