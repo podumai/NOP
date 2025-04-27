@@ -10,7 +10,7 @@
 #include <iterator> /* std::reverse_iterator, std::make_reverse_iterator */
 #include <cstdint>  /* std::size_t, std::ptrdiff_t */
 
-#include "NOP/base/func_keyword.hpp"
+#include "base/func_keyword.hpp"
 
 namespace __nop_details /* Begin namespace __nop_details */
 {

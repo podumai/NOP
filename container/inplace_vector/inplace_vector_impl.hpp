@@ -654,13 +654,13 @@ class inplace_vector_impl : public __nop_details::container::inplace_vector_base
       }
     }
 
-    return const_cast<pointer>(position);
+    return const_cast<iterator>(position);
   }
 
   func erase(const_iterator first, const_iterator last) -> iterator
   requires (std::copyable<value_type> || std::movable<value_type>)
   {
-    pointer new_last{const_cast<pointer>(first)};
+    pointer new_last{const_cast<iterator>(first)};
 
     if (first != last)
     {
@@ -687,7 +687,7 @@ class inplace_vector_impl : public __nop_details::container::inplace_vector_base
           [[likely]]
           while (++first != last)
           {
-            const_cast<pointer>(first)->~value_type();
+            const_cast<iterator>(first)->~value_type();
           }
         }
       }
