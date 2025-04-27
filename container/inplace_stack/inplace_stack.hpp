@@ -4,6 +4,7 @@
 #pragma once
 
 #include "inplace_stack_impl.hpp"
+#include "NOP/algorithm/algo_base/equal.hpp" /* nop::algorithm::equal */
 
 namespace nop /* Begin namespace nop */
 {
@@ -65,8 +66,8 @@ class inplace_stack : public nop::details::inplace_stack_impl<T, N>
     /* Empty */
   }
 
-  inplace_stack(const inplace_stack& other) noexcept(noexcept(base(static_cast<base&>(other))))
-    : base(static_cast<base&>(other))
+  inplace_stack(const inplace_stack& other) noexcept(noexcept(base(static_cast<const base&>(other))))
+    : base(static_cast<const base&>(other))
   {
     /* Empty */
   }
@@ -236,9 +237,9 @@ class inplace_stack : public nop::details::inplace_stack_impl<T, N>
 
   [[nodiscard]] bool operator==(const inplace_stack& other) const noexcept
   {
-    return std::equal(base::internal_storage(),
-                      base::internal_storage() + base::size(),
-                      other.internal_storage());
+    return nop::algorithm::equal(base::internal_storage(),
+                                 base::internal_storage() + base::size(),
+                                 other.internal_storage());
   }
 
   [[nodiscard]] bool operator!=(const inplace_stack& other) const noexcept

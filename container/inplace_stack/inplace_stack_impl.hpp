@@ -152,8 +152,8 @@ class inplace_stack_impl : public nop::details::inplace_stack_base<T, N>
   requires std::is_copy_constructible_v<value_type>
     : m_size{other.m_size}
   {
-    std::uninitialized_copy(static_cast<pointer>(static_cast<void*>(other.m_storage)),
-                            static_cast<pointer>(static_cast<void*>(other.m_storage)) + other.m_size,
+    std::uninitialized_copy(static_cast<const_pointer>(static_cast<const void*>(other.m_storage)),
+                            static_cast<const_pointer>(static_cast<const void*>(other.m_storage)) + other.m_size,
                             static_cast<pointer>(static_cast<void*>(this->m_storage)));
   }
 
