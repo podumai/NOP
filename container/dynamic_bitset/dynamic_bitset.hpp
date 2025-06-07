@@ -15,10 +15,26 @@
 #include <memory> /* std::allocator<T> */
 #include <bitset> /* std::bitset<N> */
 #include <stdexcept> /* std::out_of_range, std::length_error, std::invalid_argument */
+#include <concepts> /* std::unsigned_integral */
 #include <cstdint> /* std::size_t, std::ptrdiff_t */
+
+#include <cstdlib> /* memcpy */
 
 #include "dynamic_bitset_extension.hpp"
 
+namespace __nop_details /* Begin namespace __nop_details */
+{
+
+namespace container /* Begin namespace container */
+{
+
+template<typename Alloc>
+concept is_valid_dynamic_bitset_alloc_t = sizeof(typename std::allocator_traits<Alloc>::value_type) == 8UL
+                                       && std::unsigned_integral<typename std::allocator_traits<Alloc>::value_type>;
+
+} /* End namespace container */
+
+} /* End namespace __nop_details */
 
 namespace nop /* Begin namespace nop */
 {
@@ -49,16 +65,7 @@ namespace dynamic_bitset_limits /* Begin namespace dynamic_bitset_limits */
     #define MID_CAPACITY (1073741824UL)
   #endif
 #else
-  #error Library "NOP" : dynamic_bitset class does not support 32 bit mode (or less)
-  #if __cplusplus >= 201103L
-    extern constexpr size_t MAX_SIZE{0x20000000UL};
-    extern constexpr size_t MAX_CAPACITY{0x4000000UL};
-    extern constexpr size_t MID_CAPACITY{0x1000000UL};
-  #else
-    #define MAX_SIZE (0x20000000UL)
-    #define MAX_CAPACITY (0x4000000UL)
-    #define MID_CAPACITY (0x1000000UL)
-  #endif
+  #error Library "NOP" : dynamic_bitset class does not support 32 BIT mode (or less)
 #endif
 
 } /* End namespace dynamic_bitset_limits */
@@ -68,10 +75,10 @@ namespace dynamic_bitset_limits /* Begin namespace dynamic_bitset_limits */
 namespace container /* Begin namespace container */
 {
 
-template<typename Alloc = std::allocator<std::size_t>>
+template<__nop_details::container::is_valid_dynamic_bitset_alloc_t Alloc = std::allocator<std::size_t>>
 class dynamic_bitset
 {
-  public:
+ public:
   using value_type = bool;
   using allocator_type = Alloc;
   using size_type = std::size_t;
@@ -84,41 +91,41 @@ class dynamic_bitset
   using storage_state = bool;
   using bit_string = std::string;
 
-  private:
-  enum BitMask : size_type
+ private:
+  enum bit_mask : size_type
   {
-    Bit = 1UL,
-    Reset = 0UL,
-    Set = (0xffffffffUL << (__WORDSIZE >> 1UL)) | 0xffffffffUL
+    BIT = 1UL,
+    RESET = 0UL,
+    SET = 0xffffffffffffffffUL
   };
 
   public:
   class iterator
   {
-    private:
+   private:
     friend dynamic_bitset;
 
-    public:
-    using difference_type   = dynamic_bitset::difference_type;
-    using value_type        = dynamic_bitset::value_type;
-    using pointer           = dynamic_bitset::pointer;
-    using reference         = dynamic_bitset::reference;
+   public:
+    using difference_type = dynamic_bitset::difference_type;
+    using value_type = dynamic_bitset::value_type;
+    using pointer = dynamic_bitset::pointer;
+    using reference = dynamic_bitset::reference;
     using iterator_category = std::contiguous_iterator_tag;
 
-    private:
+   private:
     class bit_reference
     {
-      private:
+     private:
       friend iterator;
 
       private:
       pointer m_byte;
       difference_type m_bit;
 
-      public:
+     public:
       constexpr bit_reference(pointer ptr, difference_type bit_position) noexcept
-        : m_byte{ptr},
-          m_bit{bit_position}
+          : m_byte{ptr},
+            m_bit{bit_position}
       {
         /* Empty */
       }
@@ -138,12 +145,12 @@ class dynamic_bitset
         if (value)
         {
           m_byte[byte_division(static_cast<dynamic_bitset::size_type>(m_bit), UL)] |=
-          dynamic_bitset::BitMask::Bit << byte_module(static_cast<dynamic_bitset::size_type>(m_bit), UL);
+          dynamic_bitset::bit_mask::BIT << byte_module(static_cast<dynamic_bitset::size_type>(m_bit), UL);
         }
         else
         {
           m_byte[byte_division(static_cast<dynamic_bitset::size_type>(m_bit), UL)] &=
-          ~(dynamic_bitset::BitMask::Bit << byte_module(static_cast<dynamic_bitset::size_type>(m_bit), UL));
+          ~(dynamic_bitset::bit_mask::BIT << byte_module(static_cast<dynamic_bitset::size_type>(m_bit), UL));
         }
 
         return *this;
@@ -156,12 +163,12 @@ class dynamic_bitset
           if (other.get_bit())
           {
             m_byte[byte_division(static_cast<dynamic_bitset::size_type>(m_bit), UL)] |=
-            dynamic_bitset::BitMask::Bit << byte_module(static_cast<dynamic_bitset::size_type>(m_bit), UL);
+            dynamic_bitset::bit_mask::BIT << byte_module(static_cast<dynamic_bitset::size_type>(m_bit), UL);
           }
           else
           {
             m_byte[byte_division(static_cast<dynamic_bitset::size_type>(m_bit), UL)] &=
-            ~(dynamic_bitset::BitMask::Bit << byte_module(static_cast<dynamic_bitset::size_type>(m_bit), UL));
+            ~(dynamic_bitset::bit_mask::BIT << byte_module(static_cast<dynamic_bitset::size_type>(m_bit), UL));
           }
         }
 
@@ -171,7 +178,7 @@ class dynamic_bitset
       [[nodiscard]] constexpr bit_state get_bit() const noexcept
       {
         return m_byte[byte_division(static_cast<dynamic_bitset::size_type>(m_bit), UL)] &
-        dynamic_bitset::BitMask::Bit << byte_module(static_cast<dynamic_bitset::size_type>(m_bit), UL);
+        dynamic_bitset::bit_mask::BIT << byte_module(static_cast<dynamic_bitset::size_type>(m_bit), UL);
       }
 
       constexpr bit_reference& operator=(bit_reference&&) noexcept = default;
@@ -205,10 +212,10 @@ class dynamic_bitset
 
     };
 
-  private:
+   private:
     bit_reference m_iter;
 
-  public:
+   public:
     constexpr iterator(pointer ptr, difference_type bitPosition) noexcept
       : m_iter{ptr, bitPosition}
     {
@@ -323,23 +330,23 @@ class dynamic_bitset
 
   };
 
-  class alignas(sizeof(pointer) + sizeof(size_type)) const_iterator
+  class const_iterator
   {
-    public:
-    using difference_type   = dynamic_bitset::difference_type;
-    using value_type        = dynamic_bitset::value_type;
-    using pointer           = dynamic_bitset::pointer;
-    using reference         = dynamic_bitset::value_type&;
-    using iterator_category = std::contiguous_iterator_tag; /* For standard library compatibility */
+   public:
+    using difference_type = typename dynamic_bitset::difference_type;
+    using value_type = typename dynamic_bitset::value_type;
+    using pointer = typename dynamic_bitset::pointer;
+    using reference = typename dynamic_bitset::value_type&;
+    using iterator_category = typename std::contiguous_iterator_tag;
 
-    private:
+   private:
     pointer m_byte;
     difference_type m_bit;
 
-    public:
+   public:
     constexpr const_iterator(pointer ptr, difference_type bit_position) noexcept
-      : m_byte{ptr},
-        m_bit{bit_position}
+        : m_byte{ptr},
+          m_bit{bit_position}
     {
       /* Empty */
     }
@@ -445,12 +452,12 @@ class dynamic_bitset
 
     [[nodiscard]] constexpr bit_state operator*() const noexcept
     {
-      return m_byte[byte_division(m_bit, UL)] & dynamic_bitset::BitMask::Bit << byte_module(m_bit, UL);
+      return m_byte[byte_division(m_bit, UL)] & dynamic_bitset::bit_mask::BIT << byte_module(m_bit, UL);
     }
 
     [[nodiscard]] constexpr bit_state operator[](difference_type index) noexcept
     {
-      return m_byte[byte_division(index, UL)] & dynamic_bitset::BitMask::Bit << byte_module(index, UL);
+      return m_byte[byte_division(index, UL)] & dynamic_bitset::bit_mask::BIT << byte_module(index, UL);
     }
 
     constexpr const_iterator& operator=(const const_iterator&) noexcept = default;
@@ -458,13 +465,13 @@ class dynamic_bitset
 
   };
 
-private:
+ private:
   [[no_unique_address]] allocator_type xmalloc;
   pointer   m_storage;
   size_type m_bits;
   size_type m_bytes;
 
-private:
+ private:
   [[nodiscard]] constexpr size_type calculate_capacity(size_type bits_number) const noexcept
   {
     return byte_division(bits_number, UL) + (byte_module(bits_number, UL) ? 1UL : 0UL);
@@ -474,11 +481,11 @@ private:
   {
     if (value)
     {
-      m_storage[byte_division(index, UL)] |= BitMask::Bit << byte_module(index, UL);
+      m_storage[byte_division(index, UL)] |= bit_mask::BIT << byte_module(index, UL);
     }
     else
     {
-      m_storage[byte_division(index, UL)] &= ~(BitMask::Bit << byte_module(index, UL));
+      m_storage[byte_division(index, UL)] &= ~(bit_mask::BIT << byte_module(index, UL));
     }
   }
 
@@ -526,12 +533,12 @@ private:
       xmalloc.deallocate(m_storage, m_bytes);
     }
 
-    std::fill(temp_ptr + m_bytes, temp_ptr + new_size, BitMask::Reset);
+    std::fill(temp_ptr + m_bytes, temp_ptr + new_size, bit_mask::RESET);
     m_bytes = new_size;
     m_storage = temp_ptr;
   }
 
-  public:
+ public:
   [[nodiscard]] constexpr iterator begin() noexcept
   {
     return {m_storage, ZERO_VALUE};
@@ -588,7 +595,7 @@ private:
 
     for (size_type i{}; i < m_bytes; ++i)
     {
-      m_storage[i] = BitMask::Reset;
+      m_storage[i] = bit_mask::RESET;
     }
 
     if (value)
@@ -696,7 +703,7 @@ private:
 
     for (size_type current_bit{}; current_bit < remaining_bits; ++current_bit)
     {
-      if (*end & BitMask::Bit << current_bit)
+      if (*end & bit_mask::BIT << current_bit)
       {
         ++bit_count;
       }
@@ -745,7 +752,7 @@ private:
 
     for (size_type current_bit{}; current_bit < remaining_bits; ++current_bit)
     {
-      if (*end & BitMask::Bit >> current_bit)
+      if (*end & bit_mask::BIT >> current_bit)
       {
         return ANY_SET;
       }
@@ -774,7 +781,7 @@ private:
 
     for (size_type current_bit{}; current_bit < remaining_bits; ++current_bit)
     {
-      if (*end & dynamic_bitset::BitMask::Bit >> current_bit)
+      if (*end & dynamic_bitset::bit_mask::BIT >> current_bit)
       {
         return !ANY_SET;
       }
@@ -827,7 +834,7 @@ private:
 
       fill_data(m_storage + m_bytes,
                 new_size - m_bytes,
-                value ? BitMask::Set : BitMask::Reset);
+                value ? bit_mask::SET : bit_mask::RESET);
       m_bytes = new_size;
       m_bits = bits_number;
 
@@ -904,7 +911,7 @@ private:
       throw std::out_of_range{"dynamic_bitset::set() -> invalid number of bits"};
     }
 
-    fill_data(m_storage, calculate_capacity(m_bits), BitMask::Set);
+    fill_data(m_storage, calculate_capacity(m_bits), bit_mask::SET);
     return *this;
   }
 
@@ -915,7 +922,7 @@ private:
       throw std::out_of_range{"dynamic_bitset::reset(size_type) -> index is out of range"};
     }
 
-    m_storage[byte_division(index, UL)] &= ~(BitMask::Bit << byte_module(index, UL));
+    m_storage[byte_division(index, UL)] &= ~(bit_mask::BIT << byte_module(index, UL));
     return *this;
   }
 
@@ -926,7 +933,7 @@ private:
       throw std::out_of_range{"dynamic_bitset::reset() -> invalid number of bits"};
     }
 
-    fill_data(m_storage, calculate_capacity(m_bits), BitMask::Reset);
+    fill_data(m_storage, calculate_capacity(m_bits), bit_mask::RESET);
     return *this;
   }
 
@@ -937,7 +944,7 @@ private:
       throw std::out_of_range{"dynamic_bitset::flip(size_type) -> index is out of range"};
     }
 
-    m_storage[byte_division(index, UL)] ^= BitMask::Bit << byte_module(index, UL);
+    m_storage[byte_division(index, UL)] ^= bit_mask::BIT << byte_module(index, UL);
     return *this;
   }
 
@@ -953,7 +960,7 @@ private:
     [[likely]]
     for (pointer begin{m_storage}; begin < end; ++begin)
     {
-      *begin ^= BitMask::Set;
+      *begin ^= bit_mask::SET;
     }
 
     return *this;
@@ -977,7 +984,7 @@ private:
 
   [[nodiscard]] constexpr bit_state operator[](size_type index) const noexcept
   {
-    return m_storage[byte_division(index, UL)] & BitMask::Bit << byte_module(index, UL);
+    return m_storage[byte_division(index, UL)] & bit_mask::BIT << byte_module(index, UL);
   }
 
   [[nodiscard]] constexpr typename iterator::bit_reference front() noexcept
@@ -987,7 +994,7 @@ private:
 
   [[nodiscard]] constexpr bit_state front() const noexcept
   {
-    return *m_storage & BitMask::Bit;
+    return *m_storage & bit_mask::BIT;
   }
 
   [[nodiscard]] constexpr typename iterator::bit_reference back() noexcept
@@ -997,7 +1004,7 @@ private:
 
   [[nodiscard]] constexpr bit_state back() const noexcept
   {
-    return m_storage[byte_division(m_bits - 1UL, UL)] & BitMask::Bit << byte_module(m_bits - 1UL, UL);
+    return m_storage[byte_division(m_bits - 1UL, UL)] & bit_mask::BIT << byte_module(m_bits - 1UL, UL);
   }
 
   [[nodiscard]] constexpr typename iterator::bit_reference at(size_type index)
@@ -1017,7 +1024,7 @@ private:
       throw std::out_of_range{"dynamic_bitset::at(size_type) -> index is out of range"};
     }
 
-    return m_storage[byte_division(index, UL)] & BitMask::Bit << byte_module(index, UL);
+    return m_storage[byte_division(index, UL)] & bit_mask::BIT << byte_module(index, UL);
   }
 
   // Operations
@@ -1131,7 +1138,7 @@ private:
     [[likely]]
     for (pointer begin{temp_obj.m_storage}; begin < end; ++begin)
     {
-      *begin ^= BitMask::Set;
+      *begin ^= bit_mask::SET;
     }
 
     return temp_obj;
@@ -1145,25 +1152,25 @@ private:
     }
     else if (bit_offset >= m_bits)
     {
-      fill_data(m_storage, calculate_capacity(m_bits), BitMask::Reset);
+      fill_data(m_storage, calculate_capacity(m_bits), bit_mask::RESET);
     }
     else if (bit_offset)
     {
       size_type total_shifts{bit_offset - 1UL};
 
-      for (size_type bit{m_bits - 1UL}; bit > total_shifts; --bit)
+      for (size_type BIT{m_bits - 1UL}; BIT > total_shifts; --BIT)
       {
-        size_type bit_shift{bit - bit_offset};
+        size_type bit_shift{BIT - bit_offset};
         size_type byte{m_storage[byte_division(bit_shift, UL)] &
-                        BitMask::Bit << byte_module(bit_shift, UL)};
-        set_bit(bit, byte);
+                        bit_mask::BIT << byte_module(bit_shift, UL)};
+        set_bit(BIT, byte);
       }
 
-      fill_data(m_storage, byte_division(bit_offset, UL), BitMask::Reset);
+      fill_data(m_storage, byte_division(bit_offset, UL), bit_mask::RESET);
 
-      for (size_type bit{bit_offset - byte_module(bit_offset, UL)}; bit != bit_offset; ++bit)
+      for (size_type BIT{bit_offset - byte_module(bit_offset, UL)}; BIT != bit_offset; ++BIT)
       {
-        set_bit(bit, BIT_UNSET);
+        set_bit(BIT, BIT_UNSET);
       }
     }
 
@@ -1178,26 +1185,26 @@ private:
     }
     else if (bit_offset >= m_bits)
     {
-      fill_data(m_storage, calculate_capacity(m_bits), BitMask::Reset);
+      fill_data(m_storage, calculate_capacity(m_bits), bit_mask::RESET);
     }
     else if (bit_offset)
     {
       size_type total_shifts{m_bits - bit_offset};
-      for (size_type bit{}; bit < total_shifts; ++bit)
+      for (size_type BIT{}; BIT < total_shifts; ++BIT)
       {
-        size_type bit_shift{bit + bit_offset};
+        size_type bit_shift{BIT + bit_offset};
         size_type state{m_storage[byte_division(bit_shift, UL)] &
-                        BitMask::Bit << byte_module(bit_shift, UL)};
-        set_bit(bit, state);
+                        bit_mask::BIT << byte_module(bit_shift, UL)};
+        set_bit(BIT, state);
       }
-      size_type byte_shift(byte_division(bit_offset, UL));
+      size_type byte_shift{byte_division(bit_offset, UL)};
       fill_data(m_storage + (calculate_capacity(m_bits) - byte_shift),
                 byte_shift,
-                BitMask::Reset);
-      size_type bit_shift = m_bits - (byte_shift << 3UL);
-      for (size_type bit{m_bits - bit_offset}; bit != bit_shift; ++bit)
+                bit_mask::RESET);
+      size_type bit_shift{m_bits - (byte_shift << 3UL)};
+      for (size_type BIT{m_bits - bit_offset}; BIT != bit_shift; ++BIT)
       {
-        set_bit(bit, BIT_UNSET);
+        set_bit(BIT, BIT_UNSET);
       }
     }
 
@@ -1212,8 +1219,8 @@ private:
     for (size_type current_bit{}; current_bit < m_bits; ++current_bit)
     {
       storage_representation.push_back(
-      static_cast<bool>(m_storage[byte_division(current_bit, UL)] & BitMask::Bit <<
-      byte_module(current_bit, UL)) + '0');
+      static_cast<bool>(m_storage[byte_division(current_bit, UL)] &
+      bit_mask::BIT << byte_module(current_bit, UL)) + '0');
     }
 
     return storage_representation;
@@ -1225,20 +1232,20 @@ private:
 
 } /* End namespace nop */
 
-template<class Alloc1, class Alloc2>
+template<typename Alloc1, typename Alloc2>
 [[nodiscard]] constexpr bool operator==(const nop::container::dynamic_bitset<Alloc1>& lhs,
                                         const nop::container::dynamic_bitset<Alloc2>& rhs) noexcept
 {
   if (lhs.size() == rhs.size())
   {
     auto begin_lhs = lhs.data();
-    auto end       = begin_lhs + lhs.capacity();
+    auto end = begin_lhs + lhs.capacity();
     auto begin_rhs = rhs.data();
 
     [[likely]]
     while (begin_lhs < end)
     {
-      if (*begin_lhs != *begin_rhs)
+      if (*begin_lhs++ != *begin_rhs++)
       {
         return false;
       }
@@ -1251,14 +1258,14 @@ template<class Alloc1, class Alloc2>
   }
 }
 
-template<class Alloc>
-[[nodiscard]] constexpr bool operator!=(const nop::container::dynamic_bitset<Alloc>& lhs,
-                                        const nop::container::dynamic_bitset<Alloc>& rhs) noexcept
+template<typename Alloc1, typename Alloc2>
+[[nodiscard]] constexpr bool operator!=(const nop::container::dynamic_bitset<Alloc1>& lhs,
+                                        const nop::container::dynamic_bitset<Alloc2>& rhs) noexcept
 {
   return !(lhs == rhs);
 }
 
-template<class Alloc>
+template<typename Alloc>
 [[nodiscard]] constexpr nop::container::dynamic_bitset<Alloc> operator&(const nop::container::dynamic_bitset<Alloc>& lhs,
                                                                         const nop::container::dynamic_bitset<Alloc>& rhs)
 {
@@ -1301,21 +1308,21 @@ template<class Alloc>
 namespace std /* Begin namespace std */
 {
 
-  template<class Alloc>
-  struct formatter<nop::container::dynamic_bitset<Alloc>> : formatter<string>
-  {
+template<class Alloc>
+struct formatter<nop::container::dynamic_bitset<Alloc>> : formatter<string>
+{
 
-    [[nodiscard]] auto format(const nop::container::dynamic_bitset<Alloc> dynamic_bitset_obj, format_context& ctx) const
-    {
-      return formatter<string>::format(dynamic_bitset_obj.to_string(), ctx);
-    }
-  };
-
-  template<class Alloc>
-  constexpr void swap(nop::container::dynamic_bitset<Alloc>& lhs, nop::container::dynamic_bitset<Alloc>& rhs) noexcept
+  [[nodiscard]] auto format(const nop::container::dynamic_bitset<Alloc> dynamic_bitset_obj, format_context& ctx) const
   {
-    lhs.swap(rhs);
+    return formatter<string>::format(dynamic_bitset_obj.to_string(), ctx);
   }
+};
+
+template<class Alloc>
+constexpr void swap(nop::container::dynamic_bitset<Alloc>& lhs, nop::container::dynamic_bitset<Alloc>& rhs) noexcept
+{
+  lhs.swap(rhs);
+}
 
 } /* End namespace std */
 

@@ -6,7 +6,7 @@
 
 class VECTOR_TEST_FIXTURE : public ::testing::Test
 {
-protected:
+ protected:
   nop::container::dynamic_bitset<> emptyVector;
   nop::container::dynamic_bitset<> filledVector{16UL, 0xffffUL};
 };
@@ -219,7 +219,7 @@ TEST_F(VECTOR_TEST_FIXTURE, SET_METHOD)
   testVector.set();
 
   EXPECT_EQ(false, testVector.none())
-  << "Set method must set all bits to true";
+  << "set method must set all bits to true";
 }
 
 TEST_F(VECTOR_TEST_FIXTURE, RESET_INDEX_METHOD)
@@ -241,7 +241,7 @@ TEST_F(VECTOR_TEST_FIXTURE, RESET_METHOD)
   filledVector.reset();
 
   EXPECT_EQ(true, filledVector.none())
-  << "Reset method must set all bits to false";
+  << "reset method must set all bits to false";
 }
 
 TEST_F(VECTOR_TEST_FIXTURE, FLIP_INDEX_METHOD)
