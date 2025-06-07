@@ -777,7 +777,7 @@ class dynamic_bitset
       }
     }
 
-    const size_type remaining_bits = byte_module(m_bits, UL) ? byte_module(m_bits, UL) : __WORDSIZE;
+    const size_type remaining_bits{byte_module(m_bits, UL) ? byte_module(m_bits, UL) : __WORDSIZE};
 
     for (size_type current_bit{}; current_bit < remaining_bits; ++current_bit)
     {
@@ -1009,7 +1009,7 @@ class dynamic_bitset
 
   [[nodiscard]] constexpr typename iterator::bit_reference at(size_type index)
   {
-    if (index >= m_bits || m_storage == nullptr)
+    if (index >= m_bits)
     {
       throw std::out_of_range{"dynamic_bitset::at(size_type) -> index is out of range"};
     }
@@ -1311,7 +1311,6 @@ namespace std /* Begin namespace std */
 template<class Alloc>
 struct formatter<nop::container::dynamic_bitset<Alloc>> : formatter<string>
 {
-
   [[nodiscard]] auto format(const nop::container::dynamic_bitset<Alloc> dynamic_bitset_obj, format_context& ctx) const
   {
     return formatter<string>::format(dynamic_bitset_obj.to_string(), ctx);
