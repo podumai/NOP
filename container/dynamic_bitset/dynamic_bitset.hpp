@@ -85,8 +85,8 @@ class dynamic_bitset
   using difference_type = std::ptrdiff_t;
   using reference = bool&;
   using const_reference = const bool&;
-  using pointer = std::size_t*;
-  using const_pointer = const std::size_t*;
+  using pointer = typename std::allocator_traits<Alloc>::pointer;
+  using const_pointer = const typename std::allocator_traits<Alloc>::pointer;
   using bit_state = bool;
   using storage_state = bool;
   using bit_string = std::string;
