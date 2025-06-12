@@ -81,7 +81,7 @@ class stack
  public:
   [[nodiscard]] func try_pop() -> return_type
   {
-    std::unique_lock ul{m_};
+    std::lock_guard ul{m_};
     if (stack_.empty())
     {
       return return_type{};
