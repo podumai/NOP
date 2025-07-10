@@ -1213,14 +1213,13 @@ class dynamic_bitset
 
   [[nodiscard]] constexpr bit_string to_string() const
   {
-    bit_string storage_representation;
-    storage_representation.reserve(m_bits);
+    bit_string storage_representation(m_bits, '\0');
 
     for (size_type current_bit{}; current_bit < m_bits; ++current_bit)
     {
-      storage_representation.push_back(
-      static_cast<bool>(m_storage[byte_division(current_bit, UL)] &
-      bit_mask::BIT << byte_module(current_bit, UL)) + '0');
+      storage_representation[current_bit] = 
+          (m_storage[byte_division(current_bit, UL)] >> byte_module(current_bit, UL)
+              & bit_mask::BIT) | '0';
     }
 
     return storage_representation;
